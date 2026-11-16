@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7342cb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TaskHub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TaskHub</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<!-- Písmo Plus Jakarta Sans: SIL Open Font License 1.1 (komerční použití povoleno). V nativní verzi bude přibalené kvůli offline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== TOKENY =====
+   Layout: jeden sloupec pro palec. Fialová hlavička s rychlým zápisem, pak návyky, priority, oblasti, týden.
+   Vizuální svět: světlá levandule, bílé karty, jedna sytá fialová, navigace jako pilulka. */
+:root{
+  color-scheme: light;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --device-bg:#ecebf0;
+  --device-frame:#1c1633;
+  --device-ring:#d9d7e0;
+  --c-bg:#f2effa;
+  --c-surface:#ffffff;
+  --c-surface-2:#f7f4fd;
+  --c-text:#1c1633;
+  --c-muted:#6b6489;
+  --c-faint:#a7a2c2;
+  --c-accent:#7342cb;
+  --c-accent-2:#8455d6;
+  --c-accent-soft:#ece5f8;
+  --c-on-accent:#ffffff;
+  --c-stroke:#e6e0f3;
+  --c-good:#12a877;
+  --c-warn:#c98200;
+  --c-crit:#e5487a;
+
+  --f-display:"Plus Jakarta Sans", -apple-system, "SF Pro Display", system-ui, sans-serif;
+  --f-body:"Plus Jakarta Sans", -apple-system, "SF Pro Text", system-ui, sans-serif;
+
+  --fs-xs:.75rem; --fs-sm:.8125rem; --fs-md:.9375rem; --fs-lg:1.125rem; --fs-xl:1.5rem; --fs-xxl:1.75rem;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px;
+  --r-sm:12px; --r-md:16px; --r-lg:24px; --r-xl:30px; --r-pill:999px;
+  --tap:44px;
+  --shadow:0 8px 24px rgba(115,66,203,.08), 0 1px 2px rgba(115,66,203,.06);
+  --shadow-accent:0 10px 24px rgba(115,66,203,.32);
+  --t-fast:160ms;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--c-bg);
+  color:var(--c-text);
+  font-family:var(--f-body);
+  font-size:var(--fs-md);
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg span{position:absolute;border-radius:50%;filter:blur(80px)}
+.bg .b1{width:360px;height:360px;background:#ddd0f5;top:-120px;right:-140px;opacity:.7}
+.bg .b2{width:300px;height:300px;background:#f6d9f3;top:55%;left:-160px;opacity:.55}
+.bg .b3{display:none}
+
+.app{
+  position:relative;z-index:1;
+  max-width:480px;margin:0 auto;
+  padding:0 var(--sp-4) calc(var(--sab) + 108px);
+  display:flex;flex-direction:column;gap:var(--sp-6);
+}
+
+.glass{
+  background:var(--c-surface);
+  border:1px solid var(--c-stroke);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow);
+}
+
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid var(--c-accent);outline-offset:2px}
+.icon{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* Fialová hlavička */
+.hero{
+  background:var(--c-accent);
+  color:var(--c-on-accent);
+  margin:0 calc(-1 * var(--sp-4));
+  border-radius:0 0 var(--r-xl) var(--r-xl);
+  padding:calc(var(--sat) + var(--sp-4)) var(--sp-5) var(--sp-5);
+  display:flex;flex-direction:column;gap:var(--sp-4);
+  box-shadow:var(--shadow-accent);
+  position:relative;overflow:hidden;
+}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);position:relative;z-index:1}
+.top h1{font-family:var(--f-display);font-size:var(--fs-xl);line-height:1.2;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.top .greet{font-size:var(--fs-sm);font-weight:500;color:rgba(255,255,255,.75);margin-bottom:4px}
+.icon-btn{width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:var(--r-md);background:rgba(255,255,255,.16);color:#fff}
+
+/* Rychlý zápis */
+.capture{display:flex;align-items:center;gap:var(--sp-2);padding:4px 4px 4px var(--sp-4);background:#fff;border-radius:var(--r-pill);position:relative;z-index:1}
+.capture input{flex:1;min-width:0;height:var(--tap);background:none;border:0;color:var(--c-text);font:inherit;font-size:1rem;font-weight:400}
+.capture input::placeholder{color:var(--c-faint);font-weight:400}
+.capture input:focus{outline:none}
+.capture:focus-within{box-shadow:0 0 0 3px rgba(255,255,255,.4)}
+.btn-accent{
+  height:var(--tap);min-width:var(--tap);padding:0 var(--sp-3);border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  background:var(--c-accent);color:#fff;font-weight:700;
+}
+.capture-meta{display:flex;justify-content:space-between;font-size:var(--fs-sm);font-weight:400;color:rgba(255,255,255,.85);padding:0 var(--sp-2);position:relative;z-index:1}
+
+.link-u{color:rgba(255,255,255,.62);font-size:var(--fs-xs);font-weight:400;text-decoration:underline;text-decoration-color:rgba(255,255,255,.3);text-decoration-thickness:1px;text-underline-offset:3px;min-height:var(--tap);margin:-14px 0;display:inline-flex;align-items:center}
+.link-pill{display:inline-flex;align-items:center;gap:2px;height:32px;padding:0 6px 0 12px;margin:-6px 0;border-radius:var(--r-pill);background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:var(--fs-xs);position:relative}
+.link-pill::after{content:"";position:absolute;inset:-6px 0}
+.link-pill .icon{width:16px;height:16px}
+.lead{margin:0;padding:0 var(--sp-1);color:var(--c-muted);font-size:var(--fs-sm)}
+.inbox-row{gap:var(--sp-1);padding-right:var(--sp-3)}
+.icon-btn-plain{width:var(--tap);height:var(--tap);display:grid;place-items:center;color:var(--c-faint);border-radius:var(--r-md);flex:none}
+.btn-sort{height:36px;padding:0 var(--sp-4);border-radius:var(--r-pill);background:var(--c-accent-soft);color:var(--c-accent);font-weight:700;font-size:var(--fs-sm);flex:none;position:relative}
+.btn-sort::after{content:"";position:absolute;inset:-4px 0}
+.area-pick{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.pick{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 6px;border-radius:var(--r-pill);background:var(--c-surface);border:1.5px solid var(--c-stroke);font-weight:600;font-size:var(--fs-sm);text-align:left;position:relative}
+.pick::after{content:"";position:absolute;inset:-4px 0}
+.pick .ico{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.pick .ico .icon{width:15px;height:15px}
+.pick[aria-checked="true"]{border-color:var(--c-accent);background:var(--c-accent-soft)}
+.btn-wide{width:100%;height:52px;font-size:var(--fs-md)}
+.btn-accent:disabled{opacity:.4;cursor:default}
+
+/* Sekce */
+.section{display:flex;flex-direction:column;gap:var(--sp-3)}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2);padding:0 var(--sp-1)}
+.section-head h2{font-family:var(--f-display);font-size:var(--fs-lg);font-weight:800;margin:0;letter-spacing:-.01em}
+.section-head .meta{color:var(--c-muted);font-size:var(--fs-sm);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Návyky */
+.habits{display:flex;gap:var(--sp-3);overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 14px;margin:-4px -4px -10px;scrollbar-width:none}
+.habits::-webkit-scrollbar{display:none}
+.habit{
+  flex:0 0 136px;scroll-snap-align:start;padding:var(--sp-4) var(--sp-3);
+  display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-3);text-align:left;
+  transition:transform var(--t-fast),background var(--t-fast);
+}
+.habit:active{transform:scale(.97)}
+.habit.is-done{background:var(--c-accent);border-color:var(--c-accent);color:#fff;box-shadow:var(--shadow-accent)}
+.ring{position:relative;width:44px;height:44px}
+.ring svg{width:44px;height:44px;transform:rotate(-90deg)}
+.ring .track{stroke:var(--c-accent-soft)}
+.habit.is-done .ring .track{stroke:rgba(255,255,255,.25)}
+.ring .val{transition:stroke-dashoffset 400ms ease}
+.ring .mark{position:absolute;inset:0;display:grid;place-items:center}
+.habit .name{font-weight:700;font-size:var(--fs-md);line-height:1.25}
+.habit .sub{display:flex;align-items:center;gap:var(--sp-1);color:var(--c-muted);font-size:var(--fs-xs);font-weight:600;font-variant-numeric:tabular-nums}
+.habit .sub .icon{width:14px;height:14px}
+.habit.is-done .sub{color:rgba(255,255,255,.85)}
+
+/* Priority */
+.list{padding:var(--sp-1) 0;overflow:hidden}
+.list:has(> .subhead:first-child){padding-top:0}
+.row{display:flex;align-items:center;gap:var(--sp-3);min-height:62px;padding:var(--sp-2) var(--sp-4);position:relative}
+.row + .row{border-top:1px solid var(--c-stroke)}
+.row .stripe{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
+.check{width:var(--tap);height:var(--tap);margin:-6px -6px -6px -10px;flex:none;display:grid;place-items:center}
+.check span{width:24px;height:24px;border-radius:8px;border:2px solid #d3c8ec;display:grid;place-items:center;transition:all var(--t-fast);background:#fff}
+.check[aria-checked="true"] span{background:var(--c-accent);border-color:var(--c-accent)}
+.check .icon{width:14px;height:14px;stroke-width:3;opacity:0;stroke:#fff}
+.check[aria-checked="true"] .icon{opacity:1}
+.proj-ico{width:24px;height:24px;flex:none;display:grid;place-items:center}
+.row .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.row .title{font-weight:600;overflow-wrap:anywhere}
+.title-link{text-align:left;padding:4px 0;margin:-4px 0;cursor:pointer}
+.title-link:active{color:var(--c-accent)}
+.row.is-done .title{color:var(--c-faint);text-decoration:line-through}
+.row .tags{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);font-size:var(--fs-xs);color:var(--c-muted);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--r-pill);font-size:.6875rem;font-weight:700}
+.pill.p1{background:#fde7ef;color:var(--c-crit)}
+.pill.p2{background:#fdf1d8;color:var(--c-warn)}
+.pill.p3{background:var(--c-surface-2);color:var(--c-muted);box-shadow:inset 0 0 0 1px var(--c-stroke)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.progress{height:6px;border-radius:var(--r-pill);background:var(--c-accent-soft);overflow:hidden;margin-top:4px}
+.progress i{display:block;height:100%;border-radius:inherit;background:var(--c-accent)}
+.expand{width:var(--tap);height:var(--tap);display:grid;place-items:center;margin-right:-10px;color:var(--c-muted);flex:none}
+.expand .icon{transition:transform var(--t-fast)}
+.expand[aria-expanded="true"] .icon{transform:rotate(180deg)}
+.subtasks{padding:0 var(--sp-4) var(--sp-3) 54px;display:flex;flex-direction:column}
+.subtask{display:flex;align-items:center;gap:var(--sp-2);min-height:var(--tap);font-size:var(--fs-sm);font-weight:500}
+.subtask .check{margin:0 0 0 -10px}
+.subtask .check span{width:20px;height:20px;border-radius:6px}
+.subtask.is-done .label{color:var(--c-faint);text-decoration:line-through}
+.empty{padding:var(--sp-6) var(--sp-4);text-align:center;color:var(--c-muted);font-size:var(--fs-sm)}
+
+/* Činnosti pro dnešek: skupiny podle oblastí */
+.groups{display:flex;flex-direction:column;gap:var(--sp-2)}
+.group{overflow:hidden;border-radius:var(--r-md)}
+.group-head{width:100%;display:flex;align-items:center;gap:var(--sp-3);min-height:60px;padding:var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-3);text-align:left}
+.group-head .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.g-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.g-name{font-weight:700}
+.g-row{flex-direction:row;align-items:center;gap:var(--sp-2)}
+.g-count{min-width:22px;height:22px;padding:0 7px;border-radius:var(--r-pill);background:var(--c-accent-soft);color:var(--c-accent);font-size:var(--fs-xs);font-weight:800;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
+.g-count.zero{background:#e3f6ee;color:var(--c-good)}
+.g-count .icon{width:12px;height:12px;stroke-width:3}
+.g-meta{font-size:var(--fs-xs);color:var(--c-muted);font-weight:500;display:flex;align-items:center;gap:4px}
+.g-chev{width:32px;height:32px;display:grid;place-items:center;color:var(--c-muted)}
+.g-chev .icon{transition:transform var(--t-fast)}
+.group.is-open .g-chev .icon{transform:rotate(180deg)}
+.group-list{border-top:1px solid var(--c-stroke)}
+.group-list .row{padding-left:var(--sp-4)}
+
+/* Hlavička: text vedle tlačítek */
+.top-txt{flex:1;min-width:0}
+.top-txt h1{overflow-wrap:anywhere}
+
+/* Detail oblasti */
+.dir-block{border-left:4px solid var(--area-c)}
+.dir-block h4{color:var(--area-c)}
+.add-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-2);border:2px dashed #d3c8ec;border-radius:var(--r-lg);background:transparent;color:var(--c-accent);font-weight:700;min-height:156px}
+.add-tile .icon{width:28px;height:28px}
+
+/* Karty návyků */
+.hcards{display:flex;flex-direction:column;gap:var(--sp-3)}
+.hcard{padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3)}
+.hc-head{display:flex;align-items:center;gap:var(--sp-3)}
+.hc-head .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.hc-txt{flex:1;min-width:0}
+.hc-name{font-weight:700}
+.hc-meta{font-size:var(--fs-xs);color:var(--c-muted)}
+.hc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.hc-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap);padding:2px 0}
+.hc-day .d-l{font-size:.625rem;font-weight:600;color:var(--c-faint);text-transform:uppercase}
+.hc-day .d-c{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-sm);font-weight:600;color:var(--c-muted);background:var(--c-surface-2);border:1.5px solid var(--c-stroke)}
+.hc-day.today .d-c{border-color:var(--c-accent);color:var(--c-accent)}
+.hc-day.on .d-c{background:var(--area-c);border-color:var(--area-c);color:#fff}
+.hc-day .d-c .icon{width:16px;height:16px;stroke-width:3}
+.hc-foot{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--c-muted);font-weight:600}
+.hc-foot span{display:inline-flex;align-items:center;gap:4px}
+.hc-foot .icon{width:14px;height:14px}
+
+/* Formuláře v panelu */
+.form{display:flex;flex-direction:column;gap:var(--sp-4)}
+.field{display:flex;flex-direction:column;gap:var(--sp-2)}
+.flabel{font-size:var(--fs-sm);color:var(--c-muted);font-weight:700}
+.input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--c-stroke);background:#fff;padding:0 14px;font:inherit;font-size:16px;color:var(--c-text)}
+textarea.input{padding:12px 14px;resize:vertical;line-height:1.4}
+.input:focus{outline:none;border-color:var(--c-accent);box-shadow:0 0 0 3px var(--c-accent-soft)}
+.form .f-project,.form .f-recurring,.form .f-weekly{display:none}
+.form[data-type="project"] .f-project,.form[data-type="recurring"] .f-recurring,.form[data-freq="weekly"] .f-weekly{display:flex}
+.seg label{position:relative;display:inline-flex}
+.seg label input{position:absolute;opacity:0;pointer-events:none}
+.seg label span{height:38px;padding:0 var(--sp-3);border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:700;color:var(--c-muted);display:inline-flex;align-items:center;cursor:pointer}
+.seg label input:checked + span{background:var(--c-accent);color:#fff}
+.seg label input:focus-visible + span{outline:2px solid var(--c-accent);outline-offset:2px}
+.seg{flex-wrap:wrap;align-self:flex-start}
+label.pick{position:relative;cursor:pointer}
+label.pick input{position:absolute;opacity:0;pointer-events:none}
+label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-accent-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.chip-ico,.chip-col{position:relative;cursor:pointer}
+.chip-ico input,.chip-col input{position:absolute;opacity:0;pointer-events:none}
+.chip-ico span{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#fff;border:2px solid var(--c-stroke);color:var(--c-muted)}
+.chip-ico input:checked + span{border-color:var(--c-accent);background:var(--c-accent-soft);color:var(--c-accent)}
+.chip-col span{width:44px;height:44px;border-radius:50%;display:block;border:3px solid #fff;box-shadow:0 0 0 1px var(--c-stroke)}
+.chip-col input:checked + span{box-shadow:0 0 0 3px var(--c-accent)}
+.chip-ico input:focus-visible + span,.chip-col input:focus-visible + span{outline:2px solid var(--c-accent);outline-offset:2px}
+.btn-wide-ghost{width:100%}
+.icon-btn.icon-btn-bare{background:none;margin-left:-12px;width:40px}
+.icon-btn-bare .icon{width:24px;height:24px}
+.gchips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.gchips:empty{display:none}
+.gchip{display:inline-flex;align-items:center;gap:2px;height:36px;padding:0 4px 0 12px;border-radius:var(--r-pill);background:var(--c-accent-soft);color:var(--c-accent);font-weight:600;font-size:var(--fs-sm)}
+.gchip button{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--c-accent);position:relative}
+.gchip button::after{content:"";position:absolute;inset:-8px -4px}
+.gchip .icon{width:14px;height:14px;stroke-width:2.4}
+.gadd{display:flex;gap:var(--sp-2);align-items:center}
+.gadd .btn-accent{width:48px;height:48px;border-radius:14px;flex:none}
+.link-muted{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:var(--tap);padding:0 var(--sp-1);color:var(--c-accent);font-size:var(--fs-sm);font-weight:600}
+.link-muted .icon{width:16px;height:16px}
+.subhead{padding:10px var(--sp-4) 4px;font-size:var(--fs-xs);font-weight:700;color:var(--c-muted);background:var(--c-surface-2);border-top:1px solid var(--c-stroke)}
+.group-list > .subhead:first-child,.list > .subhead:first-child{border-top:0}
+.pick-plain{padding:0 14px}
+.field[hidden]{display:none}
+.btn-x{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;background:var(--c-surface);border:1px solid var(--c-stroke);color:var(--c-muted);flex:none}
+.btn-x .icon{width:18px;height:18px;stroke-width:2.2}
+.field-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:var(--sp-3)}
+.field-inline .seg{align-self:auto}
+.form .seg{padding:3px}
+.form .seg label span{height:30px;padding:0 10px;font-size:var(--fs-xs)}
+.btn-skip{flex:none;height:32px;padding:0 10px;border-radius:var(--r-pill);border:1px solid var(--c-stroke);background:var(--c-surface-2);color:var(--c-muted);font-size:var(--fs-xs);font-weight:600;position:relative;white-space:nowrap}
+.btn-skip::after{content:"";position:absolute;inset:-6px -2px}
+.check:disabled{cursor:default;opacity:.7}
+
+/* Oblasti */
+.areas{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.area{padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3);text-align:left;min-height:156px;transition:transform var(--t-fast)}
+.area:active{transform:scale(.98)}
+.area .ico,.sheet-head .ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.area .name{font-family:var(--f-display);font-weight:800;font-size:var(--fs-md)}
+.area .dir{font-size:var(--fs-xs);color:var(--c-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.area .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-xs);color:var(--c-muted);font-weight:600;font-variant-numeric:tabular-nums}
+.area .dots{display:flex;gap:3px}
+.area .dots i{width:6px;height:6px;border-radius:2px;background:var(--c-stroke)}
+.area .dots i.on{background:var(--area-c)}
+
+/* Týden */
+.week{padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.kpi{background:var(--c-surface-2);border-radius:var(--r-md);padding:var(--sp-3)}
+.kpi .label{font-size:var(--fs-xs);color:var(--c-muted);font-weight:600}
+.kpi .num{font-family:var(--f-display);font-size:var(--fs-xl);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi .num small{font-size:var(--fs-sm);color:var(--c-muted);font-weight:600;margin-left:2px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--c-faint);font-size:10px;font-family:var(--f-body);font-weight:600}
+.chart .today-l{fill:var(--c-accent);font-weight:800}
+.chart .grid{stroke:var(--c-stroke)}
+.chart .bar{fill:var(--c-accent-soft)}
+.review{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border-radius:var(--r-md);background:var(--c-accent-soft);color:var(--c-accent)}
+.review .txt{flex:1;min-width:0;color:var(--c-text)}
+.review .txt b{display:block;font-size:var(--fs-sm)}
+.review .txt span{font-size:var(--fs-xs);color:var(--c-muted)}
+.btn-ghost{height:36px;padding:0 var(--sp-4);border-radius:var(--r-pill);background:var(--c-accent);color:#fff;font-size:var(--fs-sm);font-weight:700;min-width:var(--tap);position:relative}
+.btn-ghost::after{content:"";position:absolute;inset:-4px 0}
+
+/* Navigace jako pilulka (jemné sklo) */
+.tabbar{
+  position:fixed;z-index:5;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--sab) + 12px);
+  width:min(448px,calc(100% - 32px));
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.82);border:1px solid var(--c-stroke);
+  backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  box-shadow:0 12px 30px rgba(115,66,203,.16);
+}
+.tab{height:52px;border-radius:var(--r-pill);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.6875rem;font-weight:600;color:var(--c-muted);position:relative}
+.tab[aria-current="page"]{color:#fff;background:var(--c-accent);box-shadow:0 6px 14px rgba(115,66,203,.35)}
+.tab .badge{position:absolute;top:6px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--c-crit);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center}
+
+/* Sheet + dialog */
+.scrim{position:fixed;inset:0;z-index:20;background:rgba(28,22,51,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+.scrim[hidden]{display:none}
+.sheet{
+  width:100%;max-width:480px;max-height:86%;overflow:auto;
+  border-radius:var(--r-xl) var(--r-xl) 0 0;padding:var(--sp-3) var(--sp-5) calc(var(--sab) + var(--sp-6));
+  background:var(--c-bg);
+  display:flex;flex-direction:column;gap:var(--sp-3);
+  animation:up 240ms ease;
+}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.grabber{width:40px;height:5px;border-radius:3px;background:#d6cbee;margin:0 auto}
+.sheet-head{display:flex;align-items:center;gap:var(--sp-3)}
+.sheet-head h3{flex:1;margin:0;font-family:var(--f-display);font-size:var(--fs-xl);font-weight:800}
+.block{padding:var(--sp-4);border-radius:var(--r-lg);background:var(--c-surface);border:1px solid var(--c-stroke);display:flex;flex-direction:column;gap:var(--sp-2)}
+.block h4{margin:0;font-size:var(--fs-sm);color:var(--c-accent);font-weight:700}
+.block p{margin:0}
+.btn-row{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.btn{height:var(--tap);padding:0 var(--sp-4);border-radius:var(--r-pill);background:var(--c-surface);border:1px solid var(--c-stroke);font-weight:700;font-size:var(--fs-sm);color:var(--c-accent)}
+.btn.danger{color:var(--c-crit);border-color:#f7c7d7}
+.seg{display:inline-flex;padding:4px;border-radius:var(--r-pill);background:var(--c-surface-2);border:1px solid var(--c-stroke)}
+.seg button{height:38px;padding:0 var(--sp-4);border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:700;color:var(--c-muted)}
+.seg button[aria-pressed="true"]{background:var(--c-accent);color:#fff}
+.note{font-size:var(--fs-xs);color:var(--c-muted)}
+textarea.dump{width:100%;min-height:90px;border-radius:var(--r-sm);background:var(--c-surface-2);color:var(--c-muted);border:1px solid var(--c-stroke);font:12px/1.4 ui-monospace,Menlo,monospace;padding:var(--sp-2)}
+.dialog{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:var(--sp-6);background:rgba(28,22,51,.4)}
+.dialog[hidden]{display:none}
+.dialog .box{max-width:340px;width:100%;padding:var(--sp-5);border-radius:var(--r-lg);background:var(--c-surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:var(--sp-4)}
+.dialog .box p{margin:0}
+
+/* Toast */
+.toast{
+  position:fixed;z-index:40;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--sab) + 92px);
+  width:min(420px,calc(100% - 32px));
+  display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border-radius:var(--r-pill);background:var(--c-text);color:#fff;box-shadow:var(--shadow);
+  font-size:var(--fs-sm);font-weight:600;
+}
+.toast[hidden]{display:none}
+.toast span{flex:1}
+.toast button{height:var(--tap);padding:0 var(--sp-4);color:#c7b8ff;font-weight:800}
+
+.badge-demo{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.65);font-size:.625rem;font-weight:500;margin-top:var(--sp-2)}
+
+
+/* ===== Mockup telefonu: jen na širší obrazovce. Na telefonu běží apka na celou plochu. ===== */
+.statusbar,.island,.homebar{display:none}
+@media (min-width:600px) and (min-height:640px){
+  html,body{height:auto;min-height:100%}
+  body{background:var(--device-bg);overflow:auto}
+  .stage{min-height:100vh;display:grid;place-items:center;padding:32px 16px;
+    background:none}
+  .device{width:390px;height:min(844px,calc(100vh - 64px));padding:12px;border-radius:62px;background:var(--device-frame);
+    box-shadow:inset 0 0 0 2px #3b3160,0 0 0 10px color-mix(in srgb,var(--device-ring) 45%,transparent),0 30px 60px rgba(20,16,40,.22)}
+  .screen{position:relative;height:100%;border-radius:50px;overflow:hidden;background:var(--c-bg);transform:translateZ(0);--sat:50px;--sab:22px}
+  .scroller{height:100%;overflow-y:auto;scrollbar-width:none}
+  .scroller::-webkit-scrollbar{display:none}
+  .statusbar{display:flex;position:absolute;z-index:50;top:0;left:0;right:0;height:50px;padding:4px 30px 0 34px;align-items:center;justify-content:space-between;font-size:15px;font-weight:700;color:#fff;pointer-events:none}
+  .statusbar .sys{display:flex;gap:6px;align-items:center}
+  .statusbar svg{height:12px;width:auto;fill:currentColor}
+  .island{display:block;position:absolute;z-index:51;top:11px;left:50%;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000}
+  .homebar{display:block;position:absolute;z-index:60;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--c-text);opacity:.85;pointer-events:none}
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="screen">
+      <div class="statusbar" aria-hidden="true">
+        <span id="clock">9:41</span>
+        <span class="sys">
+          <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg viewBox="0 0 16 12"><path d="M8 11.5l2.4-2.9a3.6 3.6 0 0 0-4.8 0zM3.5 6.3l1.4 1.6a4.8 4.8 0 0 1 6.2 0l1.4-1.6a7 7 0 0 0-9 0zM.8 3.4l1.4 1.6a8.9 8.9 0 0 1 11.6 0l1.4-1.6a11 11 0 0 0-14.4 0z"/></svg>
+          <svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="23" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2"/><rect x="24.5" y="4" width="2" height="4" rx="1" opacity=".4"/></svg>
+        </span>
+      </div>
+      <div class="island" aria-hidden="true"></div>
+      <div class="bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+      <div class="scroller"><main class="app" id="app" aria-live="polite"></main></div>
+      <nav class="tabbar glass" id="tabbar"></nav>
+      <div class="scrim" id="sheet" hidden></div>
+      <div class="dialog" id="dialog" hidden role="alertdialog" aria-modal="true"></div>
+      <div class="toast" id="toast" hidden role="status"></div>
+      <div class="homebar" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ===================== TEXTY (lokalizace) ===================== */
+const STRINGS = {
+  cs: {
+    greet: ["Dobré ráno", "Dobré odpoledne", "Dobrý večer"],
+    capturePh: "Nový úkol…",
+    captureAdd: "Přidat úkol do schránky",
+    inbox: n => `${n} ${pl("cs", n, ["zápis", "zápisy", "zápisu", "zápisů"])} ve schránce`,
+    captureHint: "Zařadit",
+    inboxTitle: "Schránka",
+    inboxLead: "Tady čeká všechno, co sis rychle zapsala. Zařaď to do kategorie, až budeš mít chvilku.",
+    inboxEmpty: "Schránka je prázdná. Všechno máš zařazené.",
+    writtenOn: d => `Zapsáno ${d}`,
+    sortCta: "Zařadit",
+    sortTitle: "Kam to patří?",
+    priority: "Priorita",
+    sortedTo: name => `Zařazeno do kategorie ${name}`,
+    deleteLabel: "Smazat",
+    deleted: "Smazáno",
+    habitsToday: "Dnešní návyky",
+    habitsHint: "Splní se samy, když je odškrtneš v Činnostech pro tento den. Klepnutím na kartu otevřeš detail.",
+    habitTag: "Návyk",
+    skip: "Dnes ne",
+    skipped: "Dnes přeskočeno",
+    skippedToast: "Přeskočeno, zítra se ti zase nabídne",
+    habitsMeta: (a, b) => `${a} z ${b}`,
+    streak: n => `${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])} v řadě`,
+    weekly: (a, b) => `${a}/${b} tento týden`,
+    priorities: "Priority",
+    todayTitle: "Činnosti pro tento den",
+    areasTitle: "Kategorie",
+    areasLead: "Klepni na kategorii a uvidíš její směr, úkoly, návyky i to, co už máš hotové.",
+    areaLabel: "Kategorie",
+    addArea: "Nová kategorie",
+    editArea: "Upravit kategorii",
+    areaName: "Název kategorie",
+    areaIcon: "Ikona",
+    areaColor: "Barva",
+    directionPh: "Kam chceš v této kategorii dojít?",
+    contextPh: "Poznámky, odkazy, co potřebuješ mít po ruce",
+    noDirection: "Zatím bez směru. Klepni na Upravit a zapiš, kam chceš v této kategorii dojít.",
+    deleteArea: "Smazat kategorii",
+    deleteAreaConfirm: (name, n) => `Smazat kategorii ${name}? Smažou se i její úkoly a návyky (${n}). Hned potom to půjde vrátit.`,
+    noAreas: "Zatím nemáš žádnou kategorii. Přidej první, třeba Sport nebo Freelance.",
+    needArea: "Nejdřív si vytvoř aspoň jednu kategorii.",
+    back: "Zpět",
+    edit: "Upravit",
+    add: "Přidat",
+    addTask: "Přidat úkol",
+    newTask: "Nový úkol",
+    editTask: "Upravit úkol",
+    taskDetail: "Detail úkolu",
+    followUp: "Navazující úkoly",
+    followUpPh: "Např.\nPověsit prádlo\nVyžehlit prádlo",
+    followUpHint: "Nepovinné. Každý krok na nový řádek. Po odškrtnutí úkolu se ti hned přidá první krok, po jeho splnění další a tak dál.",
+    followAdded: name => `Hotovo. Přidáno: ${name}`,
+    followTag: name => `Potom: ${name}`,
+    groups: "Podskupiny",
+    groupsPh: "Každá na nový řádek, třeba Obývák, Kuchyň, Ložnice",
+    groupsHint: "Nepovinné. Úkoly pak uvidíš rozdělené podle podskupin. Křížkem podskupinu odebereš, její úkoly zůstanou v Ostatní.",
+    group: "Podskupina",
+    groupAddPh: "Nová podskupina…",
+    groupAdd: "Přidat podskupinu",
+    editGroups: "Upravit podskupiny",
+    addGroups: "Rozdělit úkoly do podskupin (např. místnosti)",
+    noGroup: "Bez podskupiny",
+    otherGroup: "Ostatní",
+    taskTitle: "Co je potřeba udělat",
+    type: "Typ",
+    types: ["Jednorázový", "Projekt", "Opakovaný"],
+    steps: "Kroky projektu",
+    stepsPh: "Každý krok na nový řádek",
+    everyDays: "Opakovat každých (dní)",
+    everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se zase ukáže a zůstane v činnostech, dokud ho nesplníš.",
+    nextDue: d => `Další ${d}`,
+    save: "Uložit",
+    saved: "Uloženo",
+    deleteTask: "Smazat úkol",
+    archive: n => `Hotové (${n})`,
+    archiveEmpty: "Zatím tu nic hotového není.",
+    noAreaTasks: "V této kategorii nemáš žádné úkoly.",
+    habitsTitle: "Návyky",
+    habitsLead: "Klepni na den, kdy jsi návyk splnila. Takhle doplníš i dny, na které jsi zapomněla.",
+    addHabit: "Nový návyk",
+    editHabit: "Upravit návyk",
+    habitName: "Název návyku",
+    freq: "Jak často",
+    freqDaily: "Každý den",
+    freqWeekly: "Několikrát týdně",
+    timesPerWeek: "Kolikrát týdně",
+    deleteHabit: "Smazat návyk",
+    habitsEmpty: "Zatím nemáš žádné návyky.",
+    last30: n => `Za 30 dní ${n}×`,
+    required: "Vyplň prosím název.",
+    deletedArea: "Kategorie smazána",
+    startOwn: "Začít s vlastními daty",
+    startOwnNote: "Smaže ukázkové úkoly, návyky a zápisy. Kategorie zůstanou, jen bez ukázkových textů.",
+    startOwnConfirm: "Smazat ukázková data a začít s vlastními? Kategorie zůstanou.",
+    startOwnOk: "Začít",
+    startOwnDone: "Hotovo. Teď už jsou to tvoje data.",
+    prioritiesMeta: n => `${n} ${pl("cs", n, ["otevřený", "otevřené", "otevřeného", "otevřených"])}`,
+    prio: ["Vysoká", "Střední", "Nízká"],
+    project: "Projekt",
+    recurring: n => `Každých ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}`,
+    showSteps: "Zobrazit kroky",
+    noTasks: "Žádné otevřené úkoly. Užij si volno.",
+    areas: "Kategorie",
+    openTasks: n => `${n} ${pl("cs", n, ["úkol", "úkoly", "úkolu", "úkolů"])}`,
+    habitWeek: "Návyky za 7 dní",
+    week: "Tento týden",
+    tasksDone: "Hotové úkoly",
+    habitRate: "Plnění návyků",
+    chartLabel: "Splněné úkoly a návyky za posledních 7 dní",
+    review: "Týdenní revize",
+    reviewWhen: d => `Naplánovaná na ${d}`,
+    reviewStart: "Začít",
+    tabs: { home: "Přehled", areas: "Kategorie", habits: "Návyky", inbox: "Schránka" },
+    soon: "Tahle část přijde v další verzi.",
+    done: "Hotovo",
+    undone: "Vráceno",
+    undo: "Zpět",
+    added: "Uloženo do schránky",
+    emptyCapture: "Napiš nejdřív, co si chceš zapsat.",
+    settings: "Nastavení",
+    close: "Zavřít",
+    language: "Jazyk",
+    backup: "Záloha",
+    lastBackup: "Poslední záloha",
+    never: "zatím nikdy",
+    backupWhy: "Data jsou jen v tomhle zařízení. Zálohu si ulož mimo apku, třeba do Poznámek nebo Souborů.",
+    copyBackup: "Zkopírovat zálohu",
+    copied: "Záloha zkopírována. Vlož ji do Poznámek nebo Souborů.",
+    copyFailed: "Kopírování se nepovedlo. Označ text níže a zkopíruj ho ručně.",
+    importBackup: "Načíst zálohu ze souboru",
+    importOk: "Záloha načtena",
+    importBad: "Tohle není platná záloha této apky. Zkus jiný soubor.",
+    resetDemo: "Obnovit ukázková data",
+    resetConfirm: "Opravdu nahradit všechna data ukázkovými? Tohle nejde vrátit. Nejdřív si udělej zálohu.",
+    cancel: "Zrušit",
+    replace: "Nahradit",
+    demo: "Ukázková data",
+    direction: "Směr",
+    context: "Kontext",
+    tasks: "Úkoly",
+    habits: "Návyky",
+    noHabits: "Žádné návyky v této kategorii.",
+    storageOff: "Prohlížeč nedovolil ukládat data. Po zavření zmizí, proto si udělej zálohu.",
+    version: v => `Verze ${v}`,
+    settingsLabel: "Otevřít nastavení",
+  },
+  en: {
+    greet: ["Good morning", "Good afternoon", "Good evening"],
+    capturePh: "New task…",
+    captureAdd: "Add task to inbox",
+    inbox: n => `${n} ${n === 1 ? "note" : "notes"} in inbox`,
+    captureHint: "Sort",
+    inboxTitle: "Inbox",
+    inboxLead: "Everything you jotted down waits here. Sort it into a category when you have a moment.",
+    inboxEmpty: "Inbox is empty. Everything is sorted.",
+    writtenOn: d => `Added ${d}`,
+    sortCta: "Sort",
+    sortTitle: "Where does it belong?",
+    priority: "Priority",
+    sortedTo: name => `Sorted into ${name}`,
+    deleteLabel: "Delete",
+    deleted: "Deleted",
+    habitsToday: "Today's habits",
+    habitsHint: "They count when you tick them off in Things for today. Tap a card for details.",
+    habitTag: "Habit",
+    skip: "Not today",
+    skipped: "Skipped today",
+    skippedToast: "Skipped, it comes back tomorrow",
+    habitsMeta: (a, b) => `${a} of ${b}`,
+    streak: n => `${n}-day streak`,
+    weekly: (a, b) => `${a}/${b} this week`,
+    priorities: "Priorities",
+    todayTitle: "Things for today",
+    areasTitle: "Categories",
+    areasLead: "Tap a category to see its direction, tasks, habits and what you've already done.",
+    areaLabel: "Category",
+    addArea: "New category",
+    editArea: "Edit category",
+    areaName: "Category name",
+    areaIcon: "Icon",
+    areaColor: "Color",
+    directionPh: "Where do you want to get in this category?",
+    contextPh: "Notes, links, things to keep at hand",
+    noDirection: "No direction yet. Tap Edit and write where you want to get.",
+    deleteArea: "Delete category",
+    deleteAreaConfirm: (name, n) => `Delete ${name}? Its tasks and habits (${n}) will be deleted too. You can undo right after.`,
+    noAreas: "No categories yet. Add your first one, like Sport or Freelance.",
+    needArea: "Create at least one category first.",
+    back: "Back",
+    edit: "Edit",
+    add: "Add",
+    addTask: "Add task",
+    newTask: "New task",
+    editTask: "Edit task",
+    taskDetail: "Task detail",
+    followUp: "Follow-up tasks",
+    followUpPh: "E.g.\nHang the laundry\nIron the laundry",
+    followUpHint: "Optional. One step per line. Each one is added right after you finish the previous.",
+    followAdded: name => `Done. Added: ${name}`,
+    followTag: name => `Then: ${name}`,
+    groups: "Subgroups",
+    groupsPh: "One per line, e.g. Living room, Kitchen, Bedroom",
+    groupsHint: "Optional. Tasks will be split by subgroup.",
+    group: "Subgroup",
+    groupAddPh: "New subgroup…",
+    groupAdd: "Add subgroup",
+    editGroups: "Edit subgroups",
+    addGroups: "Split tasks into subgroups (e.g. rooms)",
+    noGroup: "No subgroup",
+    otherGroup: "Other",
+    taskTitle: "What needs doing",
+    type: "Type",
+    types: ["One-off", "Project", "Repeating"],
+    steps: "Project steps",
+    stepsPh: "One step per line",
+    everyDays: "Repeat every (days)",
+    everyHint: "Counted from the day you tick it off. Then it shows up again and stays until you do it.",
+    nextDue: d => `Next ${d}`,
+    save: "Save",
+    saved: "Saved",
+    deleteTask: "Delete task",
+    archive: n => `Done (${n})`,
+    archiveEmpty: "Nothing done here yet.",
+    noAreaTasks: "No tasks in this category.",
+    habitsTitle: "Habits",
+    habitsLead: "Tap a day when you did the habit. You can fill in days you forgot, too.",
+    addHabit: "New habit",
+    editHabit: "Edit habit",
+    habitName: "Habit name",
+    freq: "How often",
+    freqDaily: "Every day",
+    freqWeekly: "A few times a week",
+    timesPerWeek: "Times per week",
+    deleteHabit: "Delete habit",
+    habitsEmpty: "No habits yet.",
+    last30: n => `${n}× in 30 days`,
+    required: "Please fill in a name.",
+    deletedArea: "Category deleted",
+    startOwn: "Start with my own data",
+    startOwnNote: "Deletes sample tasks, habits and notes. Categories stay, without sample texts.",
+    startOwnConfirm: "Delete sample data and start with your own? Categories stay.",
+    startOwnOk: "Start",
+    startOwnDone: "Done. It's all yours now.",
+    prioritiesMeta: n => `${n} open`,
+    prio: ["High", "Medium", "Low"],
+    project: "Project",
+    recurring: n => `Every ${n} ${n === 1 ? "day" : "days"}`,
+    showSteps: "Show steps",
+    noTasks: "No open tasks. Enjoy the free time.",
+    areas: "Categories",
+    openTasks: n => `${n} ${n === 1 ? "task" : "tasks"}`,
+    habitWeek: "Habits, last 7 days",
+    week: "This week",
+    tasksDone: "Tasks done",
+    habitRate: "Habit completion",
+    chartLabel: "Tasks and habits completed in the last 7 days",
+    review: "Weekly review",
+    reviewWhen: d => `Planned for ${d}`,
+    reviewStart: "Start",
+    tabs: { home: "Overview", areas: "Categories", habits: "Habits", inbox: "Inbox" },
+    soon: "This part comes in the next version.",
+    done: "Done",
+    undone: "Restored",
+    undo: "Undo",
+    added: "Saved to inbox",
+    emptyCapture: "Write something first.",
+    settings: "Settings",
+    close: "Close",
+    language: "Language",
+    backup: "Backup",
+    lastBackup: "Last backup",
+    never: "never yet",
+    backupWhy: "Your data lives only on this device. Keep a backup outside the app, for example in Notes or Files.",
+    copyBackup: "Copy backup",
+    copied: "Backup copied. Paste it into Notes or Files.",
+    copyFailed: "Copying failed. Select the text below and copy it by hand.",
+    importBackup: "Load backup from file",
+    importOk: "Backup loaded",
+    importBad: "This isn't a valid backup for this app. Try another file.",
+    resetDemo: "Restore sample data",
+    resetConfirm: "Replace all data with sample data? This can't be undone. Make a backup first.",
+    cancel: "Cancel",
+    replace: "Replace",
+    demo: "Sample data",
+    direction: "Direction",
+    context: "Context",
+    tasks: "Tasks",
+    habits: "Habits",
+    noHabits: "No habits in this category.",
+    storageOff: "Your browser blocked saving. Data will be lost when closed, so make a backup.",
+    version: v => `Version ${v}`,
+    settingsLabel: "Open settings",
+  }
+};
+function pl(lang, n, forms) {
+  // forms: [one, few, many(decimal), other]
+  const r = new Intl.PluralRules(lang).select(n);
+  return { one: forms[0], few: forms[1], many: forms[2], other: forms[3] }[r] || forms[3];
+}
+
+/* ===================== PŘÍSTUP K FUNKCÍM (zdarma / placené) ===================== */
+// Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
+const FEATURES = { stats: "free", weeklyReview: "free", unlimitedAreas: "free" };
+const entitlements = { pro: false };
+function canUse(feature) { return FEATURES[feature] === "free" || entitlements.pro; }
+
+/* ===================== DATA: model, verze, migrace, úložiště ===================== */
+const APP_VERSION = "0.3.0";
+const DATA_VERSION = 2;
+const STORAGE_KEY = "hub.data";
+const PREFS_KEY = "hub.prefs";
+
+const day = (offset = 0, base = new Date()) => { const d = new Date(base); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + offset); return d; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayISO = () => iso(day());
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+function sampleData() {
+  const logDays = (pattern) => { const log = {}; pattern.forEach((on, i) => { if (on) log[iso(day(-i))] = true; }); return log; };
+  return {
+    version: DATA_VERSION,
+    demo: true,
+    areas: [
+      { id: "sport", name: "Sport", color: "#12a877", icon: "sport", groups: [], direction: "Být v kondici na letní túry. Hýbat se aspoň 4× týdně.", context: "Běh po Stromovce, posilovna út a čt. Chci zkusit lezení." },
+      { id: "work", name: "Freelance", color: "#3b7ff2", icon: "work", groups: [], direction: "Dotáhnout projekty do konce, neotvírat nové bez uzavření starých.", context: "Pondělní plánování, pátky bez schůzek." },
+      { id: "home", name: "Domácnost", color: "#e09a00", icon: "home", groups: [{ id: "g-pantry", name: "Komora" }, { id: "g-wc", name: "WC" }, { id: "g-bath", name: "Koupelna" }, { id: "g-bedroom", name: "Ložnice" }, { id: "g-hall", name: "Chodba" }, { id: "g-living", name: "Obývák" }, { id: "g-kitchen", name: "Kuchyň" }, { id: "g-other", name: "Ostatní" }], direction: "Byt, kde se mi dobře odpočívá. Méně věcí.", context: "Úklid po místnostech, ne všechno najednou." },
+      { id: "food", name: "Jídlo", color: "#5ea30d", icon: "food", groups: [], direction: "Jíst pravidelně a mít doma zdravé svačiny.", context: "Oblíbené: ořechy, cottage s ovocem, hummus a zelenina." },
+    ],
+    tasks: [
+      { id: uid(), areaId: "work", title: "Poslat nabídku klientovi", priority: 1, type: "single", done: false },
+      { id: uid(), areaId: "home", groupId: "g-bedroom", title: "Vytřídit šatník", priority: 1, type: "project", done: false,
+        subtasks: [
+          { id: uid(), title: "Vyndat všechno ze skříně", done: true },
+          { id: uid(), title: "Roztřídit na nechat / darovat / vyhodit", done: true },
+          { id: uid(), title: "Odvézt věci na charitu", done: false },
+          { id: uid(), title: "Uklidit zbytek zpět", done: false },
+        ] },
+      { id: uid(), areaId: "home", groupId: "g-bedroom", title: "Vyměnit povlečení", priority: 2, type: "recurring", everyDays: 14, nextDue: todayISO(), done: false },
+      { id: uid(), areaId: "home", groupId: "g-living", title: "Vysát a vytřít", priority: 2, type: "recurring", everyDays: 7, nextDue: todayISO(), done: false },
+      { id: uid(), areaId: "home", groupId: "g-bath", title: "Vyčistit vanu a umyvadlo", priority: 2, type: "recurring", everyDays: 3, nextDue: todayISO(), done: false },
+      { id: uid(), areaId: "sport", title: "Najít kurz lezení pro začátečníky", priority: 3, type: "single", done: false },
+      { id: uid(), areaId: "home", groupId: "g-kitchen", title: "Umýt linku a sporák", priority: 2, type: "recurring", everyDays: 3, nextDue: todayISO(), done: false },
+      { id: uid(), areaId: "home", groupId: "g-other", title: "Vyprat prádlo", priority: 2, type: "recurring", everyDays: 4, nextDue: todayISO(), done: false, followUp: "Pověsit prádlo\nVyžehlit prádlo" },
+      { id: uid(), areaId: "home", groupId: "g-hall", title: "Vytřídit skříň v předsíni", priority: 3, type: "single", done: false },
+      { id: uid(), areaId: "work", title: "Připravit podklady na poradu", priority: 2, type: "single", done: true, doneAt: iso(day(-1)) },
+      { id: uid(), areaId: "food", title: "Koupit ořechy a hummus", priority: 2, type: "single", done: true, doneAt: iso(day(-2)) },
+      { id: uid(), areaId: "home", title: "Zalít kytky", priority: 3, type: "single", done: true, doneAt: iso(day(-1)) },
+      { id: uid(), areaId: "sport", title: "Objednat nové tenisky", priority: 3, type: "single", done: true, doneAt: iso(day(-4)) },
+    ],
+    habits: [
+      { id: uid(), areaId: "sport", title: "Protažení", freq: { type: "daily" }, log: logDays([0,1,1,1,1,1,0,1,1]) },
+      { id: uid(), areaId: "sport", title: "Běh", freq: { type: "weekly", times: 3 }, log: logDays([0,1,0,0,1,0,0]) },
+      { id: uid(), areaId: "food", title: "Pít vodu", freq: { type: "daily" }, log: logDays([1,1,0,1,1,1,1]) },
+    ],
+    inbox: [
+      { id: uid(), text: "Zjistit ceny permanentky do posilovny", createdAt: iso(day(-1)) },
+      { id: uid(), text: "Dárek pro mámu k Vánocům", createdAt: iso(day(0)) },
+    ],
+    meta: { lastBackup: null, reviewWeekday: 0, cleanup1: true, cleanup2: true, cleanup3: true, cleanup4: true },
+  };
+}
+
+// Migrace: každá funkce převede data z verze N na N+1. Data uživatele se nikdy nemažou.
+const MIGRATIONS = {
+  // v1 -> v2: kategorie mohou mít podskupiny (např. místnosti). Nic se nemaže.
+  1: d => {
+    d.areas.forEach(a => { if (!Array.isArray(a.groups)) a.groups = []; });
+    if (d.demo) {
+      const home = d.areas.find(a => a.id === "home");
+      if (home && !home.groups.length) {
+        home.groups = [{ id: "g-living", name: "Obývák" }, { id: "g-kitchen", name: "Kuchyň" }, { id: "g-bedroom", name: "Ložnice" }];
+        d.tasks.forEach(x => { if (x.areaId === "home" && /povlečení|šatník/i.test(x.title)) x.groupId = "g-bedroom"; });
+      }
+    }
+    d.version = 2; return d;
+  },
+};
+function migrate(d) {
+  if (!d || typeof d !== "object" || typeof d.version !== "number") throw new Error("invalid");
+  let data = d;
+  while (data.version < DATA_VERSION) {
+    const step = MIGRATIONS[data.version];
+    if (!step) throw new Error("no-migration");
+    data = step(data);
+  }
+  if (!Array.isArray(data.areas) || !Array.isArray(data.tasks) || !Array.isArray(data.habits) || !Array.isArray(data.inbox)) throw new Error("invalid");
+  data.meta = data.meta || { lastBackup: null, reviewWeekday: 0 };
+  return data;
+}
+
+const storage = {
+  ok: true,
+  mem: {},
+  get(k) { try { return localStorage.getItem(k); } catch (e) { this.ok = false; return this.mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { this.ok = false; this.mem[k] = v; } },
+};
+
+let state;
+function load() {
+  const raw = storage.get(STORAGE_KEY);
+  if (raw) { try {
+    state = migrate(JSON.parse(raw));
+    cleanup1(); cleanup2(); cleanup3(); cleanup4();
+    // Jen u ukázkových dat: srovnat barvy oblastí s aktuálním vzhledem. Vlastní data se nemění.
+    if (state.demo) { const s = sampleData(); state.areas.forEach(a => { const m = s.areas.find(x => x.id === a.id); if (m) a.color = m.color; }); save(); }
+    return; } catch (e) { /* poškozená data necháme být, nepřepisujeme */ storage.set(STORAGE_KEY + ".corrupt", raw); } }
+  state = sampleData();
+  save();
+}
+function save() { storage.set(STORAGE_KEY, JSON.stringify(state)); }
+// Jednorázově na přání: odebrat oblasti Focení, Výlety, Jiné a návyk se svačinou. Předtím se uloží záloha.
+// Jednorázově na přání: kategorie Práce se jmenuje Freelance.
+// Jednorázově na přání: podskupiny Domácnosti. Stávající se zachovají podle názvu, úkoly z odebraných skončí v Ostatní.
+// Jednorázově na přání: vrátit Kuchyň do Domácnosti (před Ostatní) a přesunout do ní kuchyňské úkoly z Ostatní.
+function cleanup4() {
+  if (state.meta.cleanup4) return;
+  const home = state.areas.find(a => a.name.trim().toLowerCase() === "domácnost");
+  if (home) {
+    home.groups = home.groups || [];
+    let k = home.groups.find(g => g.name.toLowerCase() === "kuchyň");
+    if (!k) {
+      k = { id: uid(), name: "Kuchyň" };
+      const oi = home.groups.findIndex(g => g.name.toLowerCase() === "ostatní");
+      if (oi >= 0) home.groups.splice(oi, 0, k); else home.groups.push(k);
+    }
+    const other = home.groups.find(g => g.name.toLowerCase() === "ostatní");
+    state.tasks.forEach(x => {
+      if (x.areaId === home.id && (!x.groupId || (other && x.groupId === other.id)) && /kuchy|linku|linka|sporák|nádobí|myčk|lednic|trouba|troubu/i.test(x.title)) x.groupId = k.id;
+    });
+  }
+  state.meta.cleanup4 = true; save();
+}
+function cleanup3() {
+  if (state.meta.cleanup3) return;
+  const home = state.areas.find(a => a.name.trim().toLowerCase() === "domácnost");
+  if (home) {
+    const old = home.groups || [];
+    home.groups = ["Komora", "WC", "Koupelna", "Ložnice", "Chodba", "Obývák", "Ostatní"].map(n => old.find(g => g.name.toLowerCase() === n.toLowerCase()) || { id: uid(), name: n });
+    const keep = new Set(home.groups.map(g => g.id));
+    state.tasks.forEach(x => { if (x.areaId === home.id && x.groupId && !keep.has(x.groupId)) delete x.groupId; });
+  }
+  state.meta.cleanup3 = true; save();
+}
+function cleanup2() {
+  if (state.meta.cleanup2) return;
+  state.areas.forEach(a => { if (a.name.trim().toLowerCase() === "práce") a.name = "Freelance"; });
+  state.meta.cleanup2 = true; save();
+}
+function cleanup1() {
+  if (state.meta.cleanup1) return;
+  storage.set(STORAGE_KEY + ".before-cleanup1", JSON.stringify(state));
+  const drop = ["focení", "výlety", "jiné"];
+  const ids = state.areas.filter(a => drop.includes(a.name.trim().toLowerCase())).map(a => a.id);
+  state.areas = state.areas.filter(a => !ids.includes(a.id));
+  state.tasks = state.tasks.filter(x => !ids.includes(x.areaId));
+  state.habits = state.habits.filter(h => !ids.includes(h.areaId) && !/svačin/i.test(h.title));
+  state.meta.cleanup1 = true; save();
+}
+
+const prefs = (() => { try { return JSON.parse(storage.get(PREFS_KEY) || "{}"); } catch (e) { return {}; } })();
+function savePrefs() { storage.set(PREFS_KEY, JSON.stringify(prefs)); }
+let lang = prefs.lang || ((navigator.language || "cs").toLowerCase().startsWith("cs") ? "cs" : "en");
+const t = () => STRINGS[lang];
+
+/* ===================== LOGIKA ===================== */
+const areaById = id => state.areas.find(a => a.id === id);
+
+function weekStart(d = day()) { const x = new Date(d); const wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x; }
+function weekDaysISO() { const s = weekStart(); const today = todayISO(); const out = []; for (let i = 0; i < 7; i++) { const k = iso(day(i, s)); if (k > today) break; out.push(k); } return out; }
+
+function habitDoneToday(h) { return !!h.log[todayISO()]; }
+function habitStreak(h) {
+  let n = 0; let i = habitDoneToday(h) ? 0 : 1;
+  while (h.log[iso(day(-i))]) { n++; i++; }
+  return n;
+}
+function habitWeekCount(h) { return weekDaysISO().filter(k => h.log[k]).length; }
+function habitIsDueToday(h) { return h.freq.type === "daily" || habitDoneToday(h) || habitWeekCount(h) < h.freq.times; }
+function habitProgress(h) {
+  if (h.freq.type === "daily") return habitDoneToday(h) ? 1 : 0;
+  return Math.min(1, habitWeekCount(h) / h.freq.times);
+}
+
+function taskIsOpen(task) {
+  if (task.type === "recurring") return task.nextDue <= todayISO();
+  if (task.type === "project") return task.subtasks.some(s => !s.done);
+  return !task.done;
+}
+function isSkippedToday(task) { return task.skipDay === todayISO(); }
+function openTasks() {
+  return state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x)).sort((a, b) => a.priority - b.priority || (a.type === "project" ? -1 : 1));
+}
+function projectProgress(task) { const d = task.subtasks.filter(s => s.done).length; return { d, n: task.subtasks.length }; }
+
+function last7() {
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const k = iso(day(-i));
+    const tasks = state.tasks.filter(x => x.doneAt === k).length + state.tasks.reduce((s, x) => s + (x.subtasks || []).filter(st => st.doneAt === k).length, 0);
+    const habits = state.habits.filter(h => h.log[k]).length;
+    out.push({ k, d: day(-i), v: tasks + habits });
+  }
+  return out;
+}
+function weekStats() {
+  const days = weekDaysISO();
+  const tasksDone = state.tasks.filter(x => x.doneAt && days.includes(x.doneAt)).length;
+  let target = 0, got = 0;
+  state.habits.forEach(h => {
+    if (h.freq.type === "daily") { target += days.length; got += days.filter(k => h.log[k]).length; }
+    else { target += h.freq.times; got += Math.min(h.freq.times, habitWeekCount(h)); }
+  });
+  return { tasksDone, rate: target ? Math.round((got / target) * 100) : 0 };
+}
+function areaHabitDots(areaId) {
+  const hs = state.habits.filter(h => h.areaId === areaId);
+  return [6,5,4,3,2,1,0].map(i => hs.some(h => h.log[iso(day(-i))]));
+}
+
+// Akce (vrací funkci pro vrácení zpět)
+function toggleHabit(id) {
+  const h = state.habits.find(x => x.id === id); const k = todayISO();
+  const was = !!h.log[k];
+  if (was) delete h.log[k]; else h.log[k] = true;
+  save();
+  return () => { if (was) h.log[k] = true; else delete h.log[k]; save(); };
+}
+function completeTask(id) {
+  const task = state.tasks.find(x => x.id === id); const prev = JSON.stringify(task);
+  if (task.type === "recurring") { task.nextDue = iso(day(task.everyDays)); task.doneAt = todayISO(); }
+  else { task.done = !task.done; task.doneAt = task.done ? todayISO() : null; }
+  // Navazující úkol: po splnění se hned přidá nový úkol do stejné kategorie a podskupiny.
+  let follow = null;
+  const nowDone = task.type === "recurring" || task.done;
+  const chain = (task.followUp || "").split("\n").map(x => x.trim()).filter(Boolean);
+  if (nowDone && chain.length) {
+    follow = { id: uid(), areaId: task.areaId, title: chain[0], priority: task.priority || 2, type: "single", done: false, fromId: task.id };
+    if (chain.length > 1) follow.followUp = chain.slice(1).join("\n");
+    if (task.groupId) follow.groupId = task.groupId;
+    state.tasks.push(follow);
+  }
+  completeTask.lastFollow = follow;
+  save();
+  return () => { Object.assign(task, JSON.parse(prev)); if (follow) state.tasks = state.tasks.filter(x => x.id !== follow.id); save(); };
+}
+function toggleSubtask(taskId, subId) {
+  const task = state.tasks.find(x => x.id === taskId); const s = task.subtasks.find(x => x.id === subId);
+  const prev = { done: s.done, doneAt: s.doneAt };
+  s.done = !s.done; s.doneAt = s.done ? todayISO() : null;
+  save();
+  return () => { Object.assign(s, prev); save(); };
+}
+function addInbox(text) {
+  const item = { id: uid(), text, createdAt: todayISO() };
+  state.inbox.unshift(item); save();
+  return () => { state.inbox = state.inbox.filter(x => x.id !== item.id); save(); };
+}
+function sortInbox(id, areaId, priority) {
+  const idx = state.inbox.findIndex(x => x.id === id); const item = state.inbox[idx];
+  const task = { id: uid(), areaId, title: item.text, priority, type: "single", done: false };
+  state.inbox.splice(idx, 1); state.tasks.push(task); save();
+  return () => { state.tasks = state.tasks.filter(x => x.id !== task.id); state.inbox.splice(idx, 0, item); save(); };
+}
+function deleteInbox(id) {
+  const idx = state.inbox.findIndex(x => x.id === id); const item = state.inbox[idx];
+  state.inbox.splice(idx, 1); save();
+  return () => { state.inbox.splice(idx, 0, item); save(); };
+}
+const AREA_ICONS = ["sport", "work", "photo", "home", "trips", "food", "book", "heart", "star", "music", "other"];
+const PALETTE = ["#7342cb", "#3b7ff2", "#0ea5c6", "#12a877", "#5ea30d", "#e09a00", "#f0603a", "#e5487a"];
+const snapshot = () => JSON.stringify(state);
+const restore = snap => () => { state = JSON.parse(snap); save(); };
+function toggleHabitDay(id, k) {
+  const h = state.habits.find(x => x.id === id); const was = !!h.log[k];
+  if (was) delete h.log[k]; else h.log[k] = true;
+  save();
+  return () => { if (was) h.log[k] = true; else delete h.log[k]; save(); };
+}
+function habitCount(h, days) { let n = 0; for (let i = 0; i < days; i++) if (h.log[iso(day(-i))]) n++; return n; }
+function areaTasks(areaId) {
+  const mine = state.tasks.filter(x => x.areaId === areaId);
+  const active = mine.filter(x => x.type === "recurring" || taskIsOpen(x)).sort((a, b) => a.priority - b.priority);
+  const done = mine.filter(x => x.type !== "recurring" && !taskIsOpen(x)).sort((a, b) => (b.doneAt || "").localeCompare(a.doneAt || ""));
+  return { active, done };
+}
+function deleteArea(id) {
+  const snap = snapshot();
+  state.areas = state.areas.filter(a => a.id !== id);
+  state.tasks = state.tasks.filter(x => x.areaId !== id);
+  state.habits = state.habits.filter(h => h.areaId !== id);
+  save(); return restore(snap);
+}
+function skipToday(id) {
+  const task = state.tasks.find(x => x.id === id); const prev = task.skipDay;
+  task.skipDay = todayISO(); save();
+  return () => { if (prev) task.skipDay = prev; else delete task.skipDay; save(); };
+}
+function deleteTask(id) { const snap = snapshot(); state.tasks = state.tasks.filter(x => x.id !== id); save(); return restore(snap); }
+function deleteHabit(id) { const snap = snapshot(); state.habits = state.habits.filter(x => x.id !== id); save(); return restore(snap); }
+function startOwnData() {
+  state.tasks = []; state.habits = []; state.inbox = [];
+  state.areas.forEach(a => { a.direction = ""; a.context = ""; });
+  state.demo = false; save();
+}
+
+function exportBackup() {
+  state.meta.lastBackup = new Date().toISOString(); save();
+  return JSON.stringify({ app: "hub", exportedAt: state.meta.lastBackup, data: state }, null, 2);
+}
+function importBackup(text) {
+  const obj = JSON.parse(text);
+  const data = migrate(obj && obj.app === "hub" ? obj.data : obj);
+  state = data; save();
+}
+
+/* ===================== VZHLED (render) ===================== */
+const ICONS = {
+  sport: '<path d="M13 4a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M5 21l4-6 3 2 1-5 4 3"/><path d="M8 11l3-3 4 1 2 3"/>',
+  work: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+  photo: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  home: '<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>',
+  trips: '<path d="M3 20l6-10 4 6 3-4 5 8z"/><circle cx="17" cy="6" r="2"/>',
+  food: '<path d="M12 7c-3-3-8-1-8 4 0 5 4 10 8 9 4 1 8-4 8-9 0-5-5-7-8-4z"/><path d="M12 7c0-2 1-4 3-4"/>',
+  other: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  flame: '<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .5 2 1.5 3 2.5 3 0-3-1-5 0-8z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
+  layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+  repeat: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+  inbox: '<path d="M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 13h5l1 3h6l1-3h5"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  arrow: '<path d="M9 6l6 6-6 6"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>',
+  pencil: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  music: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  home2: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
+};
+const icon = (name, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let expanded = new Set();
+const expandedAreas = new Set();
+let archiveOpen = false;
+function view() {
+  const h = location.hash.slice(1);
+  if (h === "inbox" || h === "areas" || h === "habits") return { name: h };
+  if (h.startsWith("area-") && areaById(h.slice(5))) return { name: "area", id: h.slice(5) };
+  return { name: "home" };
+}
+function go(target) {
+  if (target) { if (location.hash !== "#" + target) location.hash = target; else render(); }
+  else { history.replaceState(null, "", location.pathname + location.search); render(); }
+}
+
+function renderHabit(h) {
+  const a = areaById(h.areaId); const p = habitProgress(h); const done = habitDoneToday(h);
+  const C = 2 * Math.PI * 18;
+  const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
+  return `<button class="habit glass ${done ? "is-done" : ""}" data-action="nav" data-view="habits" aria-label="${esc(h.title)}: ${sub}">
+    <div class="ring">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="18" fill="none" stroke-width="4"/>
+      <circle class="val" cx="22" cy="22" r="18" fill="none" stroke="${done ? "#fff" : a.color}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - p)}"/></svg>
+      <div class="mark" style="color:${done ? "#fff" : a.color}">${done ? icon("check") : icon(a.icon)}</div>
+    </div>
+    <div class="name">${esc(h.title)}</div>
+    <div class="sub">${h.freq.type === "daily" ? icon("flame") : icon("repeat")}${sub}</div>
+  </button>`;
+}
+
+// mode: "full" (pruh, oblast, priorita) | "grouped" (nic navíc) | "area" (jen priorita + úprava)
+function renderTask(task, mode = "full") {
+  if (mode === true) mode = "grouped";
+  const a = areaById(task.areaId);
+  const showStripe = mode === "full", showArea = mode === "full", showPrio = false, canEdit = mode === "area";
+  const prio = showPrio ? `<span class="pill p${task.priority}">${t().prio[task.priority - 1]}</span>` : "";
+  const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : "";
+  const stripe = showStripe ? `<i class="stripe" style="background:${a.color}"></i>` : "";
+  const skipBtn = mode === "grouped" ? `<button class="btn-skip" data-action="skip" data-id="${task.id}" aria-label="${t().skip}: ${esc(task.title)}">${t().skip}</button>` : "";
+  const skipTag = (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
+    + (mode === "area" && task.followUp ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
+  const editBtn = canEdit ? `<button class="icon-btn-plain" data-action="task-edit" data-id="${task.id}" aria-label="${t().editTask}: ${esc(task.title)}">${icon("pencil")}</button>` : "";
+  const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
+  if (task.type === "project") {
+    const { d, n } = projectProgress(task); const open = expanded.has(task.id);
+    return `<div class="row ${n && d === n ? "is-done" : ""}" data-row="${task.id}">
+      ${stripe}
+      <div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>
+      <div class="body">
+        <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
+        <div class="tags">${prio}${skipTag}${areaTag}<span>${t().project} · ${d}/${n}</span></div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? (d / n) * 100 : 0}%"></i></div>
+      </div>
+      ${skipBtn}${editBtn}
+      <button class="expand" data-action="expand" data-id="${task.id}" aria-expanded="${open}" aria-label="${t().showSteps}">${icon("chevron")}</button>
+    </div>
+    ${open ? `<div class="subtasks">${task.subtasks.map(st => `
+      <div class="subtask ${st.done ? "is-done" : ""}">
+        <button class="check" role="checkbox" aria-checked="${st.done}" data-action="sub" data-id="${task.id}" data-sub="${st.id}" aria-label="${esc(st.title)}"><span>${icon("check")}</span></button>
+        <span class="label">${esc(st.title)}</span>
+      </div>`).join("")}</div>` : ""}`;
+  }
+  let extra = "";
+  if (task.type === "recurring" && mode !== "grouped") {
+    const waiting = task.nextDue > todayISO();
+    extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextDue(fmtDay(task.nextDue)) : t().recurring(task.everyDays)}</span>`;
+  }
+  const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
+  return `<div class="row ${task.done ? "is-done" : ""}">
+    ${stripe}
+    <button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${task.type === "recurring" && checked ? "disabled" : ""}><span>${icon("check")}</span></button>
+    <div class="body">
+      <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
+      <div class="tags">${prio}${skipTag}${areaTag}${extra}</div>
+    </div>
+    ${skipBtn}${editBtn}
+  </div>`;
+}
+
+// Úkoly rozdělené podle podskupin kategorie (např. místností). extra = řádky navíc do „Ostatní“.
+function renderByGroups(area, items, mode, extra = "") {
+  const all = area.groups || [];
+  const known = new Set(all.map(g => g.id));
+  const otherG = all.find(g => g.name.trim().toLowerCase() === t().otherGroup.toLowerCase());
+  const inGroup = (x, g) => x.groupId === g.id || (otherG && g.id === otherG.id && (!x.groupId || !known.has(x.groupId)));
+  const groups = all.filter(g => items.some(x => inGroup(x, g)) || (otherG && g.id === otherG.id && extra));
+  if (!groups.length) return items.map(x => renderTask(x, mode)).join("") + extra;
+  const rest = otherG ? [] : items.filter(x => !x.groupId || !known.has(x.groupId));
+  return groups.map(g => `<div class="subhead">${esc(g.name)}</div>${items.filter(x => inGroup(x, g)).map(x => renderTask(x, mode)).join("")}${otherG && g.id === otherG.id ? extra : ""}`).join("")
+    + (!otherG && (rest.length || extra) ? `<div class="subhead">${t().otherGroup}</div>${rest.map(x => renderTask(x, mode)).join("")}${extra}` : "");
+}
+
+function renderHabitRow(h) {
+  const done = habitDoneToday(h);
+  const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
+  return `<div class="row ${done ? "is-done" : ""}">
+    <button class="check" role="checkbox" aria-checked="${done}" data-action="habit" data-id="${h.id}" aria-label="${esc(h.title)}"><span>${icon("check")}</span></button>
+    <div class="body">
+      <div class="title">${esc(h.title)}</div>
+      <div class="tags"><span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${t().habitTag} · ${sub}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderToday(tasks) {
+  const habits = state.habits.filter(habitIsDueToday);
+  if (!tasks.length && !habits.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
+  const groups = state.areas.map(a => ({ a, items: tasks.filter(x => x.areaId === a.id), habits: habits.filter(h => h.areaId === a.id) }))
+    .filter(g => g.items.length || g.habits.length)
+    .sort((x, y) => x.a.name.localeCompare(y.a.name, lang));
+  return `<div class="groups">${groups.map(g => {
+    const { a, items } = g; const open = expandedAreas.has(a.id);
+    const left = items.length + g.habits.filter(h => !habitDoneToday(h)).length;
+    return `<div class="group glass ${open ? "is-open" : ""}" style="--area-c:${a.color}">
+      <button class="group-head" data-action="expand-area" data-id="${a.id}" aria-expanded="${open}">
+        <span class="ico">${icon(a.icon)}</span>
+        <span class="g-body g-row"><span class="g-name">${esc(a.name)}</span><span class="g-count ${left ? "" : "zero"}" aria-label="${t().openTasks(left)}">${left ? left : icon("check")}</span></span>
+        <span class="g-chev">${icon("chevron")}</span>
+      </button>
+      ${open ? `<div class="group-list">${renderByGroups(a, items, "grouped", g.habits.map(renderHabitRow).join(""))}</div>` : ""}
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function renderArea(a) {
+  const n = state.tasks.filter(x => x.areaId === a.id && taskIsOpen(x)).length;
+  const dots = areaHabitDots(a.id);
+  return `<button class="area glass" style="--area-c:${a.color}" data-action="area" data-id="${a.id}">
+    <div class="ico">${icon(a.icon)}</div>
+    <div>
+      <div class="name">${esc(a.name)}</div>
+      <div class="dir">${esc(a.direction)}</div>
+    </div>
+    <div class="foot"><span>${t().openTasks(n)}</span><span class="dots" aria-label="${t().habitWeek}">${dots.map(o => `<i class="${o ? "on" : ""}"></i>`).join("")}</span></div>
+  </button>`;
+}
+
+function renderChart() {
+  const data = last7(); const max = Math.max(4, ...data.map(d => d.v));
+  const W = 320, H = 110, padB = 18, padT = 14, bw = 26, gap = (W - bw * 7) / 6;
+  const fmt = new Intl.DateTimeFormat(lang, { weekday: "short" });
+  const grid = [0.5, 1].map(f => { const y = padT + (H - padB - padT) * (1 - f); return `<line class="grid" x1="0" x2="${W}" y1="${y}" y2="${y}"/>`; }).join("");
+  const bars = data.map((d, i) => {
+    const h = Math.max(3, (H - padB - padT) * (d.v / max)); const x = i * (bw + gap); const y = H - padB - h; const isToday = i === 6;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="7" ${isToday ? 'fill="url(#gt)"' : 'class="bar"'}/>
+      ${isToday ? `<text x="${x + bw / 2}" y="${y - 4}" text-anchor="middle" class="today-l">${d.v}</text>` : ""}
+      <text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle" class="${isToday ? "today-l" : ""}">${fmt.format(d.d).replace(".", "")}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t().chartLabel}">
+    <defs><linearGradient id="gt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8455d6"/><stop offset="1" stop-color="#7342cb"/></linearGradient></defs>
+    ${grid}${bars}</svg>`;
+}
+
+let lastViewKey = null;
+function topBlock(small, big, opts = {}) {
+  const left = opts.back ? `<button class="icon-btn icon-btn-bare" data-action="nav" data-view="${opts.back}" aria-label="${t().back}">${icon("back")}</button>` : "";
+  const right = opts.right || `<button class="icon-btn" data-action="settings" aria-label="${t().settingsLabel}">${icon("gear")}</button>`;
+  return `<header class="top">${left}
+    <div class="top-txt"><div class="greet">${esc(small)}</div><h1>${esc(big)}</h1>
+      ${state.demo ? `<span class="badge-demo">${t().demo}</span>` : ""}</div>
+    ${right}</header>`;
+}
+function captureBlock(isInbox) {
+  return `<form class="capture" id="capture" autocomplete="off">
+      <input id="capture-input" name="capture" type="text" placeholder="${t().capturePh}" aria-label="${t().capturePh}">
+      <button class="btn-accent" type="submit" aria-label="${t().captureAdd}">${icon("plus")}</button>
+    </form>
+    <div class="capture-meta">${isInbox ? `<span>${t().inbox(state.inbox.length)}</span>` : `<button class="link-u" data-action="nav" data-view="inbox">${t().inbox(state.inbox.length)}</button>`}</div>`;
+}
+
+function renderHomeBody() {
+  const now = new Date();
+  const habits = state.habits.filter(habitIsDueToday);
+  const doneCount = habits.filter(habitDoneToday).length;
+  const ws = weekStats();
+  const reviewDay = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(day(((state.meta.reviewWeekday ?? 0) - now.getDay() + 7) % 7));
+  return `
+    <section class="section" aria-labelledby="h-today">
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
+      ${renderToday(openTasks())}
+    </section>
+
+    ${canUse("stats") ? `<section class="section" aria-labelledby="h-week">
+      <div class="section-head"><h2 id="h-week">${t().week}</h2></div>
+      <div class="week glass">
+        <div class="kpis">
+          <div class="kpi"><div class="label">${t().tasksDone}</div><div class="num">${ws.tasksDone}</div></div>
+          <div class="kpi"><div class="label">${t().habitRate}</div><div class="num">${ws.rate}<small>%</small></div></div>
+        </div>
+        <div class="chart">${renderChart()}</div>
+        ${canUse("weeklyReview") ? `<div class="review">
+          ${icon("repeat")}
+          <div class="txt"><b>${t().review}</b><span>${t().reviewWhen(reviewDay)}</span></div>
+          <button class="btn-ghost" data-action="soon">${t().reviewStart}</button>
+        </div>` : ""}
+      </div>
+    </section>` : ""}
+
+    <section class="section" aria-labelledby="h-habits">
+      <div class="section-head"><h2 id="h-habits">${t().habitsToday}</h2>${habits.length ? `<span class="meta">${t().habitsMeta(doneCount, habits.length)}</span>` : ""}</div>
+      ${habits.length ? `<p class="lead">${t().habitsHint}</p><div class="habits">${habits.map(renderHabit).join("")}</div>`
+        : `<div class="list glass"><div class="empty">${t().habitsEmpty}<br><button class="btn-sort" style="margin-top:12px" data-action="habit-new">${t().addHabit}</button></div></div>`}
+    </section>`;
+}
+
+function renderInboxBody() {
+  const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
+  return `
+    <section class="section" aria-labelledby="h-inbox">
+      <p class="lead">${t().inboxLead}</p>
+      <div class="list glass" id="h-inbox">${state.inbox.length ? state.inbox.map(it => `
+        <div class="row inbox-row">
+          <div class="body">
+            <div class="title">${esc(it.text)}</div>
+            <div class="tags">${t().writtenOn(fmtDay(it.createdAt))}</div>
+          </div>
+          <button class="icon-btn-plain" data-action="inbox-delete" data-id="${it.id}" aria-label="${t().deleteLabel}: ${esc(it.text)}">${icon("trash")}</button>
+          <button class="btn-sort" data-action="inbox-sort" data-id="${it.id}">${t().sortCta}</button>
+        </div>`).join("") : `<div class="empty">${t().inboxEmpty}</div>`}
+      </div>
+    </section>`;
+}
+
+function renderAreasBody() {
+  return `
+    <section class="section">
+      <p class="lead">${t().areasLead}</p>
+      <div class="areas">${state.areas.map(renderArea).join("")}
+        <button class="area add-tile" data-action="area-new">${icon("plus")}<span>${t().addArea}</span></button>
+      </div>
+    </section>`;
+}
+
+function renderAreaBody(a) {
+  const { active, done } = areaTasks(a.id);
+  const habits = state.habits.filter(h => h.areaId === a.id);
+  return `
+    <section class="section">
+      <div class="block dir-block" style="--area-c:${a.color}">
+        <h4>${t().direction}</h4>
+        <p class="${a.direction ? "" : "note"}">${a.direction ? esc(a.direction) : t().noDirection}</p>
+        ${a.context ? `<h4 style="margin-top:var(--sp-2)">${t().context}</h4><p>${esc(a.context)}</p>` : ""}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h-a-tasks">
+      <div class="section-head"><h2 id="h-a-tasks">${t().tasks}</h2>
+        <button class="btn-sort" data-action="task-new" data-area="${a.id}">${t().add}</button></div>
+      <div class="list glass">${active.length ? renderByGroups(a, active, "area") : `<div class="empty">${t().noAreaTasks}</div>`}</div>
+      <button class="link-muted" data-action="groups-edit" data-id="${a.id}">${icon("pencil")}${(a.groups || []).length ? t().editGroups : t().addGroups}</button>
+    </section>
+
+    <section class="section" aria-labelledby="h-a-habits">
+      <div class="section-head"><h2 id="h-a-habits">${t().habits}</h2>
+        <button class="btn-sort" data-action="habit-new" data-area="${a.id}">${t().add}</button></div>
+      ${habits.length ? `<div class="hcards">${habits.map(h => renderHabitCard(h, false)).join("")}</div>` : `<div class="list glass"><div class="empty">${t().noHabits}</div></div>`}
+    </section>
+
+    <section class="section">
+      <div class="group glass ${archiveOpen ? "is-open" : ""}" style="--area-c:var(--c-good)">
+        <button class="group-head" data-action="archive" aria-expanded="${archiveOpen}">
+          <span class="ico">${icon("check")}</span>
+          <span class="g-body"><span class="g-name">${t().archive(done.length)}</span></span>
+          <span class="g-chev">${icon("chevron")}</span>
+        </button>
+        ${archiveOpen ? `<div class="group-list">${done.length ? done.map(x => renderTask(x, "area")).join("") : `<div class="empty">${t().archiveEmpty}</div>`}</div>` : ""}
+      </div>
+    </section>`;
+}
+
+function renderHabitCard(h, showArea = true) {
+  const a = areaById(h.areaId);
+  const fmtW = new Intl.DateTimeFormat(lang, { weekday: "short" });
+  const fmtL = new Intl.DateTimeFormat(lang, { weekday: "long", day: "numeric", month: "long" });
+  const days = [6, 5, 4, 3, 2, 1, 0].map(i => day(-i));
+  const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
+  return `<div class="hcard glass" style="--area-c:${a.color}">
+    <div class="hc-head">
+      <span class="ico">${icon(a.icon)}</span>
+      <div class="hc-txt"><div class="hc-name">${esc(h.title)}</div>
+        <div class="hc-meta">${showArea ? `${esc(a.name)} · ` : ""}${h.freq.type === "daily" ? t().freqDaily : t().weekly(habitWeekCount(h), h.freq.times)}</div></div>
+      <button class="icon-btn-plain" data-action="habit-edit" data-id="${h.id}" aria-label="${t().editHabit}: ${esc(h.title)}">${icon("pencil")}</button>
+    </div>
+    <div class="hc-days">${days.map((d, i) => { const k = iso(d); const on = !!h.log[k];
+      return `<button class="hc-day ${on ? "on" : ""} ${i === 6 ? "today" : ""}" data-action="habit-day" data-id="${h.id}" data-day="${k}" aria-pressed="${on}" aria-label="${esc(h.title)}: ${fmtL.format(d)}">
+        <span class="d-l">${fmtW.format(d).replace(".", "")}</span><span class="d-c">${on ? icon("check") : d.getDate()}</span></button>`; }).join("")}</div>
+    <div class="hc-foot"><span>${h.freq.type === "daily" ? icon("flame") : icon("repeat")}${sub}</span><span>${t().last30(habitCount(h, 30))}</span></div>
+  </div>`;
+}
+
+function renderHabitsBody() {
+  return `
+    <section class="section">
+      <p class="lead">${t().habitsLead}</p>
+      ${state.habits.length ? `<div class="hcards">${state.habits.map(h => renderHabitCard(h)).join("")}</div>` : `<div class="list glass"><div class="empty">${t().habitsEmpty}</div></div>`}
+      <button class="btn-accent btn-wide" data-action="habit-new">${icon("plus")}${t().addHabit}</button>
+    </section>`;
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  const v = view(); const key = v.name + (v.id || "");
+  const now = new Date(); const hr = now.getHours();
+  const greet = t().greet[hr < 11 ? 0 : hr < 18 ? 1 : 2];
+  const date = new Intl.DateTimeFormat(lang, { weekday: "long", day: "numeric", month: "long" }).format(now).replace(/^./, c => c.toUpperCase());
+
+  let top, body, capture = "";
+  if (v.name === "inbox") { top = topBlock(date, t().inboxTitle); capture = captureBlock(true); body = renderInboxBody(); }
+  else if (v.name === "areas") { top = topBlock(date, t().areasTitle); body = renderAreasBody(); }
+  else if (v.name === "area") {
+    const a = areaById(v.id);
+    top = topBlock(t().areaLabel, a.name, { back: "areas", right: `<button class="icon-btn" data-action="area-edit" data-id="${a.id}" aria-label="${t().editArea}">${icon("pencil")}</button>` });
+    body = renderAreaBody(a);
+  }
+  else if (v.name === "habits") { top = topBlock(date, t().habitsTitle); body = renderHabitsBody(); }
+  else { top = topBlock(greet, date); capture = captureBlock(false); body = renderHomeBody(); }
+
+  document.getElementById("app").innerHTML = `<section class="hero">${top}${capture}</section>` + body;
+  if (key !== lastViewKey) {
+    lastViewKey = key; archiveOpen = false;
+    const sc = document.querySelector(".scroller"); if (sc && sc.scrollTo) sc.scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }
+
+  const cur = v.name === "area" ? "areas" : v.name;
+  const tabs = [["home", "home2"], ["areas", "grid"], ["habits", "repeat"], ["inbox", "inbox"]];
+  document.getElementById("tabbar").innerHTML = tabs.map(([k, ic]) => `
+    <button class="tab" ${cur === k ? 'aria-current="page"' : ""} data-action="nav" data-view="${k}">
+      ${icon(ic)}${k === "inbox" && state.inbox.length ? `<span class="badge">${state.inbox.length}</span>` : ""}<span>${t().tabs[k]}</span>
+    </button>`).join("");
+  document.getElementById("tabbar").setAttribute("aria-label", t().tabs.home);
+
+  if (!storage.ok) toast(t().storageOff);
+}
+
+/* ----- Sheet: detail oblasti a nastavení ----- */
+const sheetEl = document.getElementById("sheet");
+function openSheet(html) {
+  sheetEl.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grabber"></div>${html}</div>`;
+  sheetEl.hidden = false;
+  const f = sheetEl.querySelector("[autofocus]") || sheetEl.querySelector("button"); if (f) f.focus();
+}
+function closeSheet() { sheetEl.hidden = true; sheetEl.innerHTML = ""; }
+
+function areaPicker(name, selected) {
+  if (!state.areas.length) return `<p class="note">${t().needArea}</p>`;
+  return `<div class="area-pick" role="radiogroup">${state.areas.map(a => `
+    <label class="pick" style="--area-c:${a.color}"><input type="radio" name="${name}" value="${a.id}" ${selected === a.id ? "checked" : ""}>
+      <span class="ico">${icon(a.icon)}</span><span>${esc(a.name)}</span></label>`).join("")}</div>`;
+}
+function segRadios(name, options, selected) {
+  return `<div class="seg" role="radiogroup">${options.map(([val, label]) => `
+    <label><input type="radio" name="${name}" value="${val}" ${String(selected) === String(val) ? "checked" : ""}><span>${label}</span></label>`).join("")}</div>`;
+}
+function sheetHead(title) { return `<div class="sheet-head"><h3>${title}</h3><button class="btn-x" type="button" data-action="close" aria-label="${t().close}">${icon("x")}</button></div>`; }
+
+function openTaskForm(id, presetArea) {
+  delete sheetEl.dataset.area;
+  const task = id ? state.tasks.find(x => x.id === id) : null;
+  const areaId = task ? task.areaId : (presetArea || (state.areas[0] && state.areas[0].id));
+  const type = task ? task.type : "single";
+  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${type}" novalidate>
+    ${sheetHead(task ? t().taskDetail : t().newTask)}
+    <label class="field"><span class="flabel">${t().taskTitle}</span>
+      <input class="input" name="title" type="text" value="${task ? esc(task.title) : ""}" ${task ? "" : "autofocus"} autocomplete="off"></label>
+    <div class="field"><span class="flabel">${t().areaLabel}</span>${areaPicker("area", areaId)}</div>
+    ${state.areas.filter(ar => (ar.groups || []).length).map(ar => `
+      <div class="field f-group" data-for-area="${ar.id}" ${ar.id === areaId ? "" : "hidden"}><span class="flabel">${t().group}</span>
+        <div class="area-pick">${[["", t().noGroup], ...ar.groups.map(g => [g.id, g.name])].map(([gid, gname]) => `
+          <label class="pick pick-plain"><input type="radio" name="group_${ar.id}" value="${gid}" ${(task && task.areaId === ar.id ? (task.groupId || "") : "") === gid ? "checked" : ""}><span>${esc(gname)}</span></label>`).join("")}</div>
+      </div>`).join("")}
+    <input type="hidden" name="priority" value="${task ? task.priority : 2}">
+    <div class="field field-inline"><span class="flabel">${t().type}</span>${segRadios("type", [["single", t().types[0]], ["project", t().types[1]], ["recurring", t().types[2]]], type)}</div>
+    <label class="field f-project"><span class="flabel">${t().steps}</span>
+      <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
+    <label class="field f-recurring"><span class="flabel">${t().everyDays}</span>
+      <input class="input" name="every" type="number" inputmode="numeric" min="1" max="365" value="${task && task.everyDays ? task.everyDays : 7}">
+      <span class="note">${t().everyHint}</span></label>
+    <label class="field"><span class="flabel">${t().followUp}</span>
+      <textarea class="input" name="followUp" rows="3" placeholder="${t().followUpPh}">${task && task.followUp ? esc(task.followUp) : ""}</textarea>
+      <span class="note">${t().followUpHint}</span></label>
+    <button class="btn-accent btn-wide" type="submit">${t().save}</button>
+    ${task ? `<button class="btn danger btn-wide-ghost" type="button" data-action="task-delete" data-id="${task.id}">${t().deleteTask}</button>` : ""}
+  </form>`);
+}
+
+function openHabitForm(id, presetArea) {
+  delete sheetEl.dataset.area;
+  const h = id ? state.habits.find(x => x.id === id) : null;
+  const areaId = h ? h.areaId : (presetArea || (state.areas[0] && state.areas[0].id));
+  const ftype = h ? h.freq.type : "daily";
+  openSheet(`<form class="form" data-form="habit" data-id="${id || ""}" data-freq="${ftype}" novalidate>
+    ${sheetHead(h ? t().editHabit : t().addHabit)}
+    <label class="field"><span class="flabel">${t().habitName}</span>
+      <input class="input" name="title" type="text" value="${h ? esc(h.title) : ""}" ${h ? "" : "autofocus"} autocomplete="off"></label>
+    <div class="field"><span class="flabel">${t().areaLabel}</span>${areaPicker("area", areaId)}</div>
+    <div class="field"><span class="flabel">${t().freq}</span>${segRadios("freq", [["daily", t().freqDaily], ["weekly", t().freqWeekly]], ftype)}</div>
+    <div class="field f-weekly"><span class="flabel">${t().timesPerWeek}</span>${segRadios("times", [1, 2, 3, 4, 5, 6].map(n => [n, n]), h && h.freq.times ? h.freq.times : 3)}</div>
+    <button class="btn-accent btn-wide" type="submit">${t().save}</button>
+    ${h ? `<button class="btn danger btn-wide-ghost" type="button" data-action="habit-delete" data-id="${h.id}">${t().deleteHabit}</button>` : ""}
+  </form>`);
+}
+
+function gchipsHtml(names) {
+  return names.map(n => `<span class="gchip">${esc(n)}<button type="button" data-action="gchip-del" data-name="${esc(n)}" aria-label="${t().deleteLabel}: ${esc(n)}">${icon("x")}</button></span>`).join("");
+}
+function gchipsUpdate(form, names) {
+  form.querySelector('[name="groups"]').value = names.join("\n");
+  form.querySelector("#gchips").innerHTML = gchipsHtml(names);
+}
+function gchipsAdd(form) {
+  const inp = form.querySelector("#gchip-input"); const v = inp.value.trim(); if (!v) { inp.focus(); return; }
+  const names = form.querySelector('[name="groups"]').value.split("\n").filter(Boolean);
+  if (!names.includes(v)) names.push(v);
+  gchipsUpdate(form, names); inp.value = ""; inp.focus();
+}
+
+function openAreaForm(id) {
+  delete sheetEl.dataset.area;
+  const a = id ? areaById(id) : null;
+  const ic = a ? a.icon : "other"; const col = a ? a.color : PALETTE[0];
+  openSheet(`<form class="form" data-form="area" data-id="${id || ""}" novalidate>
+    ${sheetHead(a ? t().editArea : t().addArea)}
+    <label class="field"><span class="flabel">${t().areaName}</span>
+      <input class="input" name="name" type="text" value="${a ? esc(a.name) : ""}" ${a ? "" : "autofocus"} autocomplete="off"></label>
+    <div class="field"><span class="flabel">${t().areaIcon}</span>
+      <div class="chips">${AREA_ICONS.map(n => `<label class="chip-ico"><input type="radio" name="icon" value="${n}" ${n === ic ? "checked" : ""}><span>${icon(n)}</span></label>`).join("")}</div></div>
+    <div class="field"><span class="flabel">${t().areaColor}</span>
+      <div class="chips">${PALETTE.map(c => `<label class="chip-col"><input type="radio" name="color" value="${c}" ${c === col ? "checked" : ""}><span style="background:${c}"></span></label>`).join("")}</div></div>
+    <div class="field"><span class="flabel">${t().groups}</span>
+      <input type="hidden" name="groups" value="${a && a.groups ? esc(a.groups.map(g => g.name).join("\n")) : ""}">
+      <div class="gchips" id="gchips">${gchipsHtml(a && a.groups ? a.groups.map(g => g.name) : [])}</div>
+      <div class="gadd">
+        <input class="input" id="gchip-input" type="text" placeholder="${t().groupAddPh}" autocomplete="off" aria-label="${t().groupAddPh}">
+        <button class="btn-accent" type="button" data-action="gchip-add" aria-label="${t().groupAdd}">${icon("plus")}</button>
+      </div>
+      <span class="note">${t().groupsHint}</span></div>
+    <label class="field"><span class="flabel">${t().direction}</span>
+      <textarea class="input" name="direction" rows="3" placeholder="${t().directionPh}">${a ? esc(a.direction || "") : ""}</textarea></label>
+    <label class="field"><span class="flabel">${t().context}</span>
+      <textarea class="input" name="context" rows="3" placeholder="${t().contextPh}">${a ? esc(a.context || "") : ""}</textarea></label>
+    <button class="btn-accent btn-wide" type="submit">${t().save}</button>
+    ${a ? `<button class="btn danger btn-wide-ghost" type="button" data-action="area-delete" data-id="${a.id}">${t().deleteArea}</button>` : ""}
+  </form>`);
+}
+
+function submitForm(form) {
+  const f = new FormData(form); const id = form.dataset.id;
+  const title = (f.get("title") || f.get("name") || "").toString().trim();
+  if (!title) { toast(t().required); const inp = form.querySelector('[name="title"],[name="name"]'); if (inp) inp.focus(); return; }
+  if (form.dataset.form !== "area" && !f.get("area")) { toast(t().needArea); return; }
+  const snap = snapshot();
+  if (form.dataset.form === "task") {
+    const type = f.get("type"); const priority = +f.get("priority") || 2;
+    let task = id ? state.tasks.find(x => x.id === id) : null;
+    if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
+    Object.assign(task, { title, areaId: f.get("area"), priority, type });
+    const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp;
+    const gsel = (f.get("group_" + task.areaId) || "").toString(); const ar = areaById(task.areaId);
+    if (gsel && ar && (ar.groups || []).some(g => g.id === gsel)) task.groupId = gsel; else delete task.groupId;
+    if (type === "project") {
+      const old = task.subtasks || [];
+      const lines = f.get("steps").toString().split("\n").map(x => x.trim()).filter(Boolean);
+      task.subtasks = lines.map(l => { const m = old.find(o => o.title === l); return m || { id: uid(), title: l, done: false }; });
+      delete task.everyDays; delete task.nextDue;
+    } else if (type === "recurring") {
+      task.everyDays = Math.max(1, Math.min(365, +f.get("every") || 7));
+      if (!task.nextDue) task.nextDue = todayISO();
+      task.done = false; delete task.subtasks;
+    } else { delete task.subtasks; delete task.everyDays; delete task.nextDue; }
+  } else if (form.dataset.form === "habit") {
+    let h = id ? state.habits.find(x => x.id === id) : null;
+    if (!h) { h = { id: uid(), log: {} }; state.habits.push(h); }
+    h.title = title; h.areaId = f.get("area");
+    h.freq = f.get("freq") === "weekly" ? { type: "weekly", times: +f.get("times") || 3 } : { type: "daily" };
+  } else if (form.dataset.form === "area") {
+    let a = id ? areaById(id) : null; const isNew = !a;
+    if (!a) { a = { id: uid() }; state.areas.push(a); }
+    Object.assign(a, { name: title, icon: f.get("icon") || "other", color: f.get("color") || PALETTE[0],
+      direction: f.get("direction").toString().trim(), context: f.get("context").toString().trim() });
+    const oldG = a.groups || [];
+    const names = (f.get("groups") || "").toString().split("\n").map(x => x.trim()).filter(Boolean);
+    a.groups = [...new Set(names)].map(n => oldG.find(g => g.name === n) || { id: uid(), name: n });
+    const keep = new Set(a.groups.map(g => g.id));
+    state.tasks.forEach(x => { if (x.areaId === a.id && x.groupId && !keep.has(x.groupId)) delete x.groupId; });
+    save(); closeSheet();
+    if (isNew) go("area-" + a.id); else render();
+    toast(t().saved, restore(snap));
+    return;
+  }
+  save(); closeSheet(); render(); toast(t().saved, restore(snap));
+}
+
+let sortChoice = { id: null, areaId: null, priority: 2 };
+function openSort(id) {
+  if (sortChoice.id !== id) sortChoice = { id, areaId: null, priority: 2 };
+  delete sheetEl.dataset.area;
+  const item = state.inbox.find(x => x.id === id); if (!item) return;
+  openSheet(`
+    <div class="sheet-head"><h3>${t().sortTitle}</h3><button class="btn-x" type="button" data-action="close" aria-label="${t().close}">${icon("x")}</button></div>
+    <div class="block"><p style="font-weight:700">${esc(item.text)}</p></div>
+    ${state.areas.length ? "" : `<p class="note">${t().needArea}</p>`}
+    <div class="area-pick" role="radiogroup" aria-label="${t().areas}">${state.areas.map(a => `
+      <button class="pick" role="radio" aria-checked="${sortChoice.areaId === a.id}" data-action="sort-area" data-area="${a.id}" style="--area-c:${a.color}">
+        <span class="ico">${icon(a.icon)}</span><span>${esc(a.name)}</span>
+      </button>`).join("")}</div>
+    <button class="btn-accent btn-wide" data-action="sort-confirm" ${sortChoice.areaId ? "" : "disabled"}>${t().sortCta}</button>`);
+}
+
+function openSettings() {
+  delete sheetEl.dataset.area;
+  const lb = state.meta.lastBackup ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup)) : t().never;
+  openSheet(`
+    <div class="sheet-head"><h3>${t().settings}</h3><button class="btn-x" type="button" data-action="close" aria-label="${t().close}">${icon("x")}</button></div>
+    <div class="block"><h4>${t().language}</h4>
+      <div class="seg" role="group" aria-label="${t().language}">
+        <button data-action="lang" data-lang="cs" aria-pressed="${lang === "cs"}">Čeština</button>
+        <button data-action="lang" data-lang="en" aria-pressed="${lang === "en"}">English</button>
+      </div>
+    </div>
+    <div class="block"><h4>${t().backup}</h4>
+      <p class="note">${t().backupWhy}</p>
+      <p><b>${t().lastBackup}:</b> <span id="lb">${lb}</span></p>
+      <div class="btn-row">
+        <button class="btn" data-action="copy">${t().copyBackup}</button>
+        <label class="btn" for="import-file" style="display:inline-flex;align-items:center;cursor:pointer">${t().importBackup}</label>
+        <input id="import-file" type="file" accept="application/json,.json,.txt" hidden>
+      </div>
+      <textarea class="dump" id="dump" readonly hidden aria-label="${t().backup}"></textarea>
+    </div>
+    ${state.demo ? `<div class="block"><h4>${t().startOwn}</h4><p class="note">${t().startOwnNote}</p>
+      <div class="btn-row"><button class="btn" data-action="start-own">${t().startOwn}</button></div></div>` : ""}
+    <div class="block">
+      <div class="btn-row"><button class="btn danger" data-action="reset">${t().resetDemo}</button></div>
+      <p class="note">${t().version(APP_VERSION)}</p>
+    </div>`);
+  document.getElementById("import-file").addEventListener("change", async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try { importBackup(await file.text()); closeSheet(); render(); toast(t().importOk); }
+    catch (err) { toast(t().importBad); }
+  });
+}
+
+/* ----- Dialog a toast ----- */
+const dialogEl = document.getElementById("dialog");
+function confirmDialog(text, okLabel, onOk) {
+  dialogEl.innerHTML = `<div class="box"><p>${text}</p><div class="btn-row" style="justify-content:flex-end">
+    <button class="btn" data-d="cancel">${t().cancel}</button><button class="btn danger" data-d="ok">${okLabel}</button></div></div>`;
+  dialogEl.hidden = false; dialogEl.querySelector('[data-d="cancel"]').focus();
+  dialogEl.onclick = e => { const b = e.target.closest("[data-d]"); if (!b && e.target !== dialogEl) return; dialogEl.hidden = true; if (b && b.dataset.d === "ok") onOk(); };
+}
+const toastEl = document.getElementById("toast"); let toastTimer;
+function toast(text, undoFn) {
+  clearTimeout(toastTimer);
+  toastEl.innerHTML = `<span>${text}</span>${undoFn ? `<button data-t="undo">${t().undo}</button>` : ""}`;
+  toastEl.hidden = false;
+  toastEl.onclick = e => { if (e.target.closest('[data-t="undo"]')) { undoFn(); rerender(); toast(t().undone); } };
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, undoFn ? 5000 : 3000);
+}
+function rerender() { render(); }
+
+/* ----- Události ----- */
+document.addEventListener("click", async e => {
+  const el = e.target.closest("[data-action]"); if (!el) { if (e.target === sheetEl) closeSheet(); return; }
+  const id = el.dataset.id;
+  switch (el.dataset.action) {
+    case "habit": { const u = toggleHabit(id); rerender(); if (state.habits.find(h => h.id === id).log[todayISO()]) toast(t().done, u); break; }
+    case "task": { const u = completeTask(id); rerender(); const f = completeTask.lastFollow; toast(f ? t().followAdded(f.title) : t().done, u); break; }
+    case "sub": { const u = toggleSubtask(id, el.dataset.sub); rerender(); toast(t().done, u); break; }
+    case "expand": expanded.has(id) ? expanded.delete(id) : expanded.add(id); rerender(); break;
+    case "expand-area": expandedAreas.has(id) ? expandedAreas.delete(id) : expandedAreas.add(id); rerender(); break;
+    case "area": go("area-" + id); break;
+    case "area-new": openAreaForm(); break;
+    case "area-edit": openAreaForm(id); break;
+    case "gchip-add": gchipsAdd(el.closest("form")); break;
+    case "gchip-del": { const form = el.closest("form"); const names = form.querySelector('[name="groups"]').value.split("\n").filter(Boolean).filter(n => n !== el.dataset.name); gchipsUpdate(form, names); break; }
+    case "groups-edit": { openAreaForm(id); const g = sheetEl.querySelector("#gchip-input"); if (g) { g.scrollIntoView({ block: "center" }); g.focus(); } break; }
+    case "area-delete": {
+      const a = areaById(id); const n = state.tasks.filter(x => x.areaId === id).length + state.habits.filter(h => h.areaId === id).length;
+      confirmDialog(esc(t().deleteAreaConfirm(a.name, n)), t().deleteLabel, () => { const u = deleteArea(id); closeSheet(); go("areas"); toast(t().deletedArea, () => { u(); }); });
+      break;
+    }
+    case "task-new": openTaskForm(null, el.dataset.area); break;
+    case "task-edit": openTaskForm(id); break;
+    case "task-delete": { const u = deleteTask(id); closeSheet(); render(); toast(t().deleted, u); break; }
+    case "habit-new": openHabitForm(null, el.dataset.area); break;
+    case "habit-edit": openHabitForm(id); break;
+    case "habit-delete": { const u = deleteHabit(id); closeSheet(); render(); toast(t().deleted, u); break; }
+    case "habit-day": { const u = toggleHabitDay(id, el.dataset.day); render(); if (state.habits.find(h => h.id === id).log[el.dataset.day]) toast(t().done, u); break; }
+    case "skip": { const u = skipToday(id); render(); toast(t().skippedToast, u); break; }
+    case "archive": archiveOpen = !archiveOpen; render(); break;
+    case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
+    case "settings": openSettings(); break;
+    case "close": closeSheet(); break;
+    case "soon": toast(t().soon); break;
+    case "nav": { const v = el.dataset.view; go(v === "home" ? "" : v); break; }
+    case "inbox-delete": { const u = deleteInbox(id); render(); toast(t().deleted, u); break; }
+    case "inbox-sort": openSort(id); break;
+    case "sort-area": sortChoice.areaId = el.dataset.area; openSort(sortChoice.id); break;
+    case "sort-prio": sortChoice.priority = +el.dataset.prio; openSort(sortChoice.id); break;
+    case "sort-confirm": { const a = areaById(sortChoice.areaId); const u = sortInbox(sortChoice.id, sortChoice.areaId, sortChoice.priority); closeSheet(); render(); toast(t().sortedTo(a.name), u); break; }
+    case "lang": lang = el.dataset.lang; prefs.lang = lang; savePrefs(); render(); openSettings(); break;
+    case "copy": {
+      const json = exportBackup();
+      document.getElementById("lb").textContent = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup));
+      try { await navigator.clipboard.writeText(json); toast(t().copied); }
+      catch (err) { const d = document.getElementById("dump"); d.hidden = false; d.value = json; d.select(); toast(t().copyFailed); }
+      break;
+    }
+    case "reset": confirmDialog(t().resetConfirm, t().replace, () => { state = sampleData(); save(); closeSheet(); render(); }); break;
+  }
+});
+document.addEventListener("change", e => {
+  const form = e.target.closest("form[data-form]"); if (!form) return;
+  if (e.target.name === "type") form.dataset.type = e.target.value;
+  if (e.target.name === "area") form.querySelectorAll(".f-group").forEach(el => { el.hidden = el.dataset.forArea !== e.target.value; });
+  if (e.target.name === "freq") form.dataset.freq = e.target.value;
+});
+document.addEventListener("submit", e => {
+  const form = e.target.closest("form[data-form]");
+  if (form) { e.preventDefault(); submitForm(form); return; }
+  if (e.target.id !== "capture") return;
+  e.preventDefault();
+  const input = document.getElementById("capture-input"); const text = input.value.trim();
+  if (!text) { toast(t().emptyCapture); input.focus(); return; }
+  const u = addInbox(text); render(); toast(t().added, u);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.id === "gchip-input") { e.preventDefault(); gchipsAdd(e.target.closest("form")); return; }
+  if (e.key === "Escape") { if (!dialogEl.hidden) dialogEl.hidden = true; else if (!sheetEl.hidden) closeSheet(); }
+});
+
+window.addEventListener("hashchange", render);
+// Offline: service worker (jen když ho prostředí dovolí, v náhledu artefaktu se tiše přeskočí)
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) { /* bez offline režimu */ }
+}
+load();
+render();
+{ const c = document.getElementById("clock"); const n = new Date(); c.textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2, "0")}`; }
+</script>
+</body>
+</html>
