@@ -237,7 +237,10 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .hc-txt{flex:1;min-width:0}
 .hc-name{font-weight:700}
 .hc-meta{font-size:var(--fs-xs);color:var(--c-muted)}
-.hc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.hc-weeks{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.hc-weeks::-webkit-scrollbar{display:none}
+.hc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:0 0 100%;scroll-snap-align:start}
+.hc-day:disabled{opacity:.4}
 .hc-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap);padding:2px 0}
 .hc-day .d-l{font-size:.625rem;font-weight:600;color:var(--c-faint);text-transform:uppercase}
 .hc-day .d-c{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-sm);font-weight:600;color:var(--c-muted);background:var(--c-surface-2);border:1.5px solid var(--c-stroke)}
@@ -290,6 +293,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .subhead{padding:10px var(--sp-4) 4px;font-size:var(--fs-xs);font-weight:700;color:var(--c-muted);background:var(--c-surface-2);border-top:1px solid var(--c-stroke)}
 .group-list > .subhead:first-child,.list > .subhead:first-child{border-top:0}
 .pick-plain{padding:0 14px}
+.filter-chips{margin-bottom:calc(-1 * var(--sp-2))}
 .f-recurring .f-every-custom{display:none}
 .f-recurring[data-every="custom"] .f-every-custom{display:block}
 .field[hidden]{display:none}
@@ -428,17 +432,21 @@ textarea.dump{width:100%;min-height:90px;border-radius:var(--r-sm);background:va
 .dialog .box p{margin:0}
 
 /* Toast */
+/* Malá oznámení nahoře uprostřed, krátce. */
 .toast{
   position:fixed;z-index:40;left:50%;transform:translateX(-50%);
-  bottom:calc(var(--sab) + 92px);
-  width:min(420px,calc(100% - 32px));
-  display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  top:calc(var(--sat) + 8px);
+  max-width:calc(100% - 32px);min-height:34px;
+  display:flex;align-items:center;gap:var(--sp-2);padding:4px 14px;
   border-radius:var(--r-pill);background:var(--c-text);color:#fff;box-shadow:var(--shadow);
-  font-size:var(--fs-sm);font-weight:600;
+  font-size:var(--fs-xs);font-weight:600;animation:toast-in .18s ease-out;
 }
 .toast[hidden]{display:none}
-.toast span{flex:1}
-.toast button{height:var(--tap);padding:0 var(--sp-4);color:#c7b8ff;font-weight:800}
+.toast:has(button){padding-right:4px}
+.toast button{position:relative;height:26px;padding:0 10px;color:#c7b8ff;font-weight:800;font-size:var(--fs-xs)}
+.toast button::after{content:"";position:absolute;inset:-9px -4px}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
 
 .badge-demo{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.65);font-size:.625rem;font-weight:500;margin-top:var(--sp-2)}
 
@@ -609,6 +617,8 @@ const STRINGS = {
     archiveEmpty: "Zatím tu nic hotového není.",
     noAreaTasks: "V této kategorii nemáš žádné úkoly.",
     habitsTitle: "Návyky",
+    filterAll: "Vše",
+    filterLabel: "Filtrovat podle kategorie",
     habitsLead: "Klepni na den, kdy jsi návyk splnila. Takhle doplníš i dny, na které jsi zapomněla.",
     addHabit: "Nový návyk",
     editHabit: "Upravit návyk",
@@ -788,6 +798,8 @@ const STRINGS = {
     archiveEmpty: "Nothing done here yet.",
     noAreaTasks: "No tasks in this category.",
     habitsTitle: "Habits",
+    filterAll: "All",
+    filterLabel: "Filter by category",
     habitsLead: "Tap a day when you did the habit. You can fill in days you forgot, too.",
     addHabit: "New habit",
     editHabit: "Edit habit",
@@ -877,7 +889,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.5.1";
+const APP_VERSION = "0.5.2";
 const DATA_VERSION = 2;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -1260,6 +1272,9 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 let expanded = new Set();
 const expandedAreas = new Set();
 let archiveOpen = false;
+const HABIT_WEEKS = 12; // kolik týdnů zpět jde u návyku odswajpovat
+const habitWeekPos = {}; // pozice swajpu u jednotlivých návyků (jen v paměti)
+let habitFilter = null; // filtr kategorie na záložce Návyky (jen v paměti)
 function view() {
   const h = location.hash.slice(1);
   if (h === "inbox" || h === "areas" || h === "habits") return { name: h };
@@ -1563,7 +1578,9 @@ function renderHabitCard(h, showArea = true) {
   const a = areaById(h.areaId);
   const fmtW = new Intl.DateTimeFormat(lang, { weekday: "short" });
   const fmtL = new Intl.DateTimeFormat(lang, { weekday: "long", day: "numeric", month: "long" });
-  const days = [6, 5, 4, 3, 2, 1, 0].map(i => day(-i));
+  const today = todayISO();
+  const mon = day(-((new Date().getDay() + 6) % 7)); // pondělí aktuálního týdne
+  const weeks = Array.from({ length: HABIT_WEEKS }, (_, w) => Array.from({ length: 7 }, (_, i) => day((w - HABIT_WEEKS + 1) * 7 + i, mon)));
   const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
   return `<div class="hcard glass" style="--area-c:${a.color}">
     <div class="hc-head">
@@ -1572,18 +1589,23 @@ function renderHabitCard(h, showArea = true) {
         <div class="hc-meta">${showArea ? `${esc(a.name)} · ` : ""}${h.freq.type === "daily" ? t().freqDaily : t().weekly(habitWeekCount(h), h.freq.times)}</div></div>
       <button class="icon-btn-plain" data-action="habit-edit" data-id="${h.id}" aria-label="${t().editHabit}: ${esc(h.title)}">${icon("pencil")}</button>
     </div>
-    <div class="hc-days">${days.map((d, i) => { const k = iso(d); const on = !!h.log[k];
-      return `<button class="hc-day ${on ? "on" : ""} ${i === 6 ? "today" : ""}" data-action="habit-day" data-id="${h.id}" data-day="${k}" aria-pressed="${on}" aria-label="${esc(h.title)}: ${fmtL.format(d)}">
-        <span class="d-l">${fmtW.format(d).replace(".", "")}</span><span class="d-c">${on ? icon("check") : d.getDate()}</span></button>`; }).join("")}</div>
+    <div class="hc-weeks" data-id="${h.id}">${weeks.map(days => `<div class="hc-days">${days.map(d => { const k = iso(d); const on = !!h.log[k]; const future = k > today;
+      return `<button class="hc-day ${on ? "on" : ""} ${k === today ? "today" : ""}" data-action="habit-day" data-id="${h.id}" data-day="${k}" aria-pressed="${on}" aria-label="${esc(h.title)}: ${fmtL.format(d)}" ${future ? "disabled" : ""}>
+        <span class="d-l">${fmtW.format(d).replace(".", "")}</span><span class="d-c">${on ? icon("check") : d.getDate()}</span></button>`; }).join("")}</div>`).join("")}</div>
     <div class="hc-foot"><span>${h.freq.type === "daily" ? icon("flame") : icon("repeat")}${sub}</span><span>${t().last30(habitCount(h, 30))}</span></div>
   </div>`;
 }
 
 function renderHabitsBody() {
+  const cats = state.areas.filter(a => state.habits.some(h => h.areaId === a.id));
+  if (habitFilter && !cats.some(a => a.id === habitFilter)) habitFilter = null;
+  const shown = habitFilter ? state.habits.filter(h => h.areaId === habitFilter) : state.habits;
+  const chip = (id, label, a) => `<button class="pick ${a ? "" : "pick-plain"}" role="radio" aria-checked="${habitFilter === id}" data-action="habit-filter" data-area="${id || ""}" ${a ? `style="--area-c:${a.color}"` : ""}>${a ? `<span class="ico">${icon(a.icon)}</span>` : ""}<span>${label}</span></button>`;
   return `
+    ${cats.length ? `<div class="area-pick filter-chips" role="radiogroup" aria-label="${t().filterLabel}">${chip(null, t().filterAll)}${cats.map(a => chip(a.id, esc(a.name), a)).join("")}</div>` : ""}
     <section class="section">
       <p class="lead">${t().habitsLead}</p>
-      ${state.habits.length ? `<div class="hcards">${state.habits.map(h => renderHabitCard(h)).join("")}</div>` : `<div class="list glass"><div class="empty">${t().habitsEmpty}</div></div>`}
+      ${shown.length ? `<div class="hcards">${shown.map(h => renderHabitCard(h)).join("")}</div>` : `<div class="list glass"><div class="empty">${t().habitsEmpty}</div></div>`}
       <button class="btn-accent btn-wide" data-action="habit-new">${icon("plus")}${t().addHabit}</button>
     </section>`;
 }
@@ -1660,6 +1682,14 @@ function render() {
   else { top = dayHeader(greet); body = renderHomeBody(); }
 
   document.getElementById("app").innerHTML = `<section class="hero">${top}${capture}</section>` + body;
+  // Týdny u návyků: výchozí je aktuální týden, po překreslení zůstane týden, kam uživatelka odswajpovala.
+  document.querySelectorAll(".hc-weeks").forEach(el => {
+    const pos = habitWeekPos[el.dataset.id];
+    el.scrollLeft = pos == null ? el.scrollWidth : pos;
+    el.addEventListener("scroll", () => {
+      habitWeekPos[el.dataset.id] = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 ? null : el.scrollLeft;
+    }, { passive: true });
+  });
   if (key !== lastViewKey) {
     lastViewKey = key; archiveOpen = false;
     const sc = document.querySelector(".scroller"); if (sc && sc.scrollTo) sc.scrollTo(0, 0);
@@ -1922,12 +1952,13 @@ function confirmDialog(text, okLabel, onOk) {
   dialogEl.onclick = e => { const b = e.target.closest("[data-d]"); if (!b && e.target !== dialogEl) return; dialogEl.hidden = true; if (b && b.dataset.d === "ok") onOk(); };
 }
 const toastEl = document.getElementById("toast"); let toastTimer;
+const TOAST_MS = 1600, TOAST_MS_UNDO = 3500; // jak dlouho je oznámení vidět (s „Zpět“ déle, ať se dá stihnout)
 function toast(text, undoFn) {
   clearTimeout(toastTimer);
   toastEl.innerHTML = `<span>${text}</span>${undoFn ? `<button data-t="undo">${t().undo}</button>` : ""}`;
   toastEl.hidden = false;
   toastEl.onclick = e => { if (e.target.closest('[data-t="undo"]')) { undoFn(); rerender(); toast(t().undone); } };
-  toastTimer = setTimeout(() => { toastEl.hidden = true; }, undoFn ? 5000 : 3000);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, undoFn ? TOAST_MS_UNDO : TOAST_MS);
 }
 function rerender() { render(); }
 
@@ -1962,6 +1993,7 @@ document.addEventListener("click", async e => {
     case "task-new": openTaskForm(null, el.dataset.area); break;
     case "task-edit": openTaskForm(id); break;
     case "task-delete": { const u = deleteTask(id); closeSheet(); render(); toast(t().deleted, u); break; }
+    case "habit-filter": habitFilter = el.dataset.area || null; render(); break;
     case "habit-new": openHabitForm(null, el.dataset.area); break;
     case "habit-edit": openHabitForm(id); break;
     case "habit-delete": { const u = deleteHabit(id); closeSheet(); render(); toast(t().deleted, u); break; }
