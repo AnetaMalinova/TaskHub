@@ -95,7 +95,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
   color:var(--c-on-accent);
   margin:0 calc(-1 * var(--sp-4));
   border-radius:0 0 var(--r-xl) var(--r-xl);
-  padding:calc(var(--sat) + var(--sp-4)) var(--sp-5) var(--sp-5);
+  padding:calc(var(--sat) + var(--sp-8)) var(--sp-5) var(--sp-5);
   display:flex;flex-direction:column;gap:var(--sp-4);
   box-shadow:var(--shadow-accent);
   position:relative;overflow:hidden;
@@ -343,6 +343,20 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .tab[aria-current="page"]{color:#fff;background:var(--c-accent);box-shadow:0 6px 14px rgba(115,66,203,.35)}
 .tab .badge{position:absolute;top:6px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--c-crit);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center}
 
+.section-head{align-items:center}
+.btn-plus{width:var(--tap);height:var(--tap);display:grid;place-items:center;background:none;color:var(--c-accent);margin:-10px -10px -10px 0;flex:none}
+.btn-plus .icon{width:24px;height:24px;stroke-width:2.4}
+/* Rychlý zápis pod dnešními činnostmi */
+.capture-card{background:var(--c-accent);border-radius:var(--r-xl);padding:var(--sp-4) var(--sp-4) var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-3);box-shadow:var(--shadow-accent);color:#fff}
+
+/* Plovoucí tlačítko pro nový úkol */
+.fab{position:fixed;z-index:6;right:max(16px,calc(50% - 224px));bottom:calc(var(--sab) + 92px);width:56px;height:56px;border-radius:50%;
+  display:grid;place-items:center;background:var(--c-accent);color:#fff;box-shadow:0 10px 24px rgba(115,66,203,.45);transition:transform var(--t-fast),opacity var(--t-fast)}
+.fab .icon{width:26px;height:26px;stroke-width:2.4}
+.fab:active{transform:scale(.94)}
+.toast:not([hidden]) ~ .fab{opacity:0;pointer-events:none}
+@media (min-width:600px) and (min-height:640px){ .fab{right:16px} }
+
 /* Sheet + dialog */
 .scrim{position:fixed;inset:0;z-index:20;background:rgba(28,22,51,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
 .scrim[hidden]{display:none}
@@ -445,6 +459,10 @@ const STRINGS = {
   cs: {
     greet: ["Dobré ráno", "Dobré odpoledne", "Dobrý večer"],
     capturePh: "Nový úkol…",
+    fabLabel: "Přidat nový úkol",
+    quickSave: "Uložit do schránky",
+    quickDetail: "Rovnou zařadit do kategorie",
+    quickHint: "Ve schránce počká, než ho zařadíš. Nebo ho rovnou zařaď a nastav.",
     captureAdd: "Přidat úkol do schránky",
     inbox: n => `${n} ${pl("cs", n, ["zápis", "zápisy", "zápisu", "zápisů"])} ve schránce`,
     captureHint: "Zařadit",
@@ -592,6 +610,10 @@ const STRINGS = {
   en: {
     greet: ["Good morning", "Good afternoon", "Good evening"],
     capturePh: "New task…",
+    fabLabel: "Add a new task",
+    quickSave: "Save to inbox",
+    quickDetail: "Sort into a category now",
+    quickHint: "It waits in the inbox until you sort it. Or sort and set it up right away.",
     captureAdd: "Add task to inbox",
     inbox: n => `${n} ${n === 1 ? "note" : "notes"} in inbox`,
     captureHint: "Sort",
@@ -750,7 +772,7 @@ const entitlements = { pro: false };
 function canUse(feature) { return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.3.0";
+const APP_VERSION = "0.4.0";
 const DATA_VERSION = 2;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -764,7 +786,7 @@ function sampleData() {
   const logDays = (pattern) => { const log = {}; pattern.forEach((on, i) => { if (on) log[iso(day(-i))] = true; }); return log; };
   return {
     version: DATA_VERSION,
-    demo: true,
+    demo: false,
     areas: [
       { id: "sport", name: "Sport", color: "#12a877", icon: "sport", groups: [], direction: "Být v kondici na letní túry. Hýbat se aspoň 4× týdně.", context: "Běh po Stromovce, posilovna út a čt. Chci zkusit lezení." },
       { id: "work", name: "Freelance", color: "#3b7ff2", icon: "work", groups: [], direction: "Dotáhnout projekty do konce, neotvírat nové bez uzavření starých.", context: "Pondělní plánování, pátky bez schůzek." },
@@ -801,7 +823,7 @@ function sampleData() {
       { id: uid(), text: "Zjistit ceny permanentky do posilovny", createdAt: iso(day(-1)) },
       { id: uid(), text: "Dárek pro mámu k Vánocům", createdAt: iso(day(0)) },
     ],
-    meta: { lastBackup: null, reviewWeekday: 0, cleanup1: true, cleanup2: true, cleanup3: true, cleanup4: true },
+    meta: { lastBackup: null, reviewWeekday: 0, cleanup1: true, cleanup2: true, cleanup3: true, cleanup4: true, cleanup5: true },
   };
 }
 
@@ -845,7 +867,7 @@ function load() {
   const raw = storage.get(STORAGE_KEY);
   if (raw) { try {
     state = migrate(JSON.parse(raw));
-    cleanup1(); cleanup2(); cleanup3(); cleanup4();
+    cleanup1(); cleanup2(); cleanup3(); cleanup4(); cleanup5();
     // Jen u ukázkových dat: srovnat barvy oblastí s aktuálním vzhledem. Vlastní data se nemění.
     if (state.demo) { const s = sampleData(); state.areas.forEach(a => { const m = s.areas.find(x => x.id === a.id); if (m) a.color = m.color; }); save(); }
     return; } catch (e) { /* poškozená data necháme být, nepřepisujeme */ storage.set(STORAGE_KEY + ".corrupt", raw); } }
@@ -857,6 +879,11 @@ function save() { storage.set(STORAGE_KEY, JSON.stringify(state)); }
 // Jednorázově na přání: kategorie Práce se jmenuje Freelance.
 // Jednorázově na přání: podskupiny Domácnosti. Stávající se zachovají podle názvu, úkoly z odebraných skončí v Ostatní.
 // Jednorázově na přání: vrátit Kuchyň do Domácnosti (před Ostatní) a přesunout do ní kuchyňské úkoly z Ostatní.
+// Jednorázově na přání: současná data beru jako vlastní (bez štítku Ukázková data). Nic se nemaže.
+function cleanup5() {
+  if (state.meta.cleanup5) return;
+  state.demo = false; state.meta.cleanup5 = true; save();
+}
 function cleanup4() {
   if (state.meta.cleanup4) return;
   const home = state.areas.find(a => a.name.trim().toLowerCase() === "domácnost");
@@ -1197,8 +1224,9 @@ function renderToday(tasks) {
   const habits = state.habits.filter(habitIsDueToday);
   if (!tasks.length && !habits.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
   const groups = state.areas.map(a => ({ a, items: tasks.filter(x => x.areaId === a.id), habits: habits.filter(h => h.areaId === a.id) }))
-    .filter(g => g.items.length || g.habits.length)
+    .filter(g => g.items.length || g.habits.some(h => !habitDoneToday(h)))
     .sort((x, y) => x.a.name.localeCompare(y.a.name, lang));
+  if (!groups.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
   return `<div class="groups">${groups.map(g => {
     const { a, items } = g; const open = expandedAreas.has(a.id);
     const left = items.length + g.habits.filter(h => !habitDoneToday(h)).length;
@@ -1252,11 +1280,7 @@ function topBlock(small, big, opts = {}) {
     ${right}</header>`;
 }
 function captureBlock(isInbox) {
-  return `<form class="capture" id="capture" autocomplete="off">
-      <input id="capture-input" name="capture" type="text" placeholder="${t().capturePh}" aria-label="${t().capturePh}">
-      <button class="btn-accent" type="submit" aria-label="${t().captureAdd}">${icon("plus")}</button>
-    </form>
-    <div class="capture-meta">${isInbox ? `<span>${t().inbox(state.inbox.length)}</span>` : `<button class="link-u" data-action="nav" data-view="inbox">${t().inbox(state.inbox.length)}</button>`}</div>`;
+  return `<div class="capture-meta">${isInbox ? `<span>${t().inbox(state.inbox.length)}</span>` : `<button class="link-u" data-action="nav" data-view="inbox">${t().inbox(state.inbox.length)}</button>`}</div>`;
 }
 
 function renderHomeBody() {
@@ -1267,9 +1291,11 @@ function renderHomeBody() {
   const reviewDay = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(day(((state.meta.reviewWeekday ?? 0) - now.getDay() + 7) % 7));
   return `
     <section class="section" aria-labelledby="h-today">
-      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
+        <button class="btn-plus" data-action="quick-add" aria-label="${t().fabLabel}">${icon("plus")}</button></div>
       ${renderToday(openTasks())}
     </section>
+
 
     ${canUse("stats") ? `<section class="section" aria-labelledby="h-week">
       <div class="section-head"><h2 id="h-week">${t().week}</h2></div>
@@ -1396,7 +1422,7 @@ function render() {
   const date = new Intl.DateTimeFormat(lang, { weekday: "long", day: "numeric", month: "long" }).format(now).replace(/^./, c => c.toUpperCase());
 
   let top, body, capture = "";
-  if (v.name === "inbox") { top = topBlock(date, t().inboxTitle); capture = captureBlock(true); body = renderInboxBody(); }
+  if (v.name === "inbox") { top = topBlock(date, t().inboxTitle); body = renderInboxBody(); }
   else if (v.name === "areas") { top = topBlock(date, t().areasTitle); body = renderAreasBody(); }
   else if (v.name === "area") {
     const a = areaById(v.id);
@@ -1404,7 +1430,7 @@ function render() {
     body = renderAreaBody(a);
   }
   else if (v.name === "habits") { top = topBlock(date, t().habitsTitle); body = renderHabitsBody(); }
-  else { top = topBlock(greet, date); capture = captureBlock(false); body = renderHomeBody(); }
+  else { top = topBlock(greet, date); body = renderHomeBody(); }
 
   document.getElementById("app").innerHTML = `<section class="hero">${top}${capture}</section>` + body;
   if (key !== lastViewKey) {
@@ -1444,6 +1470,17 @@ function segRadios(name, options, selected) {
     <label><input type="radio" name="${name}" value="${val}" ${String(selected) === String(val) ? "checked" : ""}><span>${label}</span></label>`).join("")}</div>`;
 }
 function sheetHead(title) { return `<div class="sheet-head"><h3>${title}</h3><button class="btn-x" type="button" data-action="close" aria-label="${t().close}">${icon("x")}</button></div>`; }
+
+function openQuickAdd() {
+  delete sheetEl.dataset.area;
+  openSheet(`<form class="form" id="quick-form" autocomplete="off">
+    ${sheetHead(t().newTask)}
+    <input class="input" id="quick-input" type="text" placeholder="${t().capturePh}" aria-label="${t().capturePh}" autofocus>
+    <button class="btn-accent btn-wide" type="submit">${t().quickSave}</button>
+    <button class="btn btn-wide-ghost" type="button" data-action="quick-detail">${t().quickDetail}</button>
+    <p class="note">${t().quickHint}</p>
+  </form>`);
+}
 
 function openTaskForm(id, presetArea) {
   delete sheetEl.dataset.area;
@@ -1663,6 +1700,13 @@ document.addEventListener("click", async e => {
     case "area": go("area-" + id); break;
     case "area-new": openAreaForm(); break;
     case "area-edit": openAreaForm(id); break;
+    case "quick-add": openQuickAdd(); break;
+    case "quick-detail": {
+      const v = (document.getElementById("quick-input") || {}).value || "";
+      openTaskForm(null, view().name === "area" ? view().id : undefined);
+      const ti = sheetEl.querySelector('[name="title"]'); if (ti) ti.value = v.trim();
+      break;
+    }
     case "gchip-add": gchipsAdd(el.closest("form")); break;
     case "gchip-del": { const form = el.closest("form"); const names = form.querySelector('[name="groups"]').value.split("\n").filter(Boolean).filter(n => n !== el.dataset.name); gchipsUpdate(form, names); break; }
     case "groups-edit": { openAreaForm(id); const g = sheetEl.querySelector("#gchip-input"); if (g) { g.scrollIntoView({ block: "center" }); g.focus(); } break; }
@@ -1710,6 +1754,12 @@ document.addEventListener("change", e => {
 document.addEventListener("submit", e => {
   const form = e.target.closest("form[data-form]");
   if (form) { e.preventDefault(); submitForm(form); return; }
+  if (e.target.id === "quick-form") {
+    e.preventDefault();
+    const inp = document.getElementById("quick-input"); const text = inp.value.trim();
+    if (!text) { toast(t().emptyCapture); inp.focus(); return; }
+    const u = addInbox(text); closeSheet(); render(); toast(t().added, u); return;
+  }
   if (e.target.id !== "capture") return;
   e.preventDefault();
   const input = document.getElementById("capture-input"); const text = input.value.trim();
