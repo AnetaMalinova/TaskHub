@@ -101,9 +101,12 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
   position:relative;overflow:hidden;
 }
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);position:relative;z-index:1}
-.top h1{font-family:var(--f-display);font-size:var(--fs-xl);line-height:1.2;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.top h1{font-family:var(--f-display);font-size:var(--fs-xl);line-height:1.2;font-weight:700;letter-spacing:-.01em;word-spacing:.12em;margin:0;text-wrap:balance}
 .top .greet{font-size:var(--fs-sm);font-weight:500;color:rgba(255,255,255,.75);margin-bottom:4px}
-.icon-btn{width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:var(--r-md);background:rgba(255,255,255,.16);color:#fff}
+.icon-btn{width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:var(--r-md);background:none;color:#fff;margin-right:-10px}
+.icon-btn .icon{width:24px;height:24px}
+.icon-btn.icon-btn-subtle{margin-top:-12px;opacity:.7}
+.icon-btn-subtle .icon{width:19px;height:19px}
 
 /* Rychlý zápis */
 .capture{display:flex;align-items:center;gap:var(--sp-2);padding:4px 4px 4px var(--sp-4);background:#fff;border-radius:var(--r-pill);position:relative;z-index:1}
@@ -167,7 +170,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .list{padding:var(--sp-1) 0;overflow:hidden}
 .list:has(> .subhead:first-child){padding-top:0}
 .row{display:flex;align-items:center;gap:var(--sp-3);min-height:62px;padding:var(--sp-2) var(--sp-4);position:relative}
-.row + .row{border-top:1px solid var(--c-stroke)}
+.row + .row::before{content:"";position:absolute;top:0;left:56px;right:0;height:1px;background:var(--c-stroke)}
 .row .stripe{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
 .check{width:var(--tap);height:var(--tap);margin:-6px -6px -6px -10px;flex:none;display:grid;place-items:center}
 .check span{width:24px;height:24px;border-radius:8px;border:2px solid #d3c8ec;display:grid;place-items:center;transition:all var(--t-fast);background:#fff}
@@ -296,6 +299,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .form .seg label span{height:30px;padding:0 10px;font-size:var(--fs-xs)}
 .btn-skip{flex:none;height:32px;padding:0 10px;border-radius:var(--r-pill);border:1px solid var(--c-stroke);background:var(--c-surface-2);color:var(--c-muted);font-size:var(--fs-xs);font-weight:600;position:relative;white-space:nowrap}
 .btn-skip::after{content:"";position:absolute;inset:-6px -2px}
+.check.done-static .icon{opacity:1}
 .check:disabled{cursor:default;opacity:.7}
 
 /* Oblasti */
@@ -346,6 +350,40 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .section-head{align-items:center}
 .btn-plus{width:var(--tap);height:var(--tap);display:grid;place-items:center;background:none;color:var(--c-accent);margin:-10px -10px -10px 0;flex:none}
 .btn-plus .icon{width:24px;height:24px;stroke-width:2.4}
+/* Listování dny a kalendář */
+.day-title{text-align:left;color:inherit;padding:0;display:block;min-width:0;min-height:var(--tap)}
+.day-top{position:relative}
+.day-top .icon-btn-subtle{position:absolute;top:-12px;right:-10px;margin:0}
+.day-row{display:flex;align-items:center;margin-left:-10px;margin-right:-6px}
+.day-row .day-btn{flex:none;opacity:.85}
+.day-greet{padding-left:22px}
+.day-ctrl{display:flex;align-items:center;gap:0;margin:6px 0 -8px -9px}
+.day-btn{width:32px;height:var(--tap);display:grid;place-items:center;color:#fff;border-radius:12px}
+.day-btn .icon{width:20px;height:20px}
+.day-btn.dark{color:var(--c-accent)}
+.day-today{height:30px;padding:0 12px;border-radius:var(--r-pill);background:rgba(255,255,255,.2);color:#fff;font-size:var(--fs-xs);font-weight:700;position:relative}
+.day-today::after{content:"";position:absolute;inset:-7px 0}
+.cal-head{display:flex;align-items:center;justify-content:space-between}
+.cal-head b{font-family:var(--f-display);font-size:var(--fs-lg)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-wd{font-size:var(--fs-xs);font-weight:700;color:var(--c-faint);text-transform:uppercase;padding:4px 0}
+.cal-d{position:relative;height:var(--tap);border-radius:12px;font-weight:600;color:var(--c-text);font-variant-numeric:tabular-nums}
+.cal-d.is-today{color:var(--c-accent);box-shadow:inset 0 0 0 1.5px var(--c-accent)}
+.cal-d.is-sel{background:var(--c-accent);color:#fff}
+.cal-dot{position:absolute;left:50%;bottom:5px;width:5px;height:5px;border-radius:50%;transform:translateX(-50%);display:block}
+.cal-legend .cal-dot{position:static;transform:none;display:inline-block;margin-right:6px}
+.cal-dot.plan{background:var(--c-accent)}
+.cal-dot.late{background:var(--c-crit)}
+.cal-dot.done{background:var(--c-good)}
+.cal-d.is-sel .cal-dot{background:#fff}
+.cal-legend{display:flex;flex-wrap:wrap;gap:var(--sp-4);font-size:var(--fs-xs);color:var(--c-muted)}
+.date-row{display:flex;gap:var(--sp-2);align-items:center}
+.date-row .input{flex:1;min-width:0}
+.date-row .btn{flex:none;padding:0 12px}
+.form[data-type="recurring"] .f-date{display:none}
+.must .list{box-shadow:0 0 0 1.5px rgba(229,72,122,.35),var(--shadow)}
+.must-count{background:#fde7ef;color:var(--c-crit)}
+
 /* Rychlý zápis pod dnešními činnostmi */
 .capture-card{background:var(--c-accent);border-radius:var(--r-xl);padding:var(--sp-4) var(--sp-4) var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-3);box-shadow:var(--shadow-accent);color:#fff}
 
@@ -405,14 +443,20 @@ textarea.dump{width:100%;min-height:90px;border-radius:var(--r-sm);background:va
 
 /* ===== Mockup telefonu: jen na širší obrazovce. Na telefonu běží apka na celou plochu. ===== */
 .statusbar,.island,.homebar{display:none}
+/* Pevné rozvržení: lišta dole je vždy u spodního okraje obrazovky, posouvá se jen obsah. */
+html,body{height:100%;overflow:hidden}
+.stage,.device{height:100%}
+.screen{position:relative;height:100%;height:100dvh;overflow:hidden;transform:translateZ(0)}
+.scroller{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 @media (min-width:600px) and (min-height:640px){
-  html,body{height:auto;min-height:100%}
-  body{background:var(--device-bg);overflow:auto}
+  html,body{height:auto;min-height:100%;overflow:auto}
+  body{background:var(--device-bg)}
+  .stage,.device{height:auto}
   .stage{min-height:100vh;display:grid;place-items:center;padding:32px 16px;
     background:none}
   .device{width:390px;height:min(844px,calc(100vh - 64px));padding:12px;border-radius:62px;background:var(--device-frame);
     box-shadow:inset 0 0 0 2px #3b3160,0 0 0 10px color-mix(in srgb,var(--device-ring) 45%,transparent),0 30px 60px rgba(20,16,40,.22)}
-  .screen{position:relative;height:100%;border-radius:50px;overflow:hidden;background:var(--c-bg);transform:translateZ(0);--sat:50px;--sab:22px}
+  .screen{position:relative;height:100%;height:100%;border-radius:50px;overflow:hidden;background:var(--c-bg);transform:translateZ(0);--sat:50px;--sab:22px}
   .scroller{height:100%;overflow-y:auto;scrollbar-width:none}
   .scroller::-webkit-scrollbar{display:none}
   .statusbar{display:flex;position:absolute;z-index:50;top:0;left:0;right:0;height:50px;padding:4px 30px 0 34px;align-items:center;justify-content:space-between;font-size:15px;font-weight:700;color:#fff;pointer-events:none}
@@ -479,6 +523,26 @@ const STRINGS = {
     habitsToday: "Dnešní návyky",
     habitsHint: "Splní se samy, když je odškrtneš v Činnostech pro tento den. Klepnutím na kartu otevřeš detail.",
     habitTag: "Návyk",
+    mustTitle: "Must have",
+    overdue: "Overdue",
+    when: "Kdy",
+    whenHint: "Nepovinné. Bez data se úkol nabízí každý den v činnostech. S datem se ten den ukáže v Must have a zůstane tam, dokud ho nesplníš.",
+    today: "Dnes",
+    tomorrow: "Zítra",
+    rel: n => n === 1 ? "Zítra" : n === -1 ? "Včera" : n > 1 ? `Za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}` : `Před ${-n} ${pl("cs", -n, ["dnem", "dny", "dne", "dny"])}`,
+    prevDay: "Předchozí den",
+    nextDay: "Další den",
+    openCalendar: "Otevřít kalendář",
+    calendar: "Kalendář",
+    prevMonth: "Předchozí měsíc",
+    nextMonth: "Další měsíc",
+    legendPlan: "Naplánováno",
+    legendDone: "Splněno",
+    backToToday: "Zpět na dnešek",
+    nothingPlanned: "Na tenhle den zatím nic nemáš. Přidej úkol plusem.",
+    futureNote: "Úkoly bez data se nabízejí každý den v dnešních činnostech.",
+    doneThatDay: "Hotovo ten den",
+    nothingDone: "Ten den tu nic hotového není.",
     skip: "Dnes ne",
     skipped: "Dnes přeskočeno",
     skippedToast: "Přeskočeno, zítra se ti zase nabídne",
@@ -591,8 +655,13 @@ const STRINGS = {
     copied: "Záloha zkopírována. Vlož ji do Poznámek nebo Souborů.",
     copyFailed: "Kopírování se nepovedlo. Označ text níže a zkopíruj ho ručně.",
     importBackup: "Načíst zálohu ze souboru",
+    pasteBackup: "Vložit zálohu",
+    pastePh: "Sem vlož zkopírovanou zálohu",
+    pasteLoad: "Načíst vloženou zálohu",
+    pasteEmpty: "Nejdřív sem vlož zálohu.",
+    pasteConfirm: "Nahradit všechna data v téhle apce vloženou zálohou? Hned potom to půjde vrátit.",
     importOk: "Záloha načtena",
-    importBad: "Tohle není platná záloha této apky. Zkus jiný soubor.",
+    importBad: "Tohle není platná záloha této apky. Zkontroluj, že je zkopírovaná celá.",
     resetDemo: "Obnovit ukázková data",
     resetConfirm: "Opravdu nahradit všechna data ukázkovými? Tohle nejde vrátit. Nejdřív si udělej zálohu.",
     cancel: "Zrušit",
@@ -630,6 +699,26 @@ const STRINGS = {
     habitsToday: "Today's habits",
     habitsHint: "They count when you tick them off in Things for today. Tap a card for details.",
     habitTag: "Habit",
+    mustTitle: "Must have",
+    overdue: "Overdue",
+    when: "When",
+    whenHint: "Optional. Without a date the task shows up every day. With a date it appears that day and moves to Must have if missed.",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    rel: n => n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n > 1 ? `In ${n} days` : `${-n} days ago`,
+    prevDay: "Previous day",
+    nextDay: "Next day",
+    openCalendar: "Open calendar",
+    calendar: "Calendar",
+    prevMonth: "Previous month",
+    nextMonth: "Next month",
+    legendPlan: "Planned",
+    legendDone: "Done",
+    backToToday: "Back to today",
+    nothingPlanned: "Nothing planned for this day yet. Add a task with the plus.",
+    futureNote: "Tasks without a date show up every day in today's activities.",
+    doneThatDay: "Done that day",
+    nothingDone: "Nothing done that day.",
     skip: "Not today",
     skipped: "Skipped today",
     skippedToast: "Skipped, it comes back tomorrow",
@@ -742,8 +831,13 @@ const STRINGS = {
     copied: "Backup copied. Paste it into Notes or Files.",
     copyFailed: "Copying failed. Select the text below and copy it by hand.",
     importBackup: "Load backup from file",
+    pasteBackup: "Paste backup",
+    pastePh: "Paste your copied backup here",
+    pasteLoad: "Load pasted backup",
+    pasteEmpty: "Paste a backup first.",
+    pasteConfirm: "Replace all data in this app with the pasted backup? You can undo right after.",
     importOk: "Backup loaded",
-    importBad: "This isn't a valid backup for this app. Try another file.",
+    importBad: "This isn't a valid backup for this app. Check that you copied all of it.",
     resetDemo: "Restore sample data",
     resetConfirm: "Replace all data with sample data? This can't be undone. Make a backup first.",
     cancel: "Cancel",
@@ -767,12 +861,13 @@ function pl(lang, n, forms) {
 
 /* ===================== PŘÍSTUP K FUNKCÍM (zdarma / placené) ===================== */
 // Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
-const FEATURES = { stats: "free", weeklyReview: "free", unlimitedAreas: "free" };
+// "hidden" = funkce je zatím skrytá v celé apce (data se dál počítají).
+const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", unlimitedAreas: "free" };
 const entitlements = { pro: false };
-function canUse(feature) { return FEATURES[feature] === "free" || entitlements.pro; }
+function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.4.0";
+const APP_VERSION = "0.5.0";
 const DATA_VERSION = 2;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -941,13 +1036,21 @@ function weekStart(d = day()) { const x = new Date(d); const wd = (x.getDay() + 
 function weekDaysISO() { const s = weekStart(); const today = todayISO(); const out = []; for (let i = 0; i < 7; i++) { const k = iso(day(i, s)); if (k > today) break; out.push(k); } return out; }
 
 function habitDoneToday(h) { return !!h.log[todayISO()]; }
+// Přeskočené dny („Dnes ne“) sérii nepřeruší, jen se nezapočítají.
 function habitStreak(h) {
+  const sk = h.skips || {};
   let n = 0; let i = habitDoneToday(h) ? 0 : 1;
-  while (h.log[iso(day(-i))]) { n++; i++; }
+  while (i < 800) { const k = iso(day(-i)); if (h.log[k]) n++; else if (!sk[k]) break; i++; }
   return n;
 }
+function habitSkippedToday(h) { return !!(h.skips && h.skips[todayISO()]) && !habitDoneToday(h); }
+function skipHabitToday(id) {
+  const h = state.habits.find(x => x.id === id); const k = todayISO();
+  h.skips = h.skips || {}; h.skips[k] = true; save();
+  return () => { delete h.skips[k]; save(); };
+}
 function habitWeekCount(h) { return weekDaysISO().filter(k => h.log[k]).length; }
-function habitIsDueToday(h) { return h.freq.type === "daily" || habitDoneToday(h) || habitWeekCount(h) < h.freq.times; }
+function habitIsDueToday(h) { if (habitSkippedToday(h)) return false; return h.freq.type === "daily" || habitDoneToday(h) || habitWeekCount(h) < h.freq.times; }
 function habitProgress(h) {
   if (h.freq.type === "daily") return habitDoneToday(h) ? 1 : 0;
   return Math.min(1, habitWeekCount(h) / h.freq.times);
@@ -958,10 +1061,32 @@ function taskIsOpen(task) {
   if (task.type === "project") return task.subtasks.some(s => !s.done);
   return !task.done;
 }
-function isSkippedToday(task) { return task.skipDay === todayISO(); }
+function isSkippedToday(task) { const k = todayISO(); return task.skipDay === k || !!(task.skipDays && task.skipDays[k]); }
+const sortTasks = list => list.sort((a, b) => a.priority - b.priority || (a.type === "project" ? -1 : 1));
+// Dnešní činnosti: úkoly bez data, úkoly na dnešek a opakované, které jsou na řadě. Zpožděné jsou zvlášť v Must have.
 function openTasks() {
-  return state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x)).sort((a, b) => a.priority - b.priority || (a.type === "project" ? -1 : 1));
+  const today = todayISO();
+  return sortTasks(state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x) && (!x.date || x.type === "recurring")));
 }
+function isOverdue(x) { return !!x.date && x.type !== "recurring" && x.date < todayISO() && taskIsOpen(x); }
+// Must have: úkoly s datem na dnešek a zpožděné (ty mají chip Overdue).
+function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && taskIsOpen(x)).sort((a, b) => a.date.localeCompare(b.date)); }
+// Budoucí den: úkoly naplánované na ten den a opakované, které na něj připadnou.
+function plannedFor(dayIso) {
+  return sortTasks(state.tasks.filter(x => {
+    if (x.skipDays && x.skipDays[dayIso]) return false;
+    if (x.type === "recurring") return x.nextDue <= dayIso;
+    return x.date === dayIso && taskIsOpen(x);
+  }));
+}
+function doneOn(dayIso) {
+  const tasks = state.tasks.filter(x => x.doneAt === dayIso);
+  const habits = state.habits.filter(h => h.log[dayIso]);
+  return { tasks, habits };
+}
+let selectedDay = null; // null = dnes
+const curDay = () => selectedDay || todayISO();
+let calMonth = null;
 function projectProgress(task) { const d = task.subtasks.filter(s => s.done).length; return { d, n: task.subtasks.length }; }
 
 function last7() {
@@ -1062,10 +1187,14 @@ function deleteArea(id) {
   state.habits = state.habits.filter(h => h.areaId !== id);
   save(); return restore(snap);
 }
-function skipToday(id) {
-  const task = state.tasks.find(x => x.id === id); const prev = task.skipDay;
-  task.skipDay = todayISO(); save();
-  return () => { if (prev) task.skipDay = prev; else delete task.skipDay; save(); };
+// „Dnes ne“ pro libovolný den: úkol s datem se posune na další den, ostatní se ten den jen přeskočí.
+function skipToday(id, dayIso = todayISO()) {
+  const task = state.tasks.find(x => x.id === id); const prev = JSON.stringify(task);
+  if (task.date && task.type !== "recurring") { const d = new Date(dayIso + "T12:00:00"); d.setDate(d.getDate() + 1); task.date = iso(d); }
+  else if (dayIso === todayISO()) task.skipDay = dayIso;
+  else { task.skipDays = task.skipDays || {}; task.skipDays[dayIso] = true; }
+  save();
+  return () => { const old = JSON.parse(prev); Object.keys(task).forEach(k => delete task[k]); Object.assign(task, old); save(); };
 }
 function deleteTask(id) { const snap = snapshot(); state.tasks = state.tasks.filter(x => x.id !== id); save(); return restore(snap); }
 function deleteHabit(id) { const snap = snapshot(); state.habits = state.habits.filter(x => x.id !== id); save(); return restore(snap); }
@@ -1106,6 +1235,7 @@ const ICONS = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   arrow: '<path d="M9 6l6 6-6 6"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   back: '<path d="M15 6l-6 6 6 6"/>',
   pencil: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/>',
@@ -1150,12 +1280,15 @@ function renderHabit(h) {
 function renderTask(task, mode = "full") {
   if (mode === true) mode = "grouped";
   const a = areaById(task.areaId);
-  const showStripe = mode === "full", showArea = mode === "full", showPrio = false, canEdit = mode === "area";
+  const showStripe = mode === "full" || mode === "must", showArea = mode === "full" || mode === "must", showPrio = false, canEdit = mode === "area";
   const prio = showPrio ? `<span class="pill p${task.priority}">${t().prio[task.priority - 1]}</span>` : "";
   const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : "";
   const stripe = showStripe ? `<i class="stripe" style="background:${a.color}"></i>` : "";
-  const skipBtn = mode === "grouped" ? `<button class="btn-skip" data-action="skip" data-id="${task.id}" aria-label="${t().skip}: ${esc(task.title)}">${t().skip}</button>` : "";
-  const skipTag = (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
+  const skipBtn = (mode === "grouped" || mode === "future") ? `<button class="btn-skip" data-action="skip" data-id="${task.id}" aria-label="${t().skip}: ${esc(task.title)}">${t().skip}</button>` : "";
+  const fmtShort = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d + "T12:00:00"));
+  const dateTag = isOverdue(task) ? `<span class="pill p1">${t().overdue} · ${fmtShort(task.date)}</span>`
+    : (task.date && task.type !== "recurring" && mode === "area" ? `<span class="pill p3">${fmtShort(task.date)}</span>` : "");
+  const skipTag = dateTag + (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
     + (mode === "area" && task.followUp ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
   const editBtn = canEdit ? `<button class="icon-btn-plain" data-action="task-edit" data-id="${task.id}" aria-label="${t().editTask}: ${esc(task.title)}">${icon("pencil")}</button>` : "";
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
@@ -1217,11 +1350,12 @@ function renderHabitRow(h) {
       <div class="title">${esc(h.title)}</div>
       <div class="tags"><span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${t().habitTag} · ${sub}</span></div>
     </div>
+    ${done ? "" : `<button class="btn-skip" data-action="skip-habit" data-id="${h.id}" aria-label="${t().skip}: ${esc(h.title)}">${t().skip}</button>`}
   </div>`;
 }
 
-function renderToday(tasks) {
-  const habits = state.habits.filter(habitIsDueToday);
+function renderToday(tasks, withHabits = true, mode = "grouped") {
+  const habits = withHabits ? state.habits.filter(habitIsDueToday) : [];
   if (!tasks.length && !habits.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
   const groups = state.areas.map(a => ({ a, items: tasks.filter(x => x.areaId === a.id), habits: habits.filter(h => h.areaId === a.id) }))
     .filter(g => g.items.length || g.habits.some(h => !habitDoneToday(h)))
@@ -1236,7 +1370,7 @@ function renderToday(tasks) {
         <span class="g-body g-row"><span class="g-name">${esc(a.name)}</span><span class="g-count ${left ? "" : "zero"}" aria-label="${t().openTasks(left)}">${left ? left : icon("check")}</span></span>
         <span class="g-chev">${icon("chevron")}</span>
       </button>
-      ${open ? `<div class="group-list">${renderByGroups(a, items, "grouped", g.habits.map(renderHabitRow).join(""))}</div>` : ""}
+      ${open ? `<div class="group-list">${renderByGroups(a, items, mode, g.habits.map(renderHabitRow).join(""))}</div>` : ""}
     </div>`;
   }).join("")}</div>`;
 }
@@ -1283,13 +1417,44 @@ function captureBlock(isInbox) {
   return `<div class="capture-meta">${isInbox ? `<span>${t().inbox(state.inbox.length)}</span>` : `<button class="link-u" data-action="nav" data-view="inbox">${t().inbox(state.inbox.length)}</button>`}</div>`;
 }
 
+function renderMust() {
+  const list = overdueTasks();
+  if (!list.length) return "";
+  return `<section class="section must" aria-labelledby="h-must">
+      <div class="section-head"><h2 id="h-must">${t().mustTitle}</h2><span class="g-count must-count">${list.length}</span></div>
+      <div class="list glass">${list.map(x => renderTask(x, "must")).join("")}</div>
+    </section>`;
+}
+
+function renderDayBody(d) {
+  const today = todayISO();
+  if (d > today) {
+    const tasks = plannedFor(d);
+    return `<section class="section" aria-labelledby="h-today">
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
+        <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
+      ${tasks.length ? renderToday(tasks, false, "future") : `<div class="list glass"><div class="empty">${t().nothingPlanned}</div></div>`}
+      <p class="lead">${t().futureNote}</p>
+    </section>`;
+  }
+  const { tasks, habits } = doneOn(d);
+  return `<section class="section" aria-labelledby="h-past">
+      <div class="section-head"><h2 id="h-past">${t().doneThatDay}</h2></div>
+      <div class="list glass">${tasks.length || habits.length ? tasks.map(x => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(x.title)}</div><div class="tags">${esc((areaById(x.areaId) || {}).name || "")}</div></div></div>`).join("")
+        + habits.map(h => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(h.title)}</div><div class="tags">${t().habitTag}</div></div></div>`).join("")
+        : `<div class="empty">${t().nothingDone}</div>`}</div>
+    </section>`;
+}
+
 function renderHomeBody() {
+  if (curDay() !== todayISO()) return renderDayBody(curDay());
   const now = new Date();
   const habits = state.habits.filter(habitIsDueToday);
   const doneCount = habits.filter(habitDoneToday).length;
   const ws = weekStats();
   const reviewDay = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(day(((state.meta.reviewWeekday ?? 0) - now.getDay() + 7) % 7));
   return `
+    ${renderMust()}
     <section class="section" aria-labelledby="h-today">
       <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
         <button class="btn-plus" data-action="quick-add" aria-label="${t().fabLabel}">${icon("plus")}</button></div>
@@ -1313,11 +1478,11 @@ function renderHomeBody() {
       </div>
     </section>` : ""}
 
-    <section class="section" aria-labelledby="h-habits">
+    ${canUse("habitCards") ? `<section class="section" aria-labelledby="h-habits">
       <div class="section-head"><h2 id="h-habits">${t().habitsToday}</h2>${habits.length ? `<span class="meta">${t().habitsMeta(doneCount, habits.length)}</span>` : ""}</div>
       ${habits.length ? `<p class="lead">${t().habitsHint}</p><div class="habits">${habits.map(renderHabit).join("")}</div>`
         : `<div class="list glass"><div class="empty">${t().habitsEmpty}<br><button class="btn-sort" style="margin-top:12px" data-action="habit-new">${t().addHabit}</button></div></div>`}
-    </section>`;
+    </section>` : ""}`;
 }
 
 function renderInboxBody() {
@@ -1414,6 +1579,59 @@ function renderHabitsBody() {
     </section>`;
 }
 
+function relLabel(d) {
+  const diff = Math.round((new Date(d + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 86400000);
+  return t().rel(diff);
+}
+function dayHeader(greet) {
+  const d = curDay(); const isToday = d === todayISO();
+  const dt = new Date(d + "T12:00:00");
+  const wd = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(dt);
+  const dm = new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(dt);
+  const big = `${wd} ${dm}`.replace(/^./, c => c.toUpperCase());
+  return `<header class="top day-top">
+    <div class="top-txt">
+      <div class="greet day-greet">${esc(isToday ? greet : relLabel(d))}</div>
+      <div class="day-row">
+        <button class="day-btn" data-action="day-prev" aria-label="${t().prevDay}">${icon("back")}</button>
+        <button class="day-title" data-action="calendar" aria-label="${t().openCalendar}"><h1>${esc(big)}</h1></button>
+        <button class="day-btn" data-action="day-next" aria-label="${t().nextDay}">${icon("arrow")}</button>
+      </div>
+    </div>
+    <button class="icon-btn icon-btn-subtle" data-action="settings" aria-label="${t().settingsLabel}">${icon("gear")}</button>
+  </header>`;
+}
+
+function openCalendar() {
+  delete sheetEl.dataset.area;
+  const sel = curDay(); const today = todayISO();
+  if (!calMonth) calMonth = sel.slice(0, 7);
+  const [y, m] = calMonth.split("-").map(Number);
+  const first = new Date(y, m - 1, 1, 12); const startWd = (first.getDay() + 6) % 7;
+  const daysIn = new Date(y, m, 0).getDate();
+  const title = new Intl.DateTimeFormat(lang, { month: "long", year: "numeric" }).format(first).replace(/^./, c => c.toUpperCase());
+  const wdNames = [0, 1, 2, 3, 4, 5, 6].map(i => new Intl.DateTimeFormat(lang, { weekday: "short" }).format(new Date(2024, 0, 1 + i, 12)).replace(".", ""));
+  const planned = new Set(state.tasks.filter(x => x.date && x.type !== "recurring" && taskIsOpen(x)).map(x => x.date));
+  const done = new Set(state.tasks.filter(x => x.doneAt).map(x => x.doneAt));
+  state.habits.forEach(h => Object.keys(h.log).forEach(k => done.add(k)));
+  let cells = "";
+  for (let i = 0; i < startWd; i++) cells += `<span></span>`;
+  for (let dd = 1; dd <= daysIn; dd++) {
+    const k = `${y}-${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+    const dot = planned.has(k) ? (k < today ? "late" : "plan") : (done.has(k) && k <= today ? "done" : "");
+    cells += `<button class="cal-d ${k === today ? "is-today" : ""} ${k === sel ? "is-sel" : ""}" data-action="cal-pick" data-day="${k}" aria-label="${k}">${dd}${dot ? `<i class="cal-dot ${dot}"></i>` : ""}</button>`;
+  }
+  openSheet(`${sheetHead(t().calendar)}
+    <div class="cal-head">
+      <button class="day-btn dark" data-action="cal-month" data-dir="-1" aria-label="${t().prevMonth}">${icon("back")}</button>
+      <b>${title}</b>
+      <button class="day-btn dark" data-action="cal-month" data-dir="1" aria-label="${t().nextMonth}">${icon("arrow")}</button>
+    </div>
+    <div class="cal-grid">${wdNames.map(w => `<span class="cal-wd">${w}</span>`).join("")}${cells}</div>
+    <div class="cal-legend"><span><i class="cal-dot plan"></i>${t().legendPlan}</span><span><i class="cal-dot late"></i>${t().overdue}</span><span><i class="cal-dot done"></i>${t().legendDone}</span></div>
+    <button class="btn btn-wide-ghost" data-action="day-today">${t().backToToday}</button>`);
+}
+
 function render() {
   document.documentElement.lang = lang;
   const v = view(); const key = v.name + (v.id || "");
@@ -1430,7 +1648,7 @@ function render() {
     body = renderAreaBody(a);
   }
   else if (v.name === "habits") { top = topBlock(date, t().habitsTitle); body = renderHabitsBody(); }
-  else { top = topBlock(greet, date); body = renderHomeBody(); }
+  else { top = dayHeader(greet); body = renderHomeBody(); }
 
   document.getElementById("app").innerHTML = `<section class="hero">${top}${capture}</section>` + body;
   if (key !== lastViewKey) {
@@ -1482,7 +1700,7 @@ function openQuickAdd() {
   </form>`);
 }
 
-function openTaskForm(id, presetArea) {
+function openTaskForm(id, presetArea, presetDate) {
   delete sheetEl.dataset.area;
   const task = id ? state.tasks.find(x => x.id === id) : null;
   const areaId = task ? task.areaId : (presetArea || (state.areas[0] && state.areas[0].id));
@@ -1501,6 +1719,13 @@ function openTaskForm(id, presetArea) {
     <div class="field field-inline"><span class="flabel">${t().type}</span>${segRadios("type", [["single", t().types[0]], ["project", t().types[1]], ["recurring", t().types[2]]], type)}</div>
     <label class="field f-project"><span class="flabel">${t().steps}</span>
       <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
+    <div class="field f-date"><span class="flabel">${t().when}</span>
+      <div class="date-row">
+        <input class="input" name="date" type="date" value="${task && task.date ? task.date : (presetDate && presetDate !== todayISO() ? presetDate : "")}" aria-label="${t().when}">
+        <button class="btn" type="button" data-action="date-set" data-off="0">${t().today}</button>
+        <button class="btn" type="button" data-action="date-set" data-off="1">${t().tomorrow}</button>
+      </div>
+      <span class="note">${t().whenHint}</span></div>
     <label class="field f-recurring"><span class="flabel">${t().everyDays}</span>
       <input class="input" name="every" type="number" inputmode="numeric" min="1" max="365" value="${task && task.everyDays ? task.everyDays : 7}">
       <span class="note">${t().everyHint}</span></label>
@@ -1583,6 +1808,7 @@ function submitForm(form) {
     let task = id ? state.tasks.find(x => x.id === id) : null;
     if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
     Object.assign(task, { title, areaId: f.get("area"), priority, type });
+    const dt = (f.get("date") || "").toString(); if (dt && type !== "recurring") task.date = dt; else delete task.date;
     const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp;
     const gsel = (f.get("group_" + task.areaId) || "").toString(); const ar = areaById(task.areaId);
     if (gsel && ar && (ar.groups || []).some(g => g.id === gsel)) task.groupId = gsel; else delete task.groupId;
@@ -1655,6 +1881,11 @@ function openSettings() {
         <input id="import-file" type="file" accept="application/json,.json,.txt" hidden>
       </div>
       <textarea class="dump" id="dump" readonly hidden aria-label="${t().backup}"></textarea>
+      <button class="btn" data-action="paste-open">${t().pasteBackup}</button>
+      <div id="paste-box" class="field" hidden>
+        <textarea class="input" id="paste-text" rows="5" placeholder="${t().pastePh}" aria-label="${t().pasteBackup}"></textarea>
+        <button class="btn-accent btn-wide" data-action="paste-load">${t().pasteLoad}</button>
+      </div>
     </div>
     ${state.demo ? `<div class="block"><h4>${t().startOwn}</h4><p class="note">${t().startOwnNote}</p>
       <div class="btn-row"><button class="btn" data-action="start-own">${t().startOwn}</button></div></div>` : ""}
@@ -1703,7 +1934,7 @@ document.addEventListener("click", async e => {
     case "quick-add": openQuickAdd(); break;
     case "quick-detail": {
       const v = (document.getElementById("quick-input") || {}).value || "";
-      openTaskForm(null, view().name === "area" ? view().id : undefined);
+      openTaskForm(null, view().name === "area" ? view().id : undefined, view().name === "home" ? curDay() : undefined);
       const ti = sheetEl.querySelector('[name="title"]'); if (ti) ti.value = v.trim();
       break;
     }
@@ -1722,19 +1953,39 @@ document.addEventListener("click", async e => {
     case "habit-edit": openHabitForm(id); break;
     case "habit-delete": { const u = deleteHabit(id); closeSheet(); render(); toast(t().deleted, u); break; }
     case "habit-day": { const u = toggleHabitDay(id, el.dataset.day); render(); if (state.habits.find(h => h.id === id).log[el.dataset.day]) toast(t().done, u); break; }
-    case "skip": { const u = skipToday(id); render(); toast(t().skippedToast, u); break; }
+    case "day-prev": case "day-next": { const dd = new Date(curDay() + "T12:00:00"); dd.setDate(dd.getDate() + (el.dataset.action === "day-next" ? 1 : -1)); const k = iso(dd); selectedDay = k === todayISO() ? null : k; render(); break; }
+    case "day-today": selectedDay = null; calMonth = null; closeSheet(); render(); break;
+    case "calendar": calMonth = null; openCalendar(); break;
+    case "cal-month": { const [yy, mm] = calMonth.split("-").map(Number); const nd = new Date(yy, mm - 1 + Number(el.dataset.dir), 1, 12); calMonth = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}`; openCalendar(); break; }
+    case "cal-pick": { const k = el.dataset.day; selectedDay = k === todayISO() ? null : k; calMonth = null; closeSheet(); go(""); break; }
+    case "date-set": { const inp = el.closest("form").querySelector('[name="date"]'); inp.value = iso(day(+el.dataset.off)); break; }
+    case "task-new-day": openTaskForm(null, undefined, curDay()); break;
+    case "skip-habit": { const u = skipHabitToday(id); render(); toast(t().skippedToast, u); break; }
+    case "skip": { const u = skipToday(id, curDay()); render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
     case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
     case "settings": openSettings(); break;
     case "close": closeSheet(); break;
     case "soon": toast(t().soon); break;
-    case "nav": { const v = el.dataset.view; go(v === "home" ? "" : v); break; }
+    case "nav": { const v = el.dataset.view; if (v === "home" && view().name === "home") selectedDay = null; go(v === "home" ? "" : v); break; }
     case "inbox-delete": { const u = deleteInbox(id); render(); toast(t().deleted, u); break; }
     case "inbox-sort": openSort(id); break;
     case "sort-area": sortChoice.areaId = el.dataset.area; openSort(sortChoice.id); break;
     case "sort-prio": sortChoice.priority = +el.dataset.prio; openSort(sortChoice.id); break;
     case "sort-confirm": { const a = areaById(sortChoice.areaId); const u = sortInbox(sortChoice.id, sortChoice.areaId, sortChoice.priority); closeSheet(); render(); toast(t().sortedTo(a.name), u); break; }
     case "lang": lang = el.dataset.lang; prefs.lang = lang; savePrefs(); render(); openSettings(); break;
+    case "paste-open": { const b = document.getElementById("paste-box"); b.hidden = !b.hidden; if (!b.hidden) document.getElementById("paste-text").focus(); break; }
+    case "paste-load": {
+      const txt = document.getElementById("paste-text").value.trim();
+      if (!txt) { toast(t().pasteEmpty); break; }
+      try { const o = JSON.parse(txt); migrate(JSON.parse(JSON.stringify(o && o.app === "hub" ? o.data : o))); }
+      catch (err) { toast(t().importBad); break; }
+      confirmDialog(t().pasteConfirm, t().replace, () => {
+        const snap = snapshot();
+        try { importBackup(txt); closeSheet(); render(); toast(t().importOk, restore(snap)); } catch (err) { toast(t().importBad); }
+      });
+      break;
+    }
     case "copy": {
       const json = exportBackup();
       document.getElementById("lb").textContent = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup));
