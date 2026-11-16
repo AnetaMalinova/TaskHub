@@ -290,6 +290,8 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .subhead{padding:10px var(--sp-4) 4px;font-size:var(--fs-xs);font-weight:700;color:var(--c-muted);background:var(--c-surface-2);border-top:1px solid var(--c-stroke)}
 .group-list > .subhead:first-child,.list > .subhead:first-child{border-top:0}
 .pick-plain{padding:0 14px}
+.f-recurring .f-every-custom{display:none}
+.f-recurring[data-every="custom"] .f-every-custom{display:block}
 .field[hidden]{display:none}
 .btn-x{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;background:var(--c-surface);border:1px solid var(--c-stroke);color:var(--c-muted);flex:none}
 .btn-x .icon{width:18px;height:18px;stroke-width:2.2}
@@ -444,9 +446,10 @@ textarea.dump{width:100%;min-height:90px;border-radius:var(--r-sm);background:va
 /* ===== Mockup telefonu: jen na širší obrazovce. Na telefonu běží apka na celou plochu. ===== */
 .statusbar,.island,.homebar{display:none}
 /* Pevné rozvržení: lišta dole je vždy u spodního okraje obrazovky, posouvá se jen obsah. */
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .stage,.device{height:100%}
-.screen{position:relative;height:100%;height:100dvh;overflow:hidden;transform:translateZ(0)}
+/* Obrazovka je přišpendlená k oknu (iOS jinak při přetažení posune celou stránku i s lištou). */
+.screen{position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden;transform:translateZ(0)}
 .scroller{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 @media (min-width:600px) and (min-height:640px){
   html,body{height:auto;min-height:100%;overflow:auto}
@@ -593,7 +596,10 @@ const STRINGS = {
     types: ["Jednorázový", "Projekt", "Opakovaný"],
     steps: "Kroky projektu",
     stepsPh: "Každý krok na nový řádek",
-    everyDays: "Opakovat každých (dní)",
+    everyDays: "Opakovat",
+    everyPreset: n => n === 30 ? "Za měsíc" : `Za ${n} dní`,
+    everyCustom: "Vlastní",
+    everyCustomLabel: "Počet dní",
     everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se zase ukáže a zůstane v činnostech, dokud ho nesplníš.",
     nextDue: d => `Další ${d}`,
     save: "Uložit",
@@ -769,7 +775,10 @@ const STRINGS = {
     types: ["One-off", "Project", "Repeating"],
     steps: "Project steps",
     stepsPh: "One step per line",
-    everyDays: "Repeat every (days)",
+    everyDays: "Repeat",
+    everyPreset: n => n === 30 ? "Every month" : `Every ${n} days`,
+    everyCustom: "Custom",
+    everyCustomLabel: "Number of days",
     everyHint: "Counted from the day you tick it off. Then it shows up again and stays until you do it.",
     nextDue: d => `Next ${d}`,
     save: "Save",
@@ -862,12 +871,13 @@ function pl(lang, n, forms) {
 /* ===================== PŘÍSTUP K FUNKCÍM (zdarma / placené) ===================== */
 // Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
 // "hidden" = funkce je zatím skrytá v celé apce (data se dál počítají).
-const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", unlimitedAreas: "free" };
+const EVERY_PRESETS = [7, 14, 30];
+const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", unlimitedAreas: "free" };
 const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.5.0";
+const APP_VERSION = "0.5.1";
 const DATA_VERSION = 2;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -1517,28 +1527,27 @@ function renderAreaBody(a) {
   const { active, done } = areaTasks(a.id);
   const habits = state.habits.filter(h => h.areaId === a.id);
   return `
-    <section class="section">
+    ${a.direction || a.context ? `<section class="section">
       <div class="block dir-block" style="--area-c:${a.color}">
-        <h4>${t().direction}</h4>
-        <p class="${a.direction ? "" : "note"}">${a.direction ? esc(a.direction) : t().noDirection}</p>
-        ${a.context ? `<h4 style="margin-top:var(--sp-2)">${t().context}</h4><p>${esc(a.context)}</p>` : ""}
+        ${a.direction ? `<h4>${t().direction}</h4><p>${esc(a.direction)}</p>` : ""}
+        ${a.context ? `<h4 ${a.direction ? 'style="margin-top:var(--sp-2)"' : ""}>${t().context}</h4><p>${esc(a.context)}</p>` : ""}
       </div>
-    </section>
+    </section>` : ""}
 
     <section class="section" aria-labelledby="h-a-tasks">
       <div class="section-head"><h2 id="h-a-tasks">${t().tasks}</h2>
-        <button class="btn-sort" data-action="task-new" data-area="${a.id}">${t().add}</button></div>
+        <button class="btn-plus" data-action="task-new" data-area="${a.id}" aria-label="${t().addTask}">${icon("plus")}</button></div>
       <div class="list glass">${active.length ? renderByGroups(a, active, "area") : `<div class="empty">${t().noAreaTasks}</div>`}</div>
       <button class="link-muted" data-action="groups-edit" data-id="${a.id}">${icon("pencil")}${(a.groups || []).length ? t().editGroups : t().addGroups}</button>
     </section>
 
     <section class="section" aria-labelledby="h-a-habits">
       <div class="section-head"><h2 id="h-a-habits">${t().habits}</h2>
-        <button class="btn-sort" data-action="habit-new" data-area="${a.id}">${t().add}</button></div>
+        <button class="btn-plus" data-action="habit-new" data-area="${a.id}" aria-label="${t().addHabit}">${icon("plus")}</button></div>
       ${habits.length ? `<div class="hcards">${habits.map(h => renderHabitCard(h, false)).join("")}</div>` : `<div class="list glass"><div class="empty">${t().noHabits}</div></div>`}
     </section>
 
-    <section class="section">
+    ${canUse("areaArchive") ? `<section class="section">
       <div class="group glass ${archiveOpen ? "is-open" : ""}" style="--area-c:var(--c-good)">
         <button class="group-head" data-action="archive" aria-expanded="${archiveOpen}">
           <span class="ico">${icon("check")}</span>
@@ -1547,7 +1556,7 @@ function renderAreaBody(a) {
         </button>
         ${archiveOpen ? `<div class="group-list">${done.length ? done.map(x => renderTask(x, "area")).join("") : `<div class="empty">${t().archiveEmpty}</div>`}</div>` : ""}
       </div>
-    </section>`;
+    </section>` : ""}`;
 }
 
 function renderHabitCard(h, showArea = true) {
@@ -1726,9 +1735,12 @@ function openTaskForm(id, presetArea, presetDate) {
         <button class="btn" type="button" data-action="date-set" data-off="1">${t().tomorrow}</button>
       </div>
       <span class="note">${t().whenHint}</span></div>
-    <label class="field f-recurring"><span class="flabel">${t().everyDays}</span>
-      <input class="input" name="every" type="number" inputmode="numeric" min="1" max="365" value="${task && task.everyDays ? task.everyDays : 7}">
-      <span class="note">${t().everyHint}</span></label>
+    ${(() => { const ev = task && task.everyDays ? task.everyDays : 7; const preset = EVERY_PRESETS.includes(ev) ? String(ev) : "custom";
+      return `<div class="field f-recurring" data-every="${preset}"><span class="flabel">${t().everyDays}</span>
+      <div class="area-pick">${[...EVERY_PRESETS.map(n => [String(n), t().everyPreset(n)]), ["custom", t().everyCustom]].map(([v, l]) => `
+        <label class="pick pick-plain"><input type="radio" name="everyPick" value="${v}" ${v === preset ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
+      <input class="input f-every-custom" name="every" type="number" inputmode="numeric" min="1" max="365" value="${ev}" aria-label="${t().everyCustomLabel}" placeholder="${t().everyCustomLabel}">
+      <span class="note">${t().everyHint}</span></div>`; })()}
     <label class="field"><span class="flabel">${t().followUp}</span>
       <textarea class="input" name="followUp" rows="3" placeholder="${t().followUpPh}">${task && task.followUp ? esc(task.followUp) : ""}</textarea>
       <span class="note">${t().followUpHint}</span></label>
@@ -1818,7 +1830,8 @@ function submitForm(form) {
       task.subtasks = lines.map(l => { const m = old.find(o => o.title === l); return m || { id: uid(), title: l, done: false }; });
       delete task.everyDays; delete task.nextDue;
     } else if (type === "recurring") {
-      task.everyDays = Math.max(1, Math.min(365, +f.get("every") || 7));
+      const pick = f.get("everyPick");
+      task.everyDays = Math.max(1, Math.min(365, (pick && pick !== "custom" ? +pick : +f.get("every")) || 7));
       if (!task.nextDue) task.nextDue = todayISO();
       task.done = false; delete task.subtasks;
     } else { delete task.subtasks; delete task.everyDays; delete task.nextDue; }
@@ -2001,6 +2014,10 @@ document.addEventListener("change", e => {
   if (e.target.name === "type") form.dataset.type = e.target.value;
   if (e.target.name === "area") form.querySelectorAll(".f-group").forEach(el => { el.hidden = el.dataset.forArea !== e.target.value; });
   if (e.target.name === "freq") form.dataset.freq = e.target.value;
+  if (e.target.name === "everyPick") {
+    const box = e.target.closest(".f-recurring"); box.dataset.every = e.target.value;
+    if (e.target.value === "custom") { const inp = box.querySelector(".f-every-custom"); inp.focus(); inp.select && inp.select(); }
+  }
 });
 document.addEventListener("submit", e => {
   const form = e.target.closest("form[data-form]");
