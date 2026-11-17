@@ -31,15 +31,16 @@
   --c-surface-2:#f7f4fd;
   --c-text:#1c1633;
   --c-muted:#6b6489;
-  --c-faint:#a7a2c2;
+  --c-faint:#726a9d;
   --c-accent:#7342cb;
+  --c-skip:#f5c48f;
   --c-accent-2:#8455d6;
   --c-accent-soft:#ece5f8;
   --c-on-accent:#ffffff;
   --c-stroke:#e6e0f3;
-  --c-good:#12a877;
-  --c-warn:#c98200;
-  --c-crit:#e5487a;
+  --c-good:#2f9470;
+  --c-warn:#95600a;
+  --c-crit:#c52e61;
 
   --f-display:"Plus Jakarta Sans", -apple-system, "SF Pro Display", system-ui, sans-serif;
   --f-body:"Plus Jakarta Sans", -apple-system, "SF Pro Text", system-ui, sans-serif;
@@ -102,7 +103,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 }
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);position:relative;z-index:1}
 .top h1{font-family:var(--f-display);font-size:var(--fs-xl);line-height:1.2;font-weight:700;letter-spacing:-.01em;word-spacing:.12em;margin:0;text-wrap:balance}
-.top .greet{font-size:var(--fs-sm);font-weight:500;color:rgba(255,255,255,.75);margin-bottom:4px}
+.top .greet{font-size:var(--fs-sm);font-weight:500;color:rgba(255,255,255,.84);margin-bottom:4px}
 .icon-btn{width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:var(--r-md);background:none;color:#fff;margin-right:-10px}
 .icon-btn .icon{width:24px;height:24px}
 .icon-btn.icon-btn-subtle{margin-top:-12px;opacity:.7}
@@ -167,10 +168,33 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .habit.is-done .sub{color:rgba(255,255,255,.85)}
 
 /* Priority */
-.list{padding:var(--sp-1) 0;overflow:hidden}
+.list{padding:0;overflow:hidden}
 .list:has(> .subhead:first-child){padding-top:0}
 .row{display:flex;align-items:center;gap:var(--sp-3);min-height:62px;padding:var(--sp-2) var(--sp-4);position:relative}
-.row + .row::before{content:"";position:absolute;top:0;left:56px;right:0;height:1px;background:var(--c-stroke)}
+.row + .row::before,.swipe + .swipe > .row::before,.row + .swipe > .row::before,.swipe + .row::before{content:"";position:absolute;top:0;left:56px;right:0;height:1px;background:var(--c-stroke)}
+/* Swajp doleva odkryje akce (Dnes ne, Cíl dne). */
+.swipe{position:relative;overflow:hidden}
+[data-drag]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.drag-on{position:relative;z-index:5;box-shadow:0 8px 24px rgba(40,20,90,.18);transform:scale(1.02);transition:transform .15s ease,box-shadow .15s ease;background:var(--c-surface)}
+.drag-on > .row{background:var(--c-surface)}
+.wdots{display:flex;gap:4px;flex:none}
+.tags .meta{color:var(--c-faint);font-weight:500;font-size:.6875rem}
+.row .body:has(.meta){gap:1px}
+.done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-faint);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
+.done-link::after{content:"";position:absolute;inset:-4px 0}
+.wdots i{width:10px;height:10px;border-radius:3px;background:var(--c-stroke)}
+.wdots i.on{background:var(--area-c)}
+.swipe > .row{background:var(--c-surface);touch-action:pan-y;transition:transform .22s ease;will-change:transform}
+.swipe.dragging > .row{transition:none}
+.swipe.open > .row{transform:translateX(calc(-1 * var(--sw-w)))}
+.sw-acts{position:absolute;top:0;right:0;bottom:0;display:flex}
+.sw-act{width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-size:.6875rem;font-weight:700}
+.sw-act .icon{width:20px;height:20px}
+.sw-skip{background:var(--c-skip);color:var(--c-text)}
+.sw-goal{background:var(--c-accent)}
+.sw-goal .t-core{fill:currentColor}
+.sw-goal.on{background:var(--c-muted)}
+@media (prefers-reduced-motion:reduce){.swipe > .row{transition:none}}
 .row .stripe{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
 .check{width:var(--tap);height:var(--tap);margin:-6px -6px -6px -10px;flex:none;display:grid;place-items:center}
 .check span{width:24px;height:24px;border-radius:8px;border:2px solid #d3c8ec;display:grid;place-items:center;transition:all var(--t-fast);background:#fff}
@@ -305,6 +329,10 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .form .seg label span{height:30px;padding:0 10px;font-size:var(--fs-xs)}
 .btn-skip{flex:none;height:32px;padding:0 10px;border-radius:var(--r-pill);border:1px solid var(--c-stroke);background:var(--c-surface-2);color:var(--c-muted);font-size:var(--fs-xs);font-weight:600;position:relative;white-space:nowrap}
 .btn-skip::after{content:"";position:absolute;inset:-6px -2px}
+.btn-goal{width:var(--tap);height:var(--tap);display:grid;place-items:center;color:var(--c-faint);border-radius:var(--r-md);flex:none;margin-right:-6px}
+.btn-goal .icon{width:20px;height:20px}
+.btn-goal.on{color:var(--c-accent)}
+.btn-goal.on .t-core{fill:currentColor}
 .check.done-static .icon{opacity:1}
 .check:disabled{cursor:default;opacity:.7}
 
@@ -314,7 +342,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .area:active{transform:scale(.98)}
 .area .ico,.sheet-head .ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
 .area .name{font-family:var(--f-display);font-weight:800;font-size:var(--fs-md)}
-.area .dir{font-size:var(--fs-xs);color:var(--c-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.area .dir{font-size:.6875rem;color:var(--c-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
 .area .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-xs);color:var(--c-muted);font-weight:600;font-variant-numeric:tabular-nums}
 .area .dots{display:flex;gap:3px}
 .area .dots i{width:6px;height:6px;border-radius:2px;background:var(--c-stroke)}
@@ -534,7 +562,7 @@ const STRINGS = {
     habitsToday: "Dnešní návyky",
     habitsHint: "Splní se samy, když je odškrtneš v Činnostech pro tento den. Klepnutím na kartu otevřeš detail.",
     habitTag: "Návyk",
-    mustTitle: "Must have",
+    mustTitle: "Úkoly pro tento den",
     overdue: "Overdue",
     when: "Kdy",
     whenHint: "Nepovinné. Bez data se úkol nabízí každý den v činnostech. S datem se ten den ukáže v Must have a zůstane tam, dokud ho nesplníš.",
@@ -552,16 +580,28 @@ const STRINGS = {
     backToToday: "Zpět na dnešek",
     nothingPlanned: "Na tenhle den zatím nic nemáš. Přidej úkol plusem.",
     futureNote: "Úkoly bez data se nabízejí každý den v dnešních činnostech.",
-    doneThatDay: "Hotovo ten den",
+    doneThatDay: "Splněno",
     nothingDone: "Ten den tu nic hotového není.",
-    skip: "Dnes ne",
-    skipped: "Dnes přeskočeno",
-    skippedToast: "Přeskočeno, zítra se ti zase nabídne",
+    skip: "Na zítra",
+    skipped: "Na zítra",
+    skippedToast: "Přesunuto na zítra",
     habitsMeta: (a, b) => `${a} z ${b}`,
     streak: n => `${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])} v řadě`,
     weekly: (a, b) => `${a}/${b} tento týden`,
     priorities: "Priority",
-    todayTitle: "Činnosti pro tento den",
+    todayTitle: "Na výběr",
+    goalTitle: "Cíl dne",
+    goalTasks: "Úkoly",
+    goalAllDone: "Všechno z cíle dne je hotové.",
+    doneToday: "Dokončeno",
+    weekDone: n => `Tento týden splněno ${n}× ze 7 dní`,
+    goalEmpty: "Zatím nic. V sekci „Na výběr“ potáhni činnost doleva a klepni na Cíl.",
+    goalAdd: "Přidat do cíle dne",
+    goalRemove: "Odebrat z cíle dne",
+    goalAdded: "V cíli dne",
+    goalOn: "Cíl",
+    goalOff: "Zrušit",
+    goalRemoved: "Vráceno do Na výběr",
     areasTitle: "Kategorie",
     areasLead: "Klepni na kategorii a uvidíš její směr, úkoly, návyky i to, co už máš hotové.",
     areaLabel: "Kategorie",
@@ -715,7 +755,7 @@ const STRINGS = {
     habitsToday: "Today's habits",
     habitsHint: "They count when you tick them off in Things for today. Tap a card for details.",
     habitTag: "Habit",
-    mustTitle: "Must have",
+    mustTitle: "Tasks for this day",
     overdue: "Overdue",
     when: "When",
     whenHint: "Optional. Without a date the task shows up every day. With a date it appears that day and moves to Must have if missed.",
@@ -733,16 +773,28 @@ const STRINGS = {
     backToToday: "Back to today",
     nothingPlanned: "Nothing planned for this day yet. Add a task with the plus.",
     futureNote: "Tasks without a date show up every day in today's activities.",
-    doneThatDay: "Done that day",
+    doneThatDay: "Completed",
     nothingDone: "Nothing done that day.",
-    skip: "Not today",
-    skipped: "Skipped today",
-    skippedToast: "Skipped, it comes back tomorrow",
+    skip: "Tomorrow",
+    skipped: "Moved to tomorrow",
+    skippedToast: "Moved to tomorrow",
     habitsMeta: (a, b) => `${a} of ${b}`,
     streak: n => `${n}-day streak`,
     weekly: (a, b) => `${a}/${b} this week`,
     priorities: "Priorities",
-    todayTitle: "Things for today",
+    todayTitle: "To pick from",
+    goalTitle: "Today's goal",
+    goalTasks: "Tasks",
+    goalAllDone: "Everything in today's goal is done.",
+    doneToday: "Done",
+    weekDone: n => `Done ${n} of 7 days this week`,
+    goalEmpty: "Nothing yet. In “To pick from”, swipe an item left and tap Goal.",
+    goalAdd: "Add to today's goal",
+    goalRemove: "Remove from today's goal",
+    goalAdded: "Added to today's goal",
+    goalOn: "Goal",
+    goalOff: "Remove",
+    goalRemoved: "Back in To pick from",
     areasTitle: "Categories",
     areasLead: "Tap a category to see its direction, tasks, habits and what you've already done.",
     areaLabel: "Category",
@@ -889,8 +941,8 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.5.2";
-const DATA_VERSION = 2;
+const APP_VERSION = "0.6.0";
+const DATA_VERSION = 3;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
 
@@ -905,10 +957,10 @@ function sampleData() {
     version: DATA_VERSION,
     demo: false,
     areas: [
-      { id: "sport", name: "Sport", color: "#12a877", icon: "sport", groups: [], direction: "Být v kondici na letní túry. Hýbat se aspoň 4× týdně.", context: "Běh po Stromovce, posilovna út a čt. Chci zkusit lezení." },
-      { id: "work", name: "Freelance", color: "#3b7ff2", icon: "work", groups: [], direction: "Dotáhnout projekty do konce, neotvírat nové bez uzavření starých.", context: "Pondělní plánování, pátky bez schůzek." },
-      { id: "home", name: "Domácnost", color: "#e09a00", icon: "home", groups: [{ id: "g-pantry", name: "Komora" }, { id: "g-wc", name: "WC" }, { id: "g-bath", name: "Koupelna" }, { id: "g-bedroom", name: "Ložnice" }, { id: "g-hall", name: "Chodba" }, { id: "g-living", name: "Obývák" }, { id: "g-kitchen", name: "Kuchyň" }, { id: "g-other", name: "Ostatní" }], direction: "Byt, kde se mi dobře odpočívá. Méně věcí.", context: "Úklid po místnostech, ne všechno najednou." },
-      { id: "food", name: "Jídlo", color: "#5ea30d", icon: "food", groups: [], direction: "Jíst pravidelně a mít doma zdravé svačiny.", context: "Oblíbené: ořechy, cottage s ovocem, hummus a zelenina." },
+      { id: "sport", name: "Sport", color: "#3a9976", icon: "sport", groups: [], direction: "Být v kondici na letní túry. Hýbat se aspoň 4× týdně.", context: "Běh po Stromovce, posilovna út a čt. Chci zkusit lezení." },
+      { id: "work", name: "Freelance", color: "#6089d1", icon: "work", groups: [], direction: "Dotáhnout projekty do konce, neotvírat nové bez uzavření starých.", context: "Pondělní plánování, pátky bez schůzek." },
+      { id: "home", name: "Domácnost", color: "#b2802a", icon: "home", groups: [{ id: "g-pantry", name: "Komora" }, { id: "g-wc", name: "WC" }, { id: "g-bath", name: "Koupelna" }, { id: "g-bedroom", name: "Ložnice" }, { id: "g-hall", name: "Chodba" }, { id: "g-living", name: "Obývák" }, { id: "g-kitchen", name: "Kuchyň" }, { id: "g-other", name: "Ostatní" }], direction: "Byt, kde se mi dobře odpočívá. Méně věcí.", context: "Úklid po místnostech, ne všechno najednou." },
+      { id: "food", name: "Jídlo", color: "#62963d", icon: "food", groups: [], direction: "Jíst pravidelně a mít doma zdravé svačiny.", context: "Oblíbené: ořechy, cottage s ovocem, hummus a zelenina." },
     ],
     tasks: [
       { id: uid(), areaId: "work", title: "Poslat nabídku klientovi", priority: 1, type: "single", done: false },
@@ -940,7 +992,8 @@ function sampleData() {
       { id: uid(), text: "Zjistit ceny permanentky do posilovny", createdAt: iso(day(-1)) },
       { id: uid(), text: "Dárek pro mámu k Vánocům", createdAt: iso(day(0)) },
     ],
-    meta: { lastBackup: null, reviewWeekday: 0, cleanup1: true, cleanup2: true, cleanup3: true, cleanup4: true, cleanup5: true },
+    goals: {},
+    meta: { lastBackup: null, reviewWeekday: 0, cleanup1: true, cleanup2: true, cleanup3: true, cleanup4: true, cleanup5: true, cleanup7: true },
   };
 }
 
@@ -958,6 +1011,8 @@ const MIGRATIONS = {
     }
     d.version = 2; return d;
   },
+  // v2 -> v3: cíle dne ({ "YYYY-MM-DD": ["t:<id>", "h:<id>"] }). Nic se nemaže.
+  2: d => { if (!d.goals || typeof d.goals !== "object") d.goals = {}; d.version = 3; return d; },
 };
 function migrate(d) {
   if (!d || typeof d !== "object" || typeof d.version !== "number") throw new Error("invalid");
@@ -984,7 +1039,7 @@ function load() {
   const raw = storage.get(STORAGE_KEY);
   if (raw) { try {
     state = migrate(JSON.parse(raw));
-    cleanup1(); cleanup2(); cleanup3(); cleanup4(); cleanup5();
+    cleanup1(); cleanup2(); cleanup3(); cleanup4(); cleanup5(); cleanup6();
     // Jen u ukázkových dat: srovnat barvy oblastí s aktuálním vzhledem. Vlastní data se nemění.
     if (state.demo) { const s = sampleData(); state.areas.forEach(a => { const m = s.areas.find(x => x.id === a.id); if (m) a.color = m.color; }); save(); }
     return; } catch (e) { /* poškozená data necháme být, nepřepisujeme */ storage.set(STORAGE_KEY + ".corrupt", raw); } }
@@ -997,6 +1052,12 @@ function save() { storage.set(STORAGE_KEY, JSON.stringify(state)); }
 // Jednorázově na přání: podskupiny Domácnosti. Stávající se zachovají podle názvu, úkoly z odebraných skončí v Ostatní.
 // Jednorázově na přání: vrátit Kuchyň do Domácnosti (před Ostatní) a přesunout do ní kuchyňské úkoly z Ostatní.
 // Jednorázově na přání: současná data beru jako vlastní (bez štítku Ukázková data). Nic se nemaže.
+// Jednorázově: kategorie v původních sytých barvách převést na odpovídající pastelové. Vlastní jiné barvy se nemění.
+function cleanup6() {
+  if (state.meta.cleanup7) return;
+  state.areas.forEach(a => { const n = PALETTE_OLD[(a.color || "").toLowerCase()]; if (n) a.color = n; });
+  state.meta.cleanup7 = true; save();
+}
 function cleanup5() {
   if (state.meta.cleanup5) return;
   state.demo = false; state.meta.cleanup5 = true; save();
@@ -1066,8 +1127,8 @@ function habitStreak(h) {
   return n;
 }
 function habitSkippedToday(h) { return !!(h.skips && h.skips[todayISO()]) && !habitDoneToday(h); }
-function skipHabitToday(id) {
-  const h = state.habits.find(x => x.id === id); const k = todayISO();
+function skipHabitToday(id, k = todayISO()) {
+  const h = state.habits.find(x => x.id === id);
   h.skips = h.skips || {}; h.skips[k] = true; save();
   return () => { delete h.skips[k]; save(); };
 }
@@ -1084,7 +1145,9 @@ function taskIsOpen(task) {
   return !task.done;
 }
 function isSkippedToday(task) { const k = todayISO(); return task.skipDay === k || !!(task.skipDays && task.skipDays[k]); }
-const sortTasks = list => list.sort((a, b) => a.priority - b.priority || (a.type === "project" ? -1 : 1));
+// Vlastní pořadí (task.order, nastavené přetažením) má přednost; bez něj zůstává původní řazení.
+const byOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9);
+const sortTasks = list => list.sort((a, b) => byOrder(a, b) || a.priority - b.priority || (a.type === "project" ? -1 : 1));
 // Dnešní činnosti: úkoly bez data, úkoly na dnešek a opakované, které jsou na řadě. Zpožděné jsou zvlášť v Must have.
 function openTasks() {
   const today = todayISO();
@@ -1092,7 +1155,7 @@ function openTasks() {
 }
 function isOverdue(x) { return !!x.date && x.type !== "recurring" && x.date < todayISO() && taskIsOpen(x); }
 // Must have: úkoly s datem na dnešek a zpožděné (ty mají chip Overdue).
-function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && taskIsOpen(x)).sort((a, b) => a.date.localeCompare(b.date)); }
+function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && taskIsOpen(x)).sort((a, b) => byOrder(a, b) || a.date.localeCompare(b.date)); }
 // Budoucí den: úkoly naplánované na ten den a opakované, které na něj připadnou.
 function plannedFor(dayIso) {
   return sortTasks(state.tasks.filter(x => {
@@ -1186,7 +1249,11 @@ function deleteInbox(id) {
   return () => { state.inbox.splice(idx, 0, item); save(); };
 }
 const AREA_ICONS = ["sport", "work", "photo", "home", "trips", "food", "book", "heart", "star", "music", "other"];
-const PALETTE = ["#7342cb", "#3b7ff2", "#0ea5c6", "#12a877", "#5ea30d", "#e09a00", "#f0603a", "#e5487a"];
+// Barvy kategorií: tlumené, aby nejvýraznější zůstala fialová apky (fialová kategorie je záměrně světlejší lila).
+// Každá má kontrast aspoň 3:1 vůči bílé i vůči svému světlému podkladu (WCAG AA pro grafiku a ikony).
+const PALETTE = ["#9f78cc", "#6089d1", "#3194a8", "#3a9976", "#62963d", "#b2802a", "#d46a49", "#d2668a"];
+// Starší palety (sytá a první pastelová) -> aktuální, pro převod uložených kategorií.
+const PALETTE_OLD = { "#7342cb": "#9f78cc", "#3b7ff2": "#6089d1", "#0ea5c6": "#3194a8", "#12a877": "#3a9976", "#5ea30d": "#62963d", "#e09a00": "#b2802a", "#f0603a": "#d46a49", "#e5487a": "#d2668a", "#a98bdb": "#9f78cc", "#7fa6e6": "#6089d1", "#66b9cc": "#3194a8", "#62bb98": "#3a9976", "#9bc26b": "#62963d", "#e6b660": "#b2802a", "#ec9479": "#d46a49", "#e68cab": "#d2668a" };
 const snapshot = () => JSON.stringify(state);
 const restore = snap => () => { state = JSON.parse(snap); save(); };
 function toggleHabitDay(id, k) {
@@ -1210,6 +1277,33 @@ function deleteArea(id) {
   save(); return restore(snap);
 }
 // „Dnes ne“ pro libovolný den: úkol s datem se posune na další den, ostatní se ten den jen přeskočí.
+/* ----- Cíl dne: položky vybrané z „Na výběr“ na konkrétní den ----- */
+const goalKey = (kind, id) => `${kind}:${id}`;
+const goalsOf = (d = todayISO()) => (state.goals && state.goals[d]) || [];
+const isGoal = (kind, id, d = todayISO()) => goalsOf(d).includes(goalKey(kind, id));
+function setGoal(kind, id, on, d = todayISO()) {
+  if (!state.goals) state.goals = {};
+  const k = goalKey(kind, id); const list = goalsOf(d).filter(x => x !== k);
+  if (on) list.push(k);
+  if (list.length) state.goals[d] = list; else delete state.goals[d];
+  save();
+}
+function toggleGoal(kind, id, d = todayISO()) {
+  const was = isGoal(kind, id, d); setGoal(kind, id, !was, d);
+  return () => setGoal(kind, id, was, d);
+}
+// Backlog „Na výběr“ pro budoucí den: úkoly bez data a opakované, které už budou na řadě.
+function backlogFor(d) {
+  return sortTasks(state.tasks.filter(x => !(x.skipDays && x.skipDays[d]) && (x.type === "recurring" ? x.nextDue <= d : (!x.date && taskIsOpen(x)))));
+}
+function goalItems(d = todayISO()) {
+  return goalsOf(d).map(k => {
+    const [kind, id] = [k.slice(0, 1), k.slice(2)];
+    if (kind === "t") { const x = state.tasks.find(x => x.id === id); return x && !(x.skipDay === d || (x.skipDays && x.skipDays[d])) ? { kind, x } : null; }
+    const h = state.habits.find(h => h.id === id); return h && !(h.skips && h.skips[d]) ? { kind, x: h } : null;
+  }).filter(Boolean);
+}
+
 function skipToday(id, dayIso = todayISO()) {
   const task = state.tasks.find(x => x.id === id); const prev = JSON.stringify(task);
   if (task.date && task.type !== "recurring") { const d = new Date(dayIso + "T12:00:00"); d.setDate(d.getDate() + 1); task.date = iso(d); }
@@ -1233,7 +1327,7 @@ function exportBackup() {
 function importBackup(text) {
   const obj = JSON.parse(text);
   const data = migrate(obj && obj.app === "hub" ? obj.data : obj);
-  state = data; save();
+  state = data; cleanup6(); save();
 }
 
 /* ===================== VZHLED (render) ===================== */
@@ -1246,6 +1340,8 @@ const ICONS = {
   food: '<path d="M12 7c-3-3-8-1-8 4 0 5 4 10 8 9 4 1 8-4 8-9 0-5-5-7-8-4z"/><path d="M12 7c0-2 1-4 3-4"/>',
   other: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  skip: '<path d="M5 5l9 7-9 7z"/><path d="M18 5v14"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle class="t-core" cx="12" cy="12" r="1.6"/>',
   flame: '<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .5 2 1.5 3 2.5 3 0-3-1-5 0-8z"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   chevron: '<path d="M6 9l6 6 6-6"/>',
@@ -1272,9 +1368,11 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 let expanded = new Set();
 const expandedAreas = new Set();
 let archiveOpen = false;
+const SWIPE_ACT_W = 72; // šířka jedné akce pod swajpem (px)
 const HABIT_WEEKS = 12; // kolik týdnů zpět jde u návyku odswajpovat
 const habitWeekPos = {}; // pozice swajpu u jednotlivých návyků (jen v paměti)
-let habitFilter = null; // filtr kategorie na záložce Návyky (jen v paměti)
+let habitFilter = null;
+let doneTodayOpen = false; // rozbalený seznam „Dokončeno“ na přehledu (jen v paměti) // filtr kategorie na záložce Návyky (jen v paměti)
 function view() {
   const h = location.hash.slice(1);
   if (h === "inbox" || h === "areas" || h === "habits") return { name: h };
@@ -1305,11 +1403,15 @@ function renderHabit(h) {
 function renderTask(task, mode = "full") {
   if (mode === true) mode = "grouped";
   const a = areaById(task.areaId);
-  const showStripe = mode === "full" || mode === "must", showArea = mode === "full" || mode === "must", showPrio = false, canEdit = mode === "area";
+  const showStripe = mode === "full", showMeta = mode === "must" || mode === "goal", showArea = mode === "full", showPrio = false, canEdit = mode === "area";
   const prio = showPrio ? `<span class="pill p${task.priority}">${t().prio[task.priority - 1]}</span>` : "";
-  const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : "";
+  const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : (showMeta ? `<span class="meta">${esc(a.name)}</span>` : "");
   const stripe = showStripe ? `<i class="stripe" style="background:${a.color}"></i>` : "";
-  const skipBtn = (mode === "grouped" || mode === "future") ? `<button class="btn-skip" data-action="skip" data-id="${task.id}" aria-label="${t().skip}: ${esc(task.title)}">${t().skip}</button>` : "";
+  // Akce „Na zítra“ a „Cíl dne“ jsou schované pod swajpem doleva. V „Na výběr“ jen Cíl.
+  const acts = [
+    (mode === "future" || mode === "goal" || mode === "must") && !task.done && !(task.type === "recurring" && task.nextDue > todayISO()) ? skipAction("skip", task.id, task.title) : "",
+    (mode === "grouped" && curDay() >= todayISO()) || mode === "goal" ? goalAction("t", task.id, task.title, mode === "goal") : "",
+  ].join("");
   const fmtShort = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d + "T12:00:00"));
   const dateTag = isOverdue(task) ? `<span class="pill p1">${t().overdue} · ${fmtShort(task.date)}</span>`
     : (task.date && task.type !== "recurring" && mode === "area" ? `<span class="pill p3">${fmtShort(task.date)}</span>` : "");
@@ -1319,17 +1421,17 @@ function renderTask(task, mode = "full") {
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
   if (task.type === "project") {
     const { d, n } = projectProgress(task); const open = expanded.has(task.id);
-    return `<div class="row ${n && d === n ? "is-done" : ""}" data-row="${task.id}">
+    return swipeWrap(acts, `<div class="row ${n && d === n ? "is-done" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
       ${stripe}
       <div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>
       <div class="body">
         <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-        <div class="tags">${prio}${skipTag}${areaTag}<span>${t().project} · ${d}/${n}</span></div>
+        <div class="tags">${prio}${areaTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? (d / n) * 100 : 0}%"></i></div>
       </div>
-      ${skipBtn}${editBtn}
+      ${editBtn}
       <button class="expand" data-action="expand" data-id="${task.id}" aria-expanded="${open}" aria-label="${t().showSteps}">${icon("chevron")}</button>
-    </div>
+    </div>`) + `
     ${open ? `<div class="subtasks">${task.subtasks.map(st => `
       <div class="subtask ${st.done ? "is-done" : ""}">
         <button class="check" role="checkbox" aria-checked="${st.done}" data-action="sub" data-id="${task.id}" data-sub="${st.id}" aria-label="${esc(st.title)}"><span>${icon("check")}</span></button>
@@ -1337,20 +1439,49 @@ function renderTask(task, mode = "full") {
       </div>`).join("")}</div>` : ""}`;
   }
   let extra = "";
-  if (task.type === "recurring" && mode !== "grouped") {
+  if (task.type === "recurring" && mode !== "grouped" && mode !== "goal") {
     const waiting = task.nextDue > todayISO();
     extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextDue(fmtDay(task.nextDue)) : t().recurring(task.everyDays)}</span>`;
   }
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
-  return `<div class="row ${task.done ? "is-done" : ""}">
+  return swipeWrap(acts, `<div class="row ${checked ? "is-done" : ""}" ${dragAttr(mode, "t", task)}>
     ${stripe}
-    <button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${task.type === "recurring" && checked ? "disabled" : ""}><span>${icon("check")}</span></button>
+    <button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>
     <div class="body">
       <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-      <div class="tags">${prio}${skipTag}${areaTag}${extra}</div>
+      <div class="tags">${prio}${areaTag}${skipTag}${extra}</div>
     </div>
-    ${skipBtn}${editBtn}
-  </div>`;
+    ${editBtn}
+  </div>`);
+}
+
+// Přetažení (podržet prst): jen v Cíli dne, u úkolů s datem a v „Na výběr“ (úkoly v rámci jedné podskupiny).
+function dragAttr(mode, kind, x) {
+  if (curDay() < todayISO()) return "";
+  if (mode === "goal") return `data-drag="${kind}:${x.id}" data-dgroup="goal"`;
+  if (kind !== "t") return "";
+  if (mode === "must") return `data-drag="t:${x.id}" data-dgroup="dated"`;
+  if (mode === "grouped") return `data-drag="t:${x.id}" data-dgroup="b-${x.areaId}"`;
+  return "";
+}
+function applyOrder(dgroup, keys) {
+  if (dgroup === "areas") { const ids = keys.map(k => k.slice(2)); state.areas.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); }
+  else if (dgroup === "goal") { const d = curDay(); const rest = goalsOf(d).filter(k => !keys.includes(k)); state.goals[d] = [...keys, ...rest]; }
+  else keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.order = i; });
+  save();
+}
+
+function skipAction(action, id, title) {
+  return `<button class="sw-act sw-skip" data-action="${action}" data-id="${id}" aria-label="${t().skip}: ${esc(title)}">${icon("skip")}<span>${t().skip}</span></button>`;
+}
+function goalAction(kind, id, title, on) {
+  return `<button class="sw-act sw-goal ${on ? "on" : ""}" data-action="goal" data-kind="${kind}" data-id="${id}" aria-pressed="${on}" aria-label="${on ? t().goalRemove : t().goalAdd}: ${esc(title)}">${icon("target")}<span>${on ? t().goalOff : t().goalOn}</span></button>`;
+}
+// Řádek s akcemi pod swajpem. Bez akcí vrací řádek beze změny.
+function swipeWrap(acts, row) {
+  if (!acts) return row;
+  const n = (acts.match(/class="sw-act/g) || []).length;
+  return `<div class="swipe" style="--sw-w:${n * SWIPE_ACT_W}px"><div class="sw-acts">${acts}</div>${row}</div>`;
 }
 
 // Úkoly rozdělené podle podskupin kategorie (např. místností). extra = řádky navíc do „Ostatní“.
@@ -1366,29 +1497,40 @@ function renderByGroups(area, items, mode, extra = "") {
     + (!otherG && (rest.length || extra) ? `<div class="subhead">${t().otherGroup}</div>${rest.map(x => renderTask(x, mode)).join("")}${extra}` : "");
 }
 
-function renderHabitRow(h) {
-  const done = habitDoneToday(h);
-  const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
-  return `<div class="row ${done ? "is-done" : ""}">
-    <button class="check" role="checkbox" aria-checked="${done}" data-action="habit" data-id="${h.id}" aria-label="${esc(h.title)}"><span>${icon("check")}</span></button>
+// Tečky Po–Ne aktuálního týdne: které dny je návyk splněný.
+function habitWeekDots(h, ref = curDay()) {
+  const today = todayISO(); const r = new Date(ref + "T12:00:00"); const mon = day(-((r.getDay() + 6) % 7), r);
+  const days = Array.from({ length: 7 }, (_, i) => iso(day(i, mon)));
+  const n = days.filter(k => h.log[k]).length;
+  return `<span class="wdots" style="--area-c:${areaById(h.areaId).color}" role="img" aria-label="${t().weekDone(n)}">${days.map(k => `<i class="${h.log[k] ? "on" : ""} ${k === today ? "today" : ""} ${k > today ? "future" : ""}"></i>`).join("")}</span>`;
+}
+
+function renderHabitRow(h, mode = "grouped") {
+  const done = !!h.log[curDay()]; const future = curDay() > todayISO();
+  const acts = (done || mode !== "goal" ? "" : skipAction("skip-habit", h.id, h.title)) + (mode === "goal" || curDay() >= todayISO() ? goalAction("h", h.id, h.title, mode === "goal") : "");
+  return swipeWrap(acts, `<div class="row ${done ? "is-done" : ""}" ${dragAttr(mode, "h", h)}>
+
+    <button class="check" role="checkbox" aria-checked="${done}" data-action="habit" data-id="${h.id}" aria-label="${esc(h.title)}" ${future ? "disabled" : ""}><span>${icon("check")}</span></button>
     <div class="body">
       <div class="title">${esc(h.title)}</div>
-      <div class="tags"><span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${t().habitTag} · ${sub}</span></div>
+      ${mode === "goal" ? `<div class="tags"><span class="meta">${esc(areaById(h.areaId).name)} · ${t().habitTag}</span></div>` : ""}
     </div>
-    ${done ? "" : `<button class="btn-skip" data-action="skip-habit" data-id="${h.id}" aria-label="${t().skip}: ${esc(h.title)}">${t().skip}</button>`}
-  </div>`;
+    ${habitWeekDots(h)}
+  </div>`);
 }
 
 function renderToday(tasks, withHabits = true, mode = "grouped") {
-  const habits = withHabits ? state.habits.filter(habitIsDueToday) : [];
+  const d = curDay(), future = d > todayISO();
+  if (mode === "grouped") tasks = tasks.filter(x => !isGoal("t", x.id, d));
+  const habits = withHabits ? state.habits.filter(h => (future ? !(h.skips && h.skips[d]) : habitIsDueToday(h)) && !isGoal("h", h.id, d)) : [];
   if (!tasks.length && !habits.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
   const groups = state.areas.map(a => ({ a, items: tasks.filter(x => x.areaId === a.id), habits: habits.filter(h => h.areaId === a.id) }))
-    .filter(g => g.items.length || g.habits.some(h => !habitDoneToday(h)))
-    .sort((x, y) => x.a.name.localeCompare(y.a.name, lang));
+    .filter(g => g.items.length || g.habits.some(h => !h.log[d]))
+    ; // pořadí kategorií si uživatelka určuje přetažením v Kategoriích
   if (!groups.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
   return `<div class="groups">${groups.map(g => {
     const { a, items } = g; const open = expandedAreas.has(a.id);
-    const left = items.length + g.habits.filter(h => !habitDoneToday(h)).length;
+    const left = items.length + g.habits.filter(h => !h.log[d]).length;
     return `<div class="group glass ${open ? "is-open" : ""}" style="--area-c:${a.color}">
       <button class="group-head" data-action="expand-area" data-id="${a.id}" aria-expanded="${open}">
         <span class="ico">${icon(a.icon)}</span>
@@ -1402,14 +1544,13 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
 
 function renderArea(a) {
   const n = state.tasks.filter(x => x.areaId === a.id && taskIsOpen(x)).length;
-  const dots = areaHabitDots(a.id);
-  return `<button class="area glass" style="--area-c:${a.color}" data-action="area" data-id="${a.id}">
+  return `<button class="area glass" style="--area-c:${a.color}" data-action="area" data-id="${a.id}" data-drag="a:${a.id}" data-dgroup="areas">
     <div class="ico">${icon(a.icon)}</div>
     <div>
       <div class="name">${esc(a.name)}</div>
       <div class="dir">${esc(a.direction)}</div>
     </div>
-    <div class="foot"><span>${t().openTasks(n)}</span><span class="dots" aria-label="${t().habitWeek}">${dots.map(o => `<i class="${o ? "on" : ""}"></i>`).join("")}</span></div>
+    <div class="foot"><span>${t().openTasks(n)}</span></div>
   </button>`;
 }
 
@@ -1451,22 +1592,44 @@ function renderMust() {
     </section>`;
 }
 
+// Jedna sekce: nahoře cíl dne (vybrané z „Na výběr“), pod ním úkoly s datem na dnešek a prošlé.
+function renderGoals(d = todayISO()) {
+  const future = d > todayISO();
+  const all = goalItems(d); const dated = future ? state.tasks.filter(x => x.date === d && x.type !== "recurring" && taskIsOpen(x)).sort(byOrder) : overdueTasks();
+  const isDone = i => i.kind === "h" ? !!i.x.log[d] : (i.x.type === "recurring" ? (!future && i.x.nextDue > todayISO()) : !!i.x.done);
+  const items = all.filter(i => !isDone(i));
+  const done = future ? { tasks: [], habits: [] } : doneOn(d); const nDone = done.tasks.length + done.habits.length;
+  const emptyTxt = all.length ? t().goalAllDone : t().goalEmpty;
+  return `<section class="section goal" aria-labelledby="h-goal">
+      <div class="section-head"><h2 id="h-goal">${t().goalTitle}</h2>
+        <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
+      <div class="list glass">${items.length ? items.map(i => i.kind === "t" ? renderTask(i.x, "goal") : renderHabitRow(i.x, "goal")).join("") : `<div class="empty">${emptyTxt}</div>`}
+        ${dated.length ? `<div class="subhead subhead-tasks">${t().goalTasks}</div>${dated.map(x => renderTask(x, "must")).join("")}` : ""}</div>
+      ${nDone ? `<button class="done-link" data-action="toggle-done-today" aria-expanded="${doneTodayOpen}">${t().doneToday} (${nDone})</button>
+        ${doneTodayOpen ? `<div class="list glass">${done.tasks.map(x => doneRow(x.title, x.type === "recurring" ? "" : `data-action="task" data-id="${x.id}"`, "", (areaById(x.areaId) || {}).name || "")).join("")}${done.habits.map(h => doneRow(h.title, `data-action="habit" data-id="${h.id}"`, habitWeekDots(h), `${(areaById(h.areaId) || {}).name || ""} · ${t().habitTag}`)).join("")}</div>` : ""}` : ""}
+    </section>`;
+}
+// Splněná položka; s akcí jde klepnutím na fajfku vrátit zpět.
+function doneRow(title, act, extra = "", meta = "") {
+  const mark = `<span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span>`;
+  return `<div class="row is-done">${act ? `<button class="check" role="checkbox" aria-checked="true" ${act} aria-label="${esc(title)}">${mark}</button>` : `<div class="check done-static" aria-hidden="true">${mark}</div>`}<div class="body"><div class="title">${esc(title)}</div>${meta ? `<div class="tags"><span class="meta">${esc(meta)}</span></div>` : ""}</div>${extra}</div>`;
+}
+
 function renderDayBody(d) {
   const today = todayISO();
   if (d > today) {
-    const tasks = plannedFor(d);
-    return `<section class="section" aria-labelledby="h-today">
-      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
-        <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
-      ${tasks.length ? renderToday(tasks, false, "future") : `<div class="list glass"><div class="empty">${t().nothingPlanned}</div></div>`}
-      <p class="lead">${t().futureNote}</p>
+    // Budoucí den: stejné rozložení jako dnes, cíle dne si jde naplánovat dopředu.
+    return `${renderGoals(d)}
+    <section class="section" aria-labelledby="h-today">
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
+      ${renderToday(backlogFor(d))}
     </section>`;
   }
   const { tasks, habits } = doneOn(d);
   return `<section class="section" aria-labelledby="h-past">
       <div class="section-head"><h2 id="h-past">${t().doneThatDay}</h2></div>
-      <div class="list glass">${tasks.length || habits.length ? tasks.map(x => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(x.title)}</div><div class="tags">${esc((areaById(x.areaId) || {}).name || "")}</div></div></div>`).join("")
-        + habits.map(h => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(h.title)}</div><div class="tags">${t().habitTag}</div></div></div>`).join("")
+      <div class="list glass">${tasks.length || habits.length ? tasks.map(x => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(x.title)}</div><div class="tags"><span class="meta">${esc((areaById(x.areaId) || {}).name || "")}</span></div></div></div>`).join("")
+        + habits.map(h => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(h.title)}</div><div class="tags"><span class="meta">${esc((areaById(h.areaId) || {}).name || "")} · ${t().habitTag}</span></div></div>${habitWeekDots(h, d)}</div>`).join("")
         : `<div class="empty">${t().nothingDone}</div>`}</div>
     </section>`;
 }
@@ -1479,10 +1642,9 @@ function renderHomeBody() {
   const ws = weekStats();
   const reviewDay = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(day(((state.meta.reviewWeekday ?? 0) - now.getDay() + 7) % 7));
   return `
-    ${renderMust()}
+    ${renderGoals()}
     <section class="section" aria-labelledby="h-today">
-      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
-        <button class="btn-plus" data-action="quick-add" aria-label="${t().fabLabel}">${icon("plus")}</button></div>
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
       ${renderToday(openTasks())}
     </section>
 
@@ -1760,7 +1922,7 @@ function openTaskForm(id, presetArea, presetDate) {
       <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
     <div class="field f-date"><span class="flabel">${t().when}</span>
       <div class="date-row">
-        <input class="input" name="date" type="date" value="${task && task.date ? task.date : (presetDate && presetDate !== todayISO() ? presetDate : "")}" aria-label="${t().when}">
+        <input class="input" name="date" type="date" value="${task && task.date ? task.date : (presetDate || "")}" aria-label="${t().when}">
         <button class="btn" type="button" data-action="date-set" data-off="0">${t().today}</button>
         <button class="btn" type="button" data-action="date-set" data-off="1">${t().tomorrow}</button>
       </div>
@@ -1963,6 +2125,93 @@ function toast(text, undoFn) {
 function rerender() { render(); }
 
 /* ----- Události ----- */
+/* ----- Přetažení řádků: podržet prst ~0,4 s, pak táhnout nahoru/dolů ----- */
+const DRAG_HOLD_MS = 400;
+const drag = { timer: null, el: null, row: null, active: false, y: 0, x0: 0, y0: 0, moved: false };
+const dragItem = row => row.closest(".swipe") || row;
+function dragSiblings() {
+  const g = drag.row.dataset.dgroup; const parent = drag.el.parentElement;
+  return [...parent.children].filter(c => { const r = c.matches("[data-drag]") ? c : c.querySelector(":scope > [data-drag]"); return r && r.dataset.dgroup === g; });
+}
+document.addEventListener("pointerdown", e => {
+  const row = e.target.closest("[data-drag]"); if (!row || e.button > 0) return;
+  clearTimeout(drag.timer);
+  Object.assign(drag, { row, el: dragItem(row), active: false, x0: e.clientX, y0: e.clientY, moved: false });
+  drag.timer = setTimeout(() => {
+    if (swipe.moved) return;
+    drag.active = true; swipe.el = null; closeSwipes();
+    drag.el.classList.add("drag-on");
+    if (navigator.vibrate) try { navigator.vibrate(10); } catch (err) {}
+  }, DRAG_HOLD_MS);
+}, true);
+document.addEventListener("pointermove", e => {
+  if (!drag.row) return;
+  if (!drag.active) { if (Math.abs(e.clientX - drag.x0) > 8 || Math.abs(e.clientY - drag.y0) > 8) { clearTimeout(drag.timer); drag.row = null; } return; }
+  drag.moved = true;
+  const sibs = dragSiblings(); const me = drag.el;
+  // Funguje pro seznam i mřížku: prohodí se s položkou, nad kterou je prst.
+  for (const c of sibs) {
+    if (c === me) continue;
+    const r = c.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) continue;
+    if (me.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING) c.before(me); else c.after(me);
+    break;
+  }
+}, true);
+function endDrag() {
+  clearTimeout(drag.timer);
+  if (drag.active) {
+    drag.el.classList.remove("drag-on");
+    if (drag.moved) {
+      const g = drag.row.dataset.dgroup;
+      const keys = dragSiblings().map(c => (c.matches("[data-drag]") ? c : c.querySelector(":scope > [data-drag]")).dataset.drag);
+      applyOrder(g, keys); setTimeout(render, 0);
+    }
+    drag.suppressUntil = Date.now() + 500; // potlačí klepnutí po puštění
+  }
+  drag.active = false; drag.row = null;
+}
+document.addEventListener("pointerup", endDrag, true);
+document.addEventListener("pointercancel", endDrag, true);
+// Během tažení nescrollovat stránku (iOS).
+document.addEventListener("touchmove", e => { if (drag.active) e.preventDefault(); }, { passive: false });
+document.addEventListener("contextmenu", e => { if (e.target.closest("[data-drag]")) e.preventDefault(); });
+
+/* ----- Swajp řádků: doleva odkryje akce, doprava / klepnutí jinam zavře ----- */
+const swipe = { el: null, x0: 0, y0: 0, dx: 0, base: 0, axis: null, moved: false };
+function closeSwipes(except) { document.querySelectorAll(".swipe.open").forEach(s => { if (s !== except) s.classList.remove("open"); }); }
+document.addEventListener("pointerdown", e => {
+  const row = e.target.closest(".swipe > .row");
+  if (!row) { if (!e.target.closest(".sw-acts")) closeSwipes(); return; }
+  const el = row.parentElement; closeSwipes(el);
+  Object.assign(swipe, { el, x0: e.clientX, y0: e.clientY, dx: 0, axis: null, moved: false,
+    base: el.classList.contains("open") ? -parseFloat(getComputedStyle(el).getPropertyValue("--sw-w")) : 0 });
+});
+document.addEventListener("pointermove", e => {
+  const s = swipe; if (!s.el) return;
+  const dx = e.clientX - s.x0, dy = e.clientY - s.y0;
+  if (!s.axis) { if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; s.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
+  if (s.axis !== "x") { s.el = null; return; }
+  s.moved = true; s.el.classList.add("dragging");
+  const w = parseFloat(getComputedStyle(s.el).getPropertyValue("--sw-w"));
+  s.dx = Math.max(-w - 24, Math.min(0, s.base + dx));
+  s.el.querySelector(":scope > .row").style.transform = `translateX(${s.dx}px)`;
+});
+function endSwipe() {
+  const s = swipe; if (!s.el) return;
+  const el = s.el; s.el = null;
+  if (!s.moved) return;
+  const w = parseFloat(getComputedStyle(el).getPropertyValue("--sw-w"));
+  el.classList.remove("dragging"); el.querySelector(":scope > .row").style.transform = "";
+  el.classList.toggle("open", s.dx < -w / 2);
+}
+document.addEventListener("pointerup", endSwipe);
+document.addEventListener("pointercancel", endSwipe);
+// Po tažení nespouštět klepnutí na řádek.
+document.addEventListener("click", e => { if (Date.now() < (drag.suppressUntil || 0) && e.target.closest("[data-drag]")) { e.stopPropagation(); e.preventDefault(); return; } if (swipe.moved && e.target.closest(".swipe > .row")) { e.stopPropagation(); e.preventDefault(); swipe.moved = false; } }, true);
+// Klávesnice / čtečka: při fokusu na schovanou akci řádek otevřít.
+document.addEventListener("focusin", e => { const a = e.target.closest(".sw-act"); if (a) { const el = a.closest(".swipe"); closeSwipes(el); el.classList.add("open"); } });
+
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-action]"); if (!el) { if (e.target === sheetEl) closeSheet(); return; }
   const id = el.dataset.id;
@@ -1993,6 +2242,7 @@ document.addEventListener("click", async e => {
     case "task-new": openTaskForm(null, el.dataset.area); break;
     case "task-edit": openTaskForm(id); break;
     case "task-delete": { const u = deleteTask(id); closeSheet(); render(); toast(t().deleted, u); break; }
+    case "toggle-done-today": doneTodayOpen = !doneTodayOpen; render(); break;
     case "habit-filter": habitFilter = el.dataset.area || null; render(); break;
     case "habit-new": openHabitForm(null, el.dataset.area); break;
     case "habit-edit": openHabitForm(id); break;
@@ -2005,8 +2255,9 @@ document.addEventListener("click", async e => {
     case "cal-pick": { const k = el.dataset.day; selectedDay = k === todayISO() ? null : k; calMonth = null; closeSheet(); go(""); break; }
     case "date-set": { const inp = el.closest("form").querySelector('[name="date"]'); inp.value = iso(day(+el.dataset.off)); break; }
     case "task-new-day": openTaskForm(null, undefined, curDay()); break;
-    case "skip-habit": { const u = skipHabitToday(id); render(); toast(t().skippedToast, u); break; }
-    case "skip": { const u = skipToday(id, curDay()); render(); toast(t().skippedToast, u); break; }
+    case "skip-habit": { const d = curDay(); const g = isGoal("h", id, d); if (g) setGoal("h", id, false, d); const u0 = skipHabitToday(id, d); const u = () => { u0(); if (g) setGoal("h", id, true, d); }; render(); toast(t().skippedToast, u); break; }
+    case "goal": { const kind = el.dataset.kind, d = curDay(); const u = toggleGoal(kind, id, d); render(); toast(isGoal(kind, id, d) ? t().goalAdded : t().goalRemoved, u); break; }
+    case "skip": { const d = curDay(); const g = isGoal("t", id, d); if (g) setGoal("t", id, false, d); const u0 = skipToday(id, d); const u = () => { u0(); if (g) setGoal("t", id, true, d); }; render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
     case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
     case "settings": openSettings(); break;
