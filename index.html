@@ -180,7 +180,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .wdots{display:flex;gap:4px;flex:none}
 .tags .meta{color:var(--c-faint);font-weight:500;font-size:.6875rem}
 .row .body:has(.meta){gap:1px}
-.done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-faint);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
+.done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-muted);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
 .done-link::after{content:"";position:absolute;inset:-4px 0}
 .wdots i{width:10px;height:10px;border-radius:3px;background:var(--c-stroke)}
 .wdots i.on{background:var(--area-c)}
@@ -941,7 +941,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.1";
 const DATA_VERSION = 3;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
