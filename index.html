@@ -489,9 +489,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .stage,.device{height:100%}
 /* Obrazovka je přišpendlená k oknu (iOS jinak při přetažení posune celou stránku i s lištou). */
 .screen{position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden;transform:translateZ(0)}
-/* Apka z plochy (iOS): okno je o spodní bezpečnou zónu nižší než displej, proto obrazovka sahá na celou výšku displeje. */
-@media (display-mode: standalone) and (max-width:599px){ .screen{bottom:auto;height:100vh;height:100lvh} }
-@media (max-width:599px){ html.standalone .screen{bottom:auto;height:100vh;height:100lvh} }
+/* Apka z plochy (iOS 26): okno končí nad zónou home indikátoru, i když safe-area hlásí rezervu. Pak lišta nepotřebuje odsazení navíc. */
+html.vp-short{--tabbar-bottom:10px}
 .scroller{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 @media (min-width:600px) and (min-height:640px){
   html,body{height:auto;min-height:100%;overflow:auto}
@@ -947,9 +946,18 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.6.3";
+const APP_VERSION = "0.6.4";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
-try { if (navigator.standalone) document.documentElement.classList.add("standalone"); } catch (e) {}
+// Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
+function checkViewport() {
+  try {
+    const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+    const portrait = innerHeight > innerWidth;
+    const short = standalone && portrait && (screen.height - innerHeight) > 20;
+    document.documentElement.classList.toggle("vp-short", short);
+  } catch (e) {}
+}
+checkViewport(); addEventListener("resize", checkViewport);
 const DATA_VERSION = 3;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
