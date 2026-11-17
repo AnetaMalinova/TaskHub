@@ -185,6 +185,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .tags .meta + .meta::before{content:"·";margin-right:var(--sp-2);color:var(--c-faint);font-weight:500}
 .rep-badge{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:.6875rem;font-weight:600;color:var(--c-faint)}
 .rep-badge .icon{width:13px;height:13px}
+.rep-badge.due-soon{color:var(--c-crit)}
 .tags .meta{color:var(--c-faint);font-weight:500;font-size:.6875rem}
 .row .body:has(.meta){gap:1px}
 .done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-muted);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
@@ -292,8 +293,17 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--c-stroke);background:#fff;padding:0 14px;font:inherit;font-size:16px;color:var(--c-text)}
 textarea.input{padding:12px 14px;resize:vertical;line-height:1.4}
 .input:focus{outline:none;border-color:var(--c-accent);box-shadow:0 0 0 3px var(--c-accent-soft)}
-.form .f-project,.form .f-recurring,.form .f-weekly{display:none}
-.form[data-type="project"] .f-project,.form[data-type="recurring"] .f-recurring,.form[data-freq="weekly"] .f-weekly{display:flex}
+.form .f-project,.form .f-recurring,.form .f-weekly,.form .f-list{display:none}
+.form[data-type="single"][data-list="on"] .f-project,.form[data-type="single"] .f-list,.form[data-type="recurring"] .f-recurring,.form[data-freq="weekly"] .f-weekly{display:flex}
+.list-line{display:flex;align-items:center;justify-content:space-between;min-height:var(--tap);width:100%}
+/* Přepínač ve stylu iOS */
+.switch{position:relative;width:51px;height:31px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch-track{position:absolute;inset:0;border-radius:999px;background:var(--c-stroke);transition:background var(--t-fast)}
+.switch-track::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform var(--t-fast)}
+.switch input:checked + .switch-track{background:var(--c-accent)}
+.switch input:checked + .switch-track::after{transform:translateX(20px)}
+.switch input:focus-visible + .switch-track{outline:2px solid var(--c-accent);outline-offset:2px}
 .seg label{position:relative;display:inline-flex}
 .seg label input{position:absolute;opacity:0;pointer-events:none}
 .seg label span{height:38px;padding:0 var(--sp-3);border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:700;color:var(--c-muted);display:inline-flex;align-items:center;cursor:pointer}
@@ -308,7 +318,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .chip-ico input,.chip-col input{position:absolute;opacity:0;pointer-events:none}
 .chip-ico span{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#fff;border:2px solid var(--c-stroke);color:var(--c-muted)}
 .chip-ico input:checked + span{border-color:var(--c-accent);background:var(--c-accent-soft);color:var(--c-accent)}
-.chip-col span{width:44px;height:44px;border-radius:50%;display:block;border:3px solid #fff;box-shadow:0 0 0 1px var(--c-stroke)}
+.chip-col span{width:44px;height:44px;border-radius:14px;display:block;border:3px solid #fff;box-shadow:0 0 0 1px var(--c-stroke)}
 .chip-col input:checked + span{box-shadow:0 0 0 3px var(--c-accent)}
 .chip-ico input:focus-visible + span,.chip-col input:focus-visible + span{outline:2px solid var(--c-accent);outline-offset:2px}
 .btn-wide-ghost{width:100%}
@@ -343,6 +353,21 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .cat-val .ico .icon{width:15px;height:15px}
 .cat-chev{display:grid;place-items:center;color:var(--c-muted)}
 .cat-val.is-none .ico{display:none}
+.emo{font-size:1.15em;line-height:1;display:inline-block}
+/* Poslední „ikona“ v mřížce: vlastní emoji ze systémové klávesnice. */
+.chip-emoji{position:relative;width:44px;height:44px;border-radius:14px;background:#fff;border:2px dashed var(--c-stroke);display:grid;place-items:center;cursor:text}
+.chip-emoji.is-on{border:2px solid var(--c-accent);background:var(--c-accent-soft)}
+.emoji-val{font-size:1.3rem;line-height:1}
+.emoji-hint{pointer-events:none;color:var(--c-muted);display:grid}
+.emoji-hint .icon{width:20px;height:20px}
+.chip-emoji.is-on .emoji-hint{display:none}
+.chip-emoji[aria-expanded="true"]{border-color:var(--c-accent)}
+.emoji-panel{margin-top:var(--sp-3);padding:var(--sp-3);max-height:280px;overflow-y:auto}
+.emoji-gl{font-size:.6875rem;font-weight:700;color:var(--c-muted);margin:var(--sp-2) 0 4px}
+.emoji-group:first-child .emoji-gl{margin-top:0}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr)}
+.emoji-pick{height:44px;font-size:1.5rem;border-radius:10px;display:grid;place-items:center}
+.emoji-pick:active{background:var(--c-accent-soft)}
 .cat-val.is-none .cat-name{color:var(--c-muted);font-weight:500}
 /* Rozbalovací nabídka jako nativní pull-down menu v iOS: plave nad obsahem, zarovnaná vpravo. */
 .cat-field{position:relative}
@@ -625,7 +650,7 @@ const STRINGS = {
     overdue: "Overdue",
     when: "Termín",
     dueBy: d => `do ${d}`,
-    overdueSince: d => `Po termínu · ${d}`,
+    overdueSince: d => `Po termínu (${d})`,
     dueToday: "Termín dnes",
     start: "Začít",
     dateClear: "Smazat datum",
@@ -667,7 +692,7 @@ const STRINGS = {
     goalRemove: "Odebrat z cíle dne",
     goalAdded: "V cíli dne",
     goalOn: "Cíl",
-    goalOff: "Zrušit",
+    goalOff: "Na později",
     goalRemoved: "Vráceno do Na výběr",
     areasTitle: "Kategorie",
     areasLead: "Klepni na kategorii a uvidíš její směr, úkoly, návyky i to, co už máš hotové.",
@@ -709,12 +734,16 @@ const STRINGS = {
     taskTitle: "Co je potřeba udělat",
     type: "Typ",
     types: ["Jednorázově", "Projekt (víc kroků)", "Pravidelně"],
-    steps: "Kroky projektu",
+    listToggle: "Přidat seznam úkolů",
+    toGoal: "Přidat do cíle dne",
+    emojiLabel: "Vybrat emoji",
+    emojiGroups: { sport: "Sport", home: "Domov", work: "Práce", food: "Jídlo", nature: "Příroda", fun: "Volný čas" },
+    steps: "Podúkoly",
     stepsPh: "Každý krok na nový řádek",
     everyDays: "Opakovat",
-    everyPreset: n => n === 30 ? "Za měsíc" : `Za ${n} dní`,
+    everyPreset: n => ({ 7: "Za týden", 14: "Za 2 týdny", 21: "Za 3 týdny", 30: "Za měsíc", 60: "Za 2 měsíce" })[n] || `Za ${n} dní`,
     everyCustom: "Vlastní",
-    everyShort: n => n === 30 ? "měsíc" : `${n} d`,
+    everyShort: n => ({ 7: "týden", 14: "2 týdny", 21: "3 týdny", 30: "měsíc", 60: "2 měsíce" })[n] || `${n} d`,
     everyCustomLabel: "Počet dní",
     everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se znovu ukáže v „Na výběr“ a zůstane tam, dokud ho nesplníš.",
     nextDue: d => `Další ${d}`,
@@ -748,12 +777,13 @@ const STRINGS = {
     startOwnDone: "Hotovo. Teď už jsou to tvoje data.",
     prioritiesMeta: n => `${n} ${pl("cs", n, ["otevřený", "otevřené", "otevřeného", "otevřených"])}`,
     prio: ["Vysoká", "Střední", "Nízká"],
-    project: "Projekt",
+    project: "Seznam",
     recurring: n => `Každých ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}`,
     showSteps: "Zobrazit kroky",
     noTasks: "Žádné otevřené úkoly. Užij si volno.",
     areas: "Kategorie",
     openTasks: n => `${n} ${pl("cs", n, ["úkol", "úkoly", "úkolu", "úkolů"])}`,
+    habitCount: n => `${n} ${pl("cs", n, ["návyk", "návyky", "návyku", "návyků"])}`,
     habitWeek: "Návyky za 7 dní",
     week: "Tento týden",
     tasksDone: "Hotové úkoly",
@@ -828,7 +858,7 @@ const STRINGS = {
     overdue: "Overdue",
     when: "Due",
     dueBy: d => `by ${d}`,
-    overdueSince: d => `Overdue · ${d}`,
+    overdueSince: d => `Overdue (${d})`,
     dueToday: "Due today",
     start: "Start",
     dateClear: "Clear date",
@@ -870,7 +900,7 @@ const STRINGS = {
     goalRemove: "Remove from today's goal",
     goalAdded: "Added to today's goal",
     goalOn: "Goal",
-    goalOff: "Remove",
+    goalOff: "Later",
     goalRemoved: "Back in To pick from",
     areasTitle: "Categories",
     areasLead: "Tap a category to see its direction, tasks, habits and what you've already done.",
@@ -912,12 +942,16 @@ const STRINGS = {
     taskTitle: "What needs doing",
     type: "Type",
     types: ["Once", "Project (steps)", "Regularly"],
-    steps: "Project steps",
+    listToggle: "Add a checklist",
+    toGoal: "Add to today's goal",
+    emojiLabel: "Pick an emoji",
+    emojiGroups: { sport: "Sport", home: "Home", work: "Work", food: "Food", nature: "Nature", fun: "Free time" },
+    steps: "Items",
     stepsPh: "One step per line",
     everyDays: "Repeat",
-    everyPreset: n => n === 30 ? "Every month" : `Every ${n} days`,
+    everyPreset: n => ({ 7: "Every week", 14: "Every 2 weeks", 21: "Every 3 weeks", 30: "Every month", 60: "Every 2 months" })[n] || `Every ${n} days`,
     everyCustom: "Custom",
-    everyShort: n => n === 30 ? "month" : `${n} d`,
+    everyShort: n => ({ 7: "week", 14: "2 weeks", 21: "3 weeks", 30: "month", 60: "2 months" })[n] || `${n} d`,
     everyCustomLabel: "Number of days",
     everyHint: "Counted from the day you tick it off. Then it shows up again and stays until you do it.",
     nextDue: d => `Next ${d}`,
@@ -951,12 +985,13 @@ const STRINGS = {
     startOwnDone: "Done. It's all yours now.",
     prioritiesMeta: n => `${n} open`,
     prio: ["High", "Medium", "Low"],
-    project: "Project",
+    project: "Checklist",
     recurring: n => `Every ${n} ${n === 1 ? "day" : "days"}`,
     showSteps: "Show steps",
     noTasks: "No open tasks. Enjoy the free time.",
     areas: "Categories",
     openTasks: n => `${n} ${n === 1 ? "task" : "tasks"}`,
+    habitCount: n => `${n} ${n === 1 ? "habit" : "habits"}`,
     habitWeek: "Habits, last 7 days",
     week: "This week",
     tasksDone: "Tasks done",
@@ -1014,13 +1049,13 @@ function pl(lang, n, forms) {
 /* ===================== PŘÍSTUP K FUNKCÍM (zdarma / placené) ===================== */
 // Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
 // "hidden" = funkce je zatím skrytá v celé apce (data se dál počítají).
-const EVERY_PRESETS = [7, 14, 30];
+const EVERY_PRESETS = [7, 14, 21, 30, 60];
 const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", followUps: "hidden", unlimitedAreas: "free" };
 const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.8.0";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1207,6 +1242,10 @@ const areaById = id => state.areas.find(a => a.id === id);
 // Úkol bez kategorie: zástupná „kategorie“ jen pro zobrazení (neukládá se).
 const noArea = () => ({ id: "", name: t().noArea, color: "#7d7799", icon: "other", groups: [] });
 const taskArea = x => areaById(x.areaId) || noArea();
+// Ikona kategorie: vlastní emoji (systémová klávesnice), jinak čárová ikona.
+const areaIcon = a => a && a.emoji ? `<span class="emo" aria-hidden="true">${esc(a.emoji)}</span>` : icon(a ? a.icon : "other");
+const graphemes = str => { try { return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)].map(x => x.segment); } catch (e) { return [...str]; } };
+const firstGrapheme = str => { try { const it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)[Symbol.iterator]().next(); return it.done ? "" : it.value.segment; } catch (e) { return [...str][0] || ""; } };
 
 function weekStart(d = day()) { const x = new Date(d); const wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x; }
 function weekDaysISO() { const s = weekStart(); const today = todayISO(); const out = []; for (let i = 0; i < 7; i++) { const k = iso(day(i, s)); if (k > today) break; out.push(k); } return out; }
@@ -1234,7 +1273,7 @@ function habitProgress(h) {
 
 function taskIsOpen(task) {
   if (task.type === "recurring") return task.nextDue <= todayISO();
-  if (task.type === "project") return task.subtasks.some(s => !s.done);
+  if (task.type === "project") return !task.done && (task.subtasks.length ? task.subtasks.some(s => !s.done) : true);
   return !task.done;
 }
 function isSkippedToday(task) { const k = todayISO(); return task.skipDay === k || !!(task.skipDays && task.skipDays[k]); }
@@ -1245,11 +1284,11 @@ const sortTasks = list => list.sort((a, b) => byOrder(a, b) || a.priority - b.pr
 function openTasks() {
   const today = todayISO();
   // Úkoly s termínem jsou v „Na výběr“ až do dne termínu; v den termínu a po něm jsou v Cíli dne pod Úkoly.
-  return sortTasks(state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x) && (!x.date || x.type === "recurring" || x.date > today)));
+  return sortTasks(state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x) && (!x.date || x.type === "recurring" || x.date > today || x.laterOn === today)));
 }
 function isOverdue(x) { return !!x.date && x.type !== "recurring" && x.date < todayISO() && taskIsOpen(x); }
 // Úkoly v Cíli dne: úkoly s datem na dnešek a zpožděné (ty mají chip Overdue).
-function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && taskIsOpen(x)).sort((a, b) => byOrder(a, b) || a.date.localeCompare(b.date)); }
+function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && x.laterOn !== today && taskIsOpen(x)).sort((a, b) => byOrder(a, b) || a.date.localeCompare(b.date)); }
 // Budoucí den: úkoly naplánované na ten den a opakované, které na něj připadnou.
 function plannedFor(dayIso) {
   return sortTasks(state.tasks.filter(x => {
@@ -1304,7 +1343,11 @@ function toggleHabit(id) {
 function completeTask(id) {
   const task = state.tasks.find(x => x.id === id); const prev = JSON.stringify(task);
   if (task.type === "recurring") { task.nextDue = iso(day(task.everyDays)); task.doneAt = todayISO(); }
-  else { task.done = !task.done; task.doneAt = task.done ? todayISO() : null; }
+  else {
+    task.done = !task.done; task.doneAt = task.done ? todayISO() : null;
+    // Odškrtnutí celého seznamu splní / vrátí všechny podúkoly.
+    if (task.type === "project") task.subtasks.forEach(x => { x.done = task.done; x.doneAt = task.done ? todayISO() : null; });
+  }
   // Navazující úkol: po splnění se hned přidá nový úkol do stejné kategorie a podskupiny.
   let follow = null;
   const nowDone = task.type === "recurring" || task.done;
@@ -1321,10 +1364,14 @@ function completeTask(id) {
 }
 function toggleSubtask(taskId, subId) {
   const task = state.tasks.find(x => x.id === taskId); const s = task.subtasks.find(x => x.id === subId);
-  const prev = { done: s.done, doneAt: s.doneAt };
+  const prev = { done: s.done, doneAt: s.doneAt }; const prevTask = { done: task.done, doneAt: task.doneAt };
   s.done = !s.done; s.doneAt = s.done ? todayISO() : null;
+  // Seznam je splněný, když jsou splněné všechny podúkoly.
+  const all = task.subtasks.every(x => x.done);
+  if (all && !task.done) { task.done = true; task.doneAt = todayISO(); }
+  if (!all && task.done) { task.done = false; task.doneAt = null; }
   save();
-  return () => { Object.assign(s, prev); save(); };
+  return () => { Object.assign(s, prev); Object.assign(task, prevTask); save(); };
 }
 function addInbox(text) {
   const item = { id: uid(), text, createdAt: todayISO() };
@@ -1342,6 +1389,15 @@ function deleteInbox(id) {
   state.inbox.splice(idx, 1); save();
   return () => { state.inbox.splice(idx, 0, item); save(); };
 }
+// Výběr emoji přímo v apce (web neumí otevřít emoji klávesnici). Zobrazuje je systémové písmo, na iPhonu tedy jako iOS emoji.
+const EMOJI_SETS = [
+  ["sport", "🏃‍♀️🚴‍♀️🏊‍♀️🧘‍♀️🏋️‍♀️⛹️‍♀️🤸‍♀️🧗‍♀️⛷️🏂🎾⚽️🏀🏐🥊🛹🏓🥾"],
+  ["home", "🏠🛋️🛏️🧺🧹🧽🧴🪴🚿🛁🧸🔑🕯️🪑🧼🗑️"],
+  ["work", "💼💻📊📈📝📅📌📎✉️📞🖊️🗂️💡🧠🎯⏰"],
+  ["food", "🍎🥑🥦🥕🍳🥗🍝🍲🍞🧁🍰☕️🫖🍷🥤🛒"],
+  ["nature", "🌿🌸🌻🌳🍀🌊⛰️🏕️☀️🌙⭐️🌈🔥❄️🐶🐱"],
+  ["fun", "🎨🎵🎸📚📷🎬🎮🧩✈️🗺️🚗🎁🎉❤️💜✨"],
+];
 const AREA_ICONS = ["sport", "work", "photo", "home", "trips", "food", "book", "heart", "star", "music"]; // „other“ (tečky) jen jako záloha, v nabídce působilo jako „další ikony“
 // Barvy kategorií: tlumené, aby nejvýraznější zůstala fialová apky (fialová kategorie je záměrně světlejší lila).
 // Každá má kontrast aspoň 3:1 vůči bílé i vůči svému světlému podkladu (WCAG AA pro grafiku a ikony).
@@ -1442,6 +1498,8 @@ const ICONS = {
   food: '<path d="M12 7c-3-3-8-1-8 4 0 5 4 10 8 9 4 1 8-4 8-9 0-5-5-7-8-4z"/><path d="M12 7c0-2 1-4 3-4"/>',
   other: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+  later: '<path d="M12 4v10M8 10l4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   skip: '<path d="M5 5l9 7-9 7z"/><path d="M18 5v14"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle class="t-core" cx="12" cy="12" r="1.6"/>',
   flame: '<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .5 2 1.5 3 2.5 3 0-3-1-5 0-8z"/>',
@@ -1513,6 +1571,7 @@ function renderTask(task, mode = "full") {
   const acts = [
     (mode === "future" || mode === "goal" || mode === "must") && !task.done && !(task.type === "recurring" && task.nextDue > todayISO()) ? skipAction("skip", task.id, task.title) : "",
     (mode === "grouped" && curDay() >= todayISO()) || mode === "goal" ? goalAction("t", task.id, task.title, mode === "goal") : "",
+    mode === "must" && curDay() === todayISO() && !task.done ? `<button class="sw-act sw-goal on" data-action="later" data-id="${task.id}" aria-label="${t().goalOff}: ${esc(task.title)}">${icon("later")}<span>${t().goalOff}</span></button>` : "",
   ].join("");
   const fmtShort = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d + "T12:00:00"));
   const hasDeadline = task.date && task.type !== "recurring";
@@ -1523,13 +1582,15 @@ function renderTask(task, mode = "full") {
   const rightTag = "";
   const skipTag = (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
     + (mode === "area" && task.followUp && canUse("followUps") ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
-  const editBtn = canEdit ? `<button class="icon-btn-plain" data-action="task-edit" data-id="${task.id}" aria-label="${t().editTask}: ${esc(task.title)}">${icon("pencil")}</button>` : "";
+  const editBtn = ""; // úprava klepnutím na název; tužka už se nepoužívá
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
   if (task.type === "project") {
     const { d, n } = projectProgress(task); const open = expanded.has(task.id);
-    return swipeWrap(acts, `<div class="row ${n && d === n ? "is-done" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
+    const listDone = !!task.done || (n > 0 && d === n);
+    return swipeWrap(acts, `<div class="row ${listDone && mode !== "area" ? "is-done" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
       ${stripe}
-      <div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>
+      ${mode === "area" ? `<div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>`
+        : `<button class="check" role="checkbox" aria-checked="${listDone}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
       <div class="body">
         <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
         <div class="tags">${prio}${areaTag}${dateTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
@@ -1547,7 +1608,9 @@ function renderTask(task, mode = "full") {
   let extra = "";
   if (task.type === "recurring" && mode !== "grouped" && mode !== "goal") {
     const waiting = task.nextDue > todayISO();
-    extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextIn(Math.round((new Date(task.nextDue + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 864e5)) : t().recurring(task.everyDays)}</span>`;
+    const nextTxt = t().nextIn(Math.round((new Date(task.nextDue + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 864e5));
+    extra = mode === "area" ? (waiting ? `<span class="meta">${nextTxt}</span>` : "")
+      : `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? nextTxt : t().recurring(task.everyDays)}</span>`;
   }
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
   return swipeWrap(acts, `<div class="row ${checked && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
@@ -1555,9 +1618,10 @@ function renderTask(task, mode = "full") {
     ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
     <div class="body">
       <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-      <div class="tags">${prio}${areaTag}${dateTag}${skipTag}${extra}</div>
+      <div class="tags">${prio}${areaTag}${mode === "area" || mode === "grouped" ? "" : dateTag}${skipTag}${extra}</div>
     </div>
-    ${task.type === "recurring" && mode === "grouped" ? `<span class="rep-badge" aria-label="${t().recurring(task.everyDays)}">${icon("repeat")}${t().everyShort(task.everyDays)}</span>` : ""}
+    ${task.type === "recurring" && (mode === "grouped" || mode === "area") ? `<span class="rep-badge" aria-label="${t().recurring(task.everyDays)}">${icon("repeat")}${t().everyShort(task.everyDays)}</span>` : ""}
+    ${(mode === "area" || mode === "grouped") && dueText ? `<span class="rep-badge ${daysLeft <= 1 ? "due-soon" : ""}">${dueText}</span>` : ""}
     ${rightTag}${editBtn}
   </div>`);
 }
@@ -1565,14 +1629,15 @@ function renderTask(task, mode = "full") {
 // Přetažení (podržet prst): jen v Cíli dne, u úkolů s datem a v „Na výběr“ (úkoly v rámci jedné podskupiny).
 function dragAttr(mode, kind, x) {
   if (curDay() < todayISO()) return "";
-  if (mode === "goal") return `data-drag="${kind}:${x.id}" data-dgroup="${kind === "h" ? "goal-h" : "goal"}"`;
+  if (mode === "goal") return `data-drag="${kind}:${x.id}" data-dgroup="${kind === "h" ? "goal-h" : "day-t"}"`;
   if (kind !== "t") return "";
-  if (mode === "must") return `data-drag="t:${x.id}" data-dgroup="dated"`;
+  if (mode === "must") return `data-drag="t:${x.id}" data-dgroup="day-t"`;
   if (mode === "grouped") return `data-drag="t:${x.id}" data-dgroup="b-${x.areaId}"`;
   return "";
 }
 function applyOrder(dgroup, keys) {
   if (dgroup === "areas") { const ids = keys.map(k => k.slice(2)); state.areas.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); }
+  else if (dgroup === "day-t") keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.dayOrder = i; });
   else if (dgroup === "goal" || dgroup === "goal-h") { const d = curDay(); const rest = goalsOf(d).filter(k => !keys.includes(k)); state.goals[d] = [...keys, ...rest]; }
   else keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.order = i; });
   save();
@@ -1582,7 +1647,7 @@ function skipAction(action, id, title) {
   return `<button class="sw-act sw-skip" data-action="${action}" data-id="${id}" aria-label="${t().skip}: ${esc(title)}">${icon("skip")}<span>${t().skip}</span></button>`;
 }
 function goalAction(kind, id, title, on) {
-  return `<button class="sw-act sw-goal ${on ? "on" : ""}" data-action="goal" data-kind="${kind}" data-id="${id}" aria-pressed="${on}" aria-label="${on ? t().goalRemove : t().goalAdd}: ${esc(title)}">${icon("target")}<span>${on ? t().goalOff : t().goalOn}</span></button>`;
+  return `<button class="sw-act sw-goal ${on ? "on" : ""}" data-action="goal" data-kind="${kind}" data-id="${id}" aria-pressed="${on}" aria-label="${on ? t().goalRemove : t().goalAdd}: ${esc(title)}">${icon(on ? "later" : "target")}<span>${on ? t().goalOff : t().goalOn}</span></button>`;
 }
 // Řádek s akcemi pod swajpem. Bez akcí vrací řádek beze změny.
 function swipeWrap(acts, row) {
@@ -1645,7 +1710,7 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
     const left = items.length + g.habits.filter(h => !h.log[d]).length;
     return `<div class="group glass ${open ? "is-open" : ""}" style="--area-c:${a.color}">
       <button class="group-head" data-action="expand-area" data-id="${a.id}" aria-expanded="${open}">
-        <span class="ico">${icon(a.icon)}</span>
+        <span class="ico">${areaIcon(a)}</span>
         <span class="g-body g-row"><span class="g-name">${esc(a.id ? a.name : t().noAreaGroup)}</span><span class="g-count ${left ? "" : "zero"}" aria-label="${t().openTasks(left)}">${left ? left : icon("check")}</span></span>
         <span class="g-chev">${icon("chevron")}</span>
       </button>
@@ -1656,13 +1721,14 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
 
 function renderArea(a) {
   const n = state.tasks.filter(x => x.areaId === a.id && taskIsOpen(x)).length;
+  const nh = state.habits.filter(h => h.areaId === a.id).length;
   return `<button class="area glass" style="--area-c:${a.color}" data-action="area" data-id="${a.id}" data-drag="a:${a.id}" data-dgroup="areas">
-    <div class="ico">${icon(a.icon)}</div>
+    <div class="ico">${areaIcon(a)}</div>
     <div>
       <div class="name">${esc(a.name)}</div>
       <div class="dir">${esc(a.direction)}</div>
     </div>
-    <div class="foot"><span>${t().openTasks(n)}</span></div>
+    <div class="foot"><span>${t().openTasks(n)} · ${t().habitCount(nh)}</span></div>
   </button>`;
 }
 
@@ -1718,7 +1784,10 @@ function renderGoals(d = todayISO()) {
         <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
       <div class="list glass">${(() => {
         // Dvě části podle druhu: Úkoly (vybrané i s datem) a Návyky.
-        const tRows = items.filter(i => i.kind === "t").map(i => renderTask(i.x, "goal")).join("") + dated.map(x => renderTask(x, "must")).join("");
+        // Vybrané úkoly i úkoly s termínem jsou jeden seznam s vlastním pořadím (task.dayOrder, přetažením).
+        const tList = [...items.filter(i => i.kind === "t").map(i => ({ x: i.x, m: "goal" })), ...dated.map(x => ({ x, m: "must" }))];
+        tList.sort((a, b) => (a.x.dayOrder ?? 1e9) - (b.x.dayOrder ?? 1e9));
+        const tRows = tList.map(o => renderTask(o.x, o.m)).join("");
         const hRows = items.filter(i => i.kind === "h").map(i => renderHabitRow(i.x, "goal")).join("");
         if (!tRows && !hRows) return `<div class="empty">${emptyTxt}</div>`;
         return (tRows ? `<div class="subhead">${t().goalTasks}</div>${tRows}` : "") + (hRows ? `<div class="subhead">${t().habits}</div>${hRows}` : "");
@@ -1746,8 +1815,9 @@ function renderDayBody(d) {
   const { tasks, habits } = doneOn(d);
   return `<section class="section" aria-labelledby="h-past">
       <div class="section-head"><h2 id="h-past">${t().doneThatDay}</h2></div>
-      <div class="list glass">${tasks.length || habits.length ? tasks.map(x => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(x.title)}</div><div class="tags"><span class="meta">${esc((areaById(x.areaId) || {}).name || "")}</span></div></div></div>`).join("")
-        + habits.map(h => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(h.title)}</div><div class="tags"><span class="meta">${esc((areaById(h.areaId) || {}).name || "")} · ${t().habitTag}</span></div></div>${habitWeekDots(h, d)}</div>`).join("")
+      <div class="list glass">${tasks.length || habits.length
+        ? (tasks.length ? `<div class="subhead">${t().goalTasks}</div>` + tasks.map(x => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(x.title)}</div>${(areaById(x.areaId) || {}).name ? `<div class="tags"><span class="meta">${esc(areaById(x.areaId).name)}</span></div>` : ""}</div></div>`).join("") : "")
+        + (habits.length ? `<div class="subhead">${t().habits}</div>` + habits.map(h => `<div class="row is-done"><div class="check done-static" aria-hidden="true"><span style="background:var(--c-good);border-color:var(--c-good)">${icon("check")}</span></div><div class="body"><div class="title">${esc(h.title)}</div><div class="tags"><span class="meta">${esc((areaById(h.areaId) || {}).name || "")}</span></div></div>${habitWeekDots(h, d)}</div>`).join("") : "")
         : `<div class="empty">${t().nothingDone}</div>`}</div>
     </section>`;
 }
@@ -1863,7 +1933,7 @@ function renderHabitCard(h, showArea = true) {
   const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
   return `<div class="hcard glass" style="--area-c:${a.color}">
     <div class="hc-head">
-      <span class="ico">${icon(a.icon)}</span>
+      <span class="ico">${areaIcon(a)}</span>
       <div class="hc-txt"><div class="hc-name">${esc(h.title)}</div>
         <div class="hc-meta">${showArea ? `${esc(a.name)} · ` : ""}${h.freq.type === "daily" ? t().freqDaily : t().weekly(habitWeekCount(h), h.freq.times)}</div></div>
       <button class="icon-btn-plain" data-action="habit-edit" data-id="${h.id}" aria-label="${t().editHabit}: ${esc(h.title)}">${icon("pencil")}</button>
@@ -1879,7 +1949,7 @@ function renderHabitsBody() {
   const cats = state.areas.filter(a => state.habits.some(h => h.areaId === a.id));
   if (habitFilter && !cats.some(a => a.id === habitFilter)) habitFilter = null;
   const shown = habitFilter ? state.habits.filter(h => h.areaId === habitFilter) : state.habits;
-  const chip = (id, label, a) => `<button class="pick ${a ? "" : "pick-plain"}" role="radio" aria-checked="${habitFilter === id}" data-action="habit-filter" data-area="${id || ""}" ${a ? `style="--area-c:${a.color}"` : ""}>${a ? `<span class="ico">${icon(a.icon)}</span>` : ""}<span>${label}</span></button>`;
+  const chip = (id, label, a) => `<button class="pick ${a ? "" : "pick-plain"}" role="radio" aria-checked="${habitFilter === id}" data-action="habit-filter" data-area="${id || ""}" ${a ? `style="--area-c:${a.color}"` : ""}>${a ? `<span class="ico">${areaIcon(a)}</span>` : ""}<span>${label}</span></button>`;
   return `
     ${cats.length ? `<div class="area-pick filter-chips" role="radiogroup" aria-label="${t().filterLabel}">${chip(null, t().filterAll)}${cats.map(a => chip(a.id, esc(a.name), a)).join("")}</div>` : ""}
     <section class="section">
@@ -1999,7 +2069,7 @@ function areaPicker(name, selected) {
   if (!state.areas.length) return `<p class="note">${t().needArea}</p>`;
   return `<div class="area-pick" role="radiogroup">${state.areas.map(a => `
     <label class="pick" style="--area-c:${a.color}"><input type="radio" name="${name}" value="${a.id}" ${selected === a.id ? "checked" : ""}>
-      <span class="ico">${icon(a.icon)}</span><span>${esc(a.name)}</span></label>`).join("")}</div>`;
+      <span class="ico">${areaIcon(a)}</span><span>${esc(a.name)}</span></label>`).join("")}</div>`;
 }
 // Kategorie jako rozbalovací řádek: vlevo popisek, vpravo vybraná kategorie; klepnutím se rozbalí výběr.
 const fmtDateLong = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric", year: "numeric" }).format(new Date(d + "T12:00:00"));
@@ -2010,11 +2080,11 @@ function areaSelect(name, selected, allowNone = false) {
   return `<div class="field cat-field">
     <button type="button" class="cat-head" data-action="cat-toggle" aria-expanded="false">
       <span class="flabel">${t().areaLabel}</span>
-      <span class="cat-val ${cur.id ? "" : "is-none"}" style="--area-c:${cur.color}"><span class="ico">${icon(cur.icon)}</span><span class="cat-name">${esc(cur.name)}</span><span class="cat-chev">${icon("chevron")}</span></span>
+      <span class="cat-val ${cur.id ? "" : "is-none"}" style="--area-c:${cur.color}"><span class="ico">${areaIcon(cur)}</span><span class="cat-name">${esc(cur.name)}</span><span class="cat-chev">${icon("chevron")}</span></span>
     </button>
     <div class="cat-list list glass" role="radiogroup" aria-label="${t().areaLabel}" hidden>${opts.map(a => `
       <label class="cat-opt" style="--area-c:${a.color}"><input type="radio" name="${name}" value="${a.id}" ${cur.id === a.id ? "checked" : ""}>
-        <span class="ico">${icon(a.icon)}</span><span class="cat-opt-name">${esc(a.name)}</span><span class="cat-tick">${icon("check")}</span></label>`).join("")}</div>
+        <span class="ico">${areaIcon(a)}</span><span class="cat-opt-name">${esc(a.name)}</span><span class="cat-tick">${icon("check")}</span></label>`).join("")}</div>
   </div>`;
 }
 // Stejné rozbalovací menu jako u kategorie, jen s textovými volbami.
@@ -2052,7 +2122,9 @@ function openTaskForm(id, presetArea, presetDate) {
   const task = id ? state.tasks.find(x => x.id === id) : null;
   const areaId = task ? (task.areaId || "") : (presetArea || "");
   const type = task ? task.type : "single";
-  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${type}" data-goal-day="${!id && presetDate ? presetDate : ""}" novalidate>
+  // Projekt už není samostatný typ: je to jednorázový úkol se zapnutým „Seznamem“ (podúkoly). Uložený typ zůstává "project".
+  const baseType = type === "recurring" ? "recurring" : "single", isList = type === "project";
+  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${baseType}" data-list="${isList ? "on" : "off"}" data-goal-day="${!id && presetDate ? presetDate : ""}" novalidate>
     ${sheetHead(task ? t().taskDetail : t().newTask)}
     <label class="field"><span class="flabel">${t().taskTitle}</span>
       <input class="input" name="title" type="text" value="${task ? esc(task.title) : ""}" ${task ? "" : "autofocus"} autocomplete="off"></label>
@@ -2060,7 +2132,7 @@ function openTaskForm(id, presetArea, presetDate) {
       ${areaSelect("area", areaId, true)}
       ${state.areas.filter(ar => (ar.groups || []).length).map(ar => menuSelect("group_" + ar.id, t().group, [["", t().noGroup], ...sortedGroups(ar).map(g => [g.id, esc(g.name)])], task && task.areaId === ar.id ? (task.groupId || "") : "")
         .replace('class="field cat-field"', `class="field cat-field f-group" data-for-area="${ar.id}" ${ar.id === areaId ? "" : "hidden"}`)).join("")}
-      ${menuSelect("type", t().type, [["single", t().types[0]], ["recurring", t().types[2]], ["project", t().types[1]]], type)}
+      ${menuSelect("type", t().type, [["single", t().types[0]], ["recurring", t().types[2]]], baseType)}
       <div class="field f-date ${task && task.date ? "has-date" : ""}">
         <div class="date-line">
           <span class="flabel">${t().when}</span>
@@ -2076,6 +2148,10 @@ function openTaskForm(id, presetArea, presetDate) {
       return `<div class="f-recurring f-recurring-extra" data-every="${preset}">
       <input class="input f-every-custom" name="every" type="number" inputmode="numeric" min="1" max="365" value="${ev}" aria-label="${t().everyCustomLabel}" placeholder="${t().everyCustomLabel}">
       <span class="note">${t().everyHint}</span></div>`; })()}
+      ${!id && presetDate ? `<label class="field f-togoal"><span class="list-line"><span class="flabel">${t().toGoal}</span>
+        <span class="switch"><input type="checkbox" name="toGoal" role="switch" checked aria-label="${t().toGoal}"><span class="switch-track"></span></span></span></label>` : ""}
+      <label class="field f-list"><span class="list-line"><span class="flabel">${t().listToggle}</span>
+        <span class="switch"><input type="checkbox" name="list" role="switch" ${isList ? "checked" : ""} aria-label="${t().listToggle}"><span class="switch-track"></span></span></span></label>
     </div>
     <input type="hidden" name="priority" value="${task ? task.priority : 2}">
     <label class="field f-project"><span class="flabel">${t().steps}</span>
@@ -2130,7 +2206,9 @@ function openAreaForm(id) {
     <label class="field"><span class="flabel">${t().areaName}</span>
       <input class="input" name="name" type="text" value="${a ? esc(a.name) : ""}" ${a ? "" : "autofocus"} autocomplete="off"></label>
     <div class="field"><span class="flabel">${t().areaIcon}</span>
-      <div class="chips">${AREA_ICONS.map(n => `<label class="chip-ico"><input type="radio" name="icon" value="${n}" ${n === ic ? "checked" : ""}><span>${icon(n)}</span></label>`).join("")}</div></div>
+      <div class="chips">${AREA_ICONS.map(n => `<label class="chip-ico"><input type="radio" name="icon" value="${n}" ${n === ic && !(a && a.emoji) ? "checked" : ""}><span>${icon(n)}</span></label>`).join("")}<button type="button" class="chip-emoji ${a && a.emoji ? "is-on" : ""}" data-action="emoji-toggle" aria-expanded="false" aria-label="${t().emojiLabel}"><span class="emoji-val">${a && a.emoji ? esc(a.emoji) : ""}</span><span class="emoji-hint">${icon("smile")}</span></button>
+        <input type="hidden" name="emoji" value="${a && a.emoji ? esc(a.emoji) : ""}"></div>
+      <div class="emoji-panel list glass" hidden>${EMOJI_SETS.map(([key, list]) => `<div class="emoji-group"><div class="emoji-gl">${t().emojiGroups[key]}</div><div class="emoji-grid">${graphemes(list).map(e => `<button type="button" class="emoji-pick" data-action="emoji-pick" data-emoji="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div></div>
     <div class="field"><span class="flabel">${t().areaColor}</span>
       <div class="chips">${PALETTE.map(c => `<label class="chip-col"><input type="radio" name="color" value="${c}" ${c === col ? "checked" : ""}><span style="background:${c}"></span></label>`).join("")}</div></div>
     <div class="field"><span class="flabel">${t().groups}</span>
@@ -2157,7 +2235,7 @@ function submitForm(form) {
   if (form.dataset.form === "habit" && !f.get("area")) { toast(t().needArea); return; }
   const snap = snapshot();
   if (form.dataset.form === "task") {
-    const type = f.get("type"); const priority = +f.get("priority") || 2;
+    const type = f.get("type") === "single" && f.get("list") ? "project" : f.get("type"); const priority = +f.get("priority") || 2;
     let task = id ? state.tasks.find(x => x.id === id) : null;
     const isNew = !task;
     if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
@@ -2179,7 +2257,8 @@ function submitForm(form) {
       task.done = false; delete task.subtasks;
     } else { delete task.subtasks; delete task.everyDays; delete task.nextDue; }
     // Nový úkol z plusu u Cíle dne bez data: patří do cíle toho dne.
-    if (isNew && form.dataset.goalDay && !task.date && !(task.type === "recurring" && task.nextDue > form.dataset.goalDay)) setGoal("t", task.id, true, form.dataset.goalDay);
+    const gd = form.dataset.goalDay;
+    if (isNew && gd && f.get("toGoal") && !(task.date && task.date <= gd) && !(task.type === "recurring" && task.nextDue > gd)) setGoal("t", task.id, true, gd);
   } else if (form.dataset.form === "habit") {
     let h = id ? state.habits.find(x => x.id === id) : null;
     if (!h) { h = { id: uid(), log: {} }; state.habits.push(h); }
@@ -2188,6 +2267,8 @@ function submitForm(form) {
   } else if (form.dataset.form === "area") {
     let a = id ? areaById(id) : null; const isNew = !a;
     if (!a) { a = { id: uid() }; state.areas.push(a); }
+    const emo = firstGrapheme((f.get("emoji") || "").toString().trim());
+    if (emo) a.emoji = emo; else delete a.emoji;
     Object.assign(a, { name: title, icon: f.get("icon") || "other", color: f.get("color") || PALETTE[0],
       direction: f.get("direction").toString().trim(), context: f.get("context").toString().trim() });
     const oldG = a.groups || [];
@@ -2214,7 +2295,7 @@ function openSort(id) {
     ${state.areas.length ? "" : `<p class="note">${t().needArea}</p>`}
     <div class="area-pick" role="radiogroup" aria-label="${t().areas}">${state.areas.map(a => `
       <button class="pick" role="radio" aria-checked="${sortChoice.areaId === a.id}" data-action="sort-area" data-area="${a.id}" style="--area-c:${a.color}">
-        <span class="ico">${icon(a.icon)}</span><span>${esc(a.name)}</span>
+        <span class="ico">${areaIcon(a)}</span><span>${esc(a.name)}</span>
       </button>`).join("")}</div>
     <button class="btn-accent btn-wide" data-action="sort-confirm" ${sortChoice.areaId ? "" : "disabled"}>${t().sortCta}</button>`);
 }
@@ -2365,6 +2446,14 @@ document.addEventListener("click", e => { if (Date.now() < (drag.suppressUntil |
 // Klávesnice / čtečka: při fokusu na schovanou akci řádek otevřít.
 document.addEventListener("focusin", e => { const a = e.target.closest(".sw-act"); if (a) { const el = a.closest(".swipe"); closeSwipes(el); el.classList.add("open"); } });
 
+// Vlastní emoji kategorie: drží jen jedno emoji a zruší výběr čárové ikony.
+function onEmojiInput(el) { if (!el.parentElement.classList) return;
+  const v = firstGrapheme(el.value.trim()); if (el.value !== v) el.value = v;
+  el.parentElement.classList.toggle("is-on", !!v);
+  if (v) el.form.querySelectorAll('[name="icon"]').forEach(r => { r.checked = false; });
+}
+document.addEventListener("input", e => { if (e.target.name === "emoji") onEmojiInput(e.target); });
+
 document.addEventListener("click", async e => {
   // Klepnutí na řádek s datem rovnou otevře kalendář.
   if (e.target.closest(".date-line") && !e.target.closest(".date-clear")) { const inp = e.target.closest(".date-line").querySelector(".date-pill"); try { inp.showPicker(); } catch (err) { inp.focus(); } }
@@ -2376,6 +2465,14 @@ document.addEventListener("click", async e => {
     case "task": { const u = completeTask(id); rerender(); const f = completeTask.lastFollow; toast(f ? t().followAdded(f.title) : t().done, u); break; }
     case "sub": { const u = toggleSubtask(id, el.dataset.sub); rerender(); toast(t().done, u); break; }
     case "expand": expanded.has(id) ? expanded.delete(id) : expanded.add(id); rerender(); break;
+    case "emoji-toggle": { const pnl = el.closest("form").querySelector(".emoji-panel"); pnl.hidden = !pnl.hidden; el.setAttribute("aria-expanded", String(!pnl.hidden)); break; }
+    case "emoji-pick": {
+      const form = el.closest("form"); const v = el.dataset.emoji;
+      form.querySelector('[name="emoji"]').value = v;
+      const chip = form.querySelector(".chip-emoji"); chip.classList.add("is-on"); chip.querySelector(".emoji-val").textContent = v; chip.setAttribute("aria-expanded", "false");
+      form.querySelectorAll('[name="icon"]').forEach(r => { r.checked = false; });
+      form.querySelector(".emoji-panel").hidden = true; break;
+    }
     case "cat-toggle": {
       const l = el.parentElement.querySelector(".cat-list"); l.hidden = !l.hidden; el.setAttribute("aria-expanded", String(!l.hidden));
       if (!l.hidden) {
@@ -2425,6 +2522,7 @@ document.addEventListener("click", async e => {
     case "date-set": { const inp = el.closest("form").querySelector('[name="date"]'); inp.value = iso(day(+el.dataset.off)); break; }
     case "task-new-day": openTaskForm(null, undefined, curDay()); break;
     case "skip-habit": { const u = moveGoalNextDay("h", id, () => skipHabitToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
+    case "later": { const x = state.tasks.find(x => x.id === id); const prev = x.laterOn; x.laterOn = todayISO(); save(); render(); toast(t().goalRemoved, () => { if (prev) x.laterOn = prev; else delete x.laterOn; save(); render(); }); break; }
     case "goal": { const kind = el.dataset.kind, d = curDay(); const u = toggleGoal(kind, id, d); render(); toast(isGoal(kind, id, d) ? t().goalAdded : t().goalRemoved, u); break; }
     case "skip": { const u = moveGoalNextDay("t", id, () => skipToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
@@ -2464,6 +2562,9 @@ document.addEventListener("click", async e => {
 document.addEventListener("change", e => {
   const form = e.target.closest("form[data-form]"); if (!form) return;
   if (e.target.name === "type") form.dataset.type = e.target.value;
+  if (e.target.name === "icon") { const em = form.querySelector('[name="emoji"]'); if (em) { em.value = ""; const c = form.querySelector(".chip-emoji"); c.classList.remove("is-on"); c.querySelector(".emoji-val").textContent = ""; } }
+  if (e.target.name === "emoji") onEmojiInput(e.target);
+  if (e.target.name === "list") form.dataset.list = e.target.checked ? "on" : "off";
   if (e.target.name === "date" || e.target.name === "start") {
     const box = e.target.closest(".field"); box.classList.toggle("has-date", !!e.target.value);
     box.querySelector(".date-text").textContent = !e.target.value ? t().dateNone : (e.target.name === "start" && e.target.value === todayISO() ? t().today : fmtDateLong(e.target.value));
@@ -2474,7 +2575,7 @@ document.addEventListener("change", e => {
     const box = e.target.closest(".cat-field"); const a = areaById(e.target.value) || noArea();
     if (box) {
       const v = box.querySelector(".cat-val"); v.style.setProperty("--area-c", a.color); v.classList.toggle("is-none", !a.id);
-      v.querySelector(".ico").innerHTML = icon(a.icon); v.querySelector(".cat-name").textContent = a.name;
+      v.querySelector(".ico").innerHTML = areaIcon(a); v.querySelector(".cat-name").textContent = a.name;
       box.querySelector(".cat-list").hidden = true; box.querySelector(".cat-head").setAttribute("aria-expanded", "false");
     }
   }
