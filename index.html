@@ -489,6 +489,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .stage,.device{height:100%}
 /* Obrazovka je přišpendlená k oknu (iOS jinak při přetažení posune celou stránku i s lištou). */
 .screen{position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden;transform:translateZ(0)}
+/* Apka z plochy (iOS): okno je o spodní bezpečnou zónu nižší než displej, proto obrazovka sahá na celou výšku displeje. */
+@media (display-mode: standalone) and (max-width:599px){ .screen{bottom:auto;height:100vh;height:100lvh} }
+@media (max-width:599px){ html.standalone .screen{bottom:auto;height:100vh;height:100lvh} }
 .scroller{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 @media (min-width:600px) and (min-height:640px){
   html,body{height:auto;min-height:100%;overflow:auto}
@@ -939,12 +942,14 @@ function pl(lang, n, forms) {
 // Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
 // "hidden" = funkce je zatím skrytá v celé apce (data se dál počítají).
 const EVERY_PRESETS = [7, 14, 30];
-const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", unlimitedAreas: "free" };
+const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", followUps: "hidden", unlimitedAreas: "free" };
 const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.6.2";
+const APP_VERSION = "0.6.3";
+// iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
+try { if (navigator.standalone) document.documentElement.classList.add("standalone"); } catch (e) {}
 const DATA_VERSION = 3;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -1217,7 +1222,7 @@ function completeTask(id) {
   // Navazující úkol: po splnění se hned přidá nový úkol do stejné kategorie a podskupiny.
   let follow = null;
   const nowDone = task.type === "recurring" || task.done;
-  const chain = (task.followUp || "").split("\n").map(x => x.trim()).filter(Boolean);
+  const chain = (canUse("followUps") ? task.followUp || "" : "").split("\n").map(x => x.trim()).filter(Boolean);
   if (nowDone && chain.length) {
     follow = { id: uid(), areaId: task.areaId, title: chain[0], priority: task.priority || 2, type: "single", done: false, fromId: task.id };
     if (chain.length > 1) follow.followUp = chain.slice(1).join("\n");
@@ -1419,7 +1424,7 @@ function renderTask(task, mode = "full") {
   const dateTag = isOverdue(task) ? `<span class="pill p1">${t().overdue} · ${fmtShort(task.date)}</span>`
     : (task.date && task.type !== "recurring" && mode === "area" ? `<span class="pill p3">${fmtShort(task.date)}</span>` : "");
   const skipTag = dateTag + (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
-    + (mode === "area" && task.followUp ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
+    + (mode === "area" && task.followUp && canUse("followUps") ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
   const editBtn = canEdit ? `<button class="icon-btn-plain" data-action="task-edit" data-id="${task.id}" aria-label="${t().editTask}: ${esc(task.title)}">${icon("pencil")}</button>` : "";
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
   if (task.type === "project") {
@@ -1447,7 +1452,7 @@ function renderTask(task, mode = "full") {
     extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextDue(fmtDay(task.nextDue)) : t().recurring(task.everyDays)}</span>`;
   }
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
-  return swipeWrap(acts, `<div class="row ${checked ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
+  return swipeWrap(acts, `<div class="row ${checked && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
     ${stripe}
     ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
     <div class="body">
@@ -1935,9 +1940,9 @@ function openTaskForm(id, presetArea, presetDate) {
         <label class="pick pick-plain"><input type="radio" name="everyPick" value="${v}" ${v === preset ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
       <input class="input f-every-custom" name="every" type="number" inputmode="numeric" min="1" max="365" value="${ev}" aria-label="${t().everyCustomLabel}" placeholder="${t().everyCustomLabel}">
       <span class="note">${t().everyHint}</span></div>`; })()}
-    <label class="field"><span class="flabel">${t().followUp}</span>
+    ${canUse("followUps") ? `<label class="field"><span class="flabel">${t().followUp}</span>
       <textarea class="input" name="followUp" rows="3" placeholder="${t().followUpPh}">${task && task.followUp ? esc(task.followUp) : ""}</textarea>
-      <span class="note">${t().followUpHint}</span></label>
+      <span class="note">${t().followUpHint}</span></label>` : ""}
     <button class="btn-accent btn-wide" type="submit">${t().save}</button>
     ${task ? `<button class="btn danger btn-wide-ghost" type="button" data-action="task-delete" data-id="${task.id}">${t().deleteTask}</button>` : ""}
   </form>`);
@@ -2015,7 +2020,7 @@ function submitForm(form) {
     if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
     Object.assign(task, { title, areaId: f.get("area"), priority, type });
     const dt = (f.get("date") || "").toString(); if (dt && type !== "recurring") task.date = dt; else delete task.date;
-    const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp;
+    if (canUse("followUps")) { const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp; }
     const gsel = (f.get("group_" + task.areaId) || "").toString(); const ar = areaById(task.areaId);
     if (gsel && ar && (ar.groups || []).some(g => g.id === gsel)) task.groupId = gsel; else delete task.groupId;
     if (type === "project") {
