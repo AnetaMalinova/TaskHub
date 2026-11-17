@@ -180,6 +180,11 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .drag-on{position:relative;z-index:5;box-shadow:0 8px 24px rgba(40,20,90,.18);transform:scale(1.02);transition:transform .15s ease,box-shadow .15s ease;background:var(--c-surface)}
 .drag-on > .row{background:var(--c-surface)}
 .wdots{display:flex;gap:4px;flex:none}
+.row-right{flex:none;display:inline-flex}
+.tags .meta.due-soon{color:var(--c-crit);font-weight:600}
+.tags .meta + .meta::before{content:"·";margin-right:var(--sp-2);color:var(--c-faint);font-weight:500}
+.rep-badge{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:.6875rem;font-weight:600;color:var(--c-faint)}
+.rep-badge .icon{width:13px;height:13px}
 .tags .meta{color:var(--c-faint);font-weight:500;font-size:.6875rem}
 .row .body:has(.meta){gap:1px}
 .done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-muted);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
@@ -267,7 +272,9 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .hc-weeks{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .hc-weeks::-webkit-scrollbar{display:none}
 .hc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:0 0 100%;scroll-snap-align:start}
-.hc-day:disabled{opacity:.4}
+.hc-day:disabled{cursor:default}
+/* Nesplněné dny (minulé i budoucí) stejně bledé; dnešek a splněné dny plně. */
+.hc-day:not(.on):not(.today) .d-c{opacity:.4}
 .hc-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap);padding:2px 0}
 .hc-day .d-l{font-size:.625rem;font-weight:600;color:var(--c-faint);text-transform:uppercase}
 .hc-day .d-c{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-sm);font-weight:600;color:var(--c-muted);background:var(--c-surface-2);border:1.5px solid var(--c-stroke)}
@@ -321,13 +328,53 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .group-list > .subhead:first-child,.list > .subhead:first-child{border-top:0}
 .pick-plain{padding:0 14px}
 .filter-chips{margin-bottom:calc(-1 * var(--sp-2))}
-.f-recurring .f-every-custom{display:none}
-.f-recurring[data-every="custom"] .f-every-custom{display:block}
+.f-recurring-extra{flex-direction:column;gap:6px;margin:-6px 0 4px}
+.f-recurring-extra .note{font-size:.6875rem}
+.f-recurring-extra .f-every-custom{display:none}
+.f-recurring-extra[data-every="custom"] .f-every-custom{display:block}
 .field[hidden]{display:none}
 .btn-x{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;background:var(--c-surface);border:1px solid var(--c-stroke);color:var(--c-muted);flex:none}
 .btn-x .icon{width:18px;height:18px;stroke-width:2.2}
 .field-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:var(--sp-3)}
 .field-inline .seg{align-self:auto}
+.cat-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);min-height:var(--tap);width:100%;text-align:left}
+.cat-val{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:var(--fs-sm)}
+.cat-val .ico{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c)}
+.cat-val .ico .icon{width:15px;height:15px}
+.cat-chev{display:grid;place-items:center;color:var(--c-muted)}
+.cat-val.is-none .ico{display:none}
+.cat-val.is-none .cat-name{color:var(--c-muted);font-weight:500}
+/* Rozbalovací nabídka jako nativní pull-down menu v iOS: plave nad obsahem, zarovnaná vpravo. */
+.cat-field{position:relative}
+/* Nastavení úkolu jako seskupená karta v iOS: řádky těsně pod sebou s jemnou linkou. */
+.set-card{overflow:visible;padding:0;background:none !important;box-shadow:none !important;border:0 !important;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.set-card > .field{padding:0;gap:0;position:relative}
+.date-right{position:relative}
+/* Viditelný je jen text (datum nebo „Nevybráno“), nativní pole leží neviditelně přes něj a otevírá kalendář. */
+.set-card .date-pill{position:absolute;inset:0;width:100%;height:100%;min-width:0;padding:0;opacity:0;background:none}
+.date-text{line-height:var(--tap)}
+.f-date:not(.has-date) .date-text{color:var(--c-muted);font-weight:500}
+.form[data-type="recurring"] .f-date-note{display:none}
+.form .f-start{display:none}
+.form[data-type="recurring"] .f-start{display:flex}
+.f-date-note{margin-top:-8px}
+.form .cat-field:not(.set-card > *){margin-top:-10px}
+.cat-list{position:absolute;z-index:20;right:0;top:calc(100% - 4px);min-width:230px;max-height:60vh;overflow-y:auto;border-radius:14px;box-shadow:0 12px 40px rgba(28,22,51,.22),0 0 0 .5px rgba(28,22,51,.08);background:var(--c-surface);transform-origin:top right;animation:menu-in .16s ease-out}
+.cat-list.up{top:auto;bottom:calc(100% - 4px);transform-origin:bottom right}
+@keyframes menu-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.cat-list{animation:none}}
+.cat-opt{display:flex;align-items:center;gap:var(--sp-3);min-height:44px;padding:0 var(--sp-4);position:relative;font-weight:600;cursor:pointer}
+.cat-opt + .cat-opt::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--c-stroke)}
+.cat-opt input{position:absolute;opacity:0;pointer-events:none}
+.cat-opt .ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.cat-opt .ico .icon{width:15px;height:15px}
+.cat-opt-name{flex:1}
+.cat-tick{color:var(--c-accent);visibility:hidden;display:grid}
+.cat-tick .icon{width:18px;height:18px;stroke-width:2.6}
+.cat-opt:has(input:checked) .cat-tick{visibility:visible}
+.cat-opt:has(input:focus-visible){outline:2px solid var(--c-accent);outline-offset:-2px}
+.cat-chev .icon{width:18px;height:18px;transition:transform var(--t-fast)}
+.cat-head[aria-expanded="true"] .cat-chev .icon{transform:rotate(180deg)}
 .form .seg{padding:3px}
 .form .seg label span{height:30px;padding:0 10px;font-size:var(--fs-xs)}
 .btn-skip{flex:none;height:32px;padding:0 10px;border-radius:var(--r-pill);border:1px solid var(--c-stroke);background:var(--c-surface-2);color:var(--c-muted);font-size:var(--fs-xs);font-weight:600;position:relative;white-space:nowrap}
@@ -414,10 +461,15 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .cal-dot.done{background:var(--c-good)}
 .cal-d.is-sel .cal-dot{background:#fff}
 .cal-legend{display:flex;flex-wrap:wrap;gap:var(--sp-4);font-size:var(--fs-xs);color:var(--c-muted)}
-.date-row{display:flex;gap:var(--sp-2);align-items:center}
-.date-row .input{flex:1;min-width:0}
-.date-row .btn{flex:none;padding:0 12px}
-.form[data-type="recurring"] .f-date{display:none}
+.date-line{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);min-height:var(--tap)}
+.date-right{display:inline-flex;align-items:center;gap:4px}
+/* Datum vpravo jako nativní iOS „pilulka“; prázdné pole ukáže „Bez data“. */
+.date-pill{appearance:none;-webkit-appearance:none;border:0;border-radius:8px;background:var(--c-surface-2);color:var(--c-text);font:600 var(--fs-sm)/1 var(--f-body);height:34px;padding:0 10px;min-width:110px;text-align:center}
+.date-pill:invalid,.date-pill[value=""]{color:var(--c-muted)}
+.date-pill{position:relative;cursor:pointer}
+/* Neviditelný ovladač kalendáře přes celé pole: klepnutí kamkoli otevře kalendář, ikona se neukazuje. */
+.date-pill::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;margin:0;padding:0;opacity:0;cursor:pointer}
+.form[data-type="recurring"] .f-date{display:none !important}
 .must .list{box-shadow:0 0 0 1.5px rgba(229,72,122,.35),var(--shadow)}
 .must-count{background:#fde7ef;color:var(--c-crit)}
 
@@ -452,6 +504,8 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .btn-row{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .btn{height:var(--tap);padding:0 var(--sp-4);border-radius:var(--r-pill);background:var(--c-surface);border:1px solid var(--c-stroke);font-weight:700;font-size:var(--fs-sm);color:var(--c-accent)}
 .btn.danger{color:var(--c-crit);border-color:#f7c7d7}
+/* Smazání jako nenápadné textové tlačítko hned pod hlavním tlačítkem. */
+.btn-text-danger{align-self:center;min-height:var(--tap);margin-top:-10px;padding:0 var(--sp-4);color:var(--c-crit);font-weight:600;font-size:var(--fs-sm)}
 .seg{display:inline-flex;padding:4px;border-radius:var(--r-pill);background:var(--c-surface-2);border:1px solid var(--c-stroke)}
 .seg button{height:38px;padding:0 var(--sp-4);border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:700;color:var(--c-muted)}
 .seg button[aria-pressed="true"]{background:var(--c-accent);color:#fff}
@@ -569,8 +623,16 @@ const STRINGS = {
     habitTag: "Návyk",
     mustTitle: "Úkoly pro tento den",
     overdue: "Overdue",
-    when: "Kdy",
-    whenHint: "Nepovinné. Bez data se úkol nabízí každý den v činnostech. S datem se ten den ukáže v Must have a zůstane tam, dokud ho nesplníš.",
+    when: "Termín",
+    dueBy: d => `do ${d}`,
+    overdueSince: d => `Po termínu · ${d}`,
+    dueToday: "Termín dnes",
+    start: "Začít",
+    dateClear: "Smazat datum",
+    dateNone: "Nevybráno",
+    noArea: "Nevybráno",
+    noAreaGroup: "Bez kategorie",
+    whenHint: "Nepovinné. Bez data se úkol nabízí každý den v „Na výběr“. S datem se ten den ukáže v Cíli dne pod Úkoly a zůstane tam, dokud ho nesplníš.",
     today: "Dnes",
     tomorrow: "Zítra",
     rel: n => n === 1 ? "Zítra" : n === -1 ? "Včera" : n > 1 ? `Za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}` : `Před ${-n} ${pl("cs", -n, ["dnem", "dny", "dne", "dny"])}`,
@@ -646,15 +708,17 @@ const STRINGS = {
     otherGroup: "Ostatní",
     taskTitle: "Co je potřeba udělat",
     type: "Typ",
-    types: ["Jednorázový", "Projekt", "Opakovaný"],
+    types: ["Jednorázově", "Projekt (víc kroků)", "Pravidelně"],
     steps: "Kroky projektu",
     stepsPh: "Každý krok na nový řádek",
     everyDays: "Opakovat",
     everyPreset: n => n === 30 ? "Za měsíc" : `Za ${n} dní`,
     everyCustom: "Vlastní",
+    everyShort: n => n === 30 ? "měsíc" : `${n} d`,
     everyCustomLabel: "Počet dní",
-    everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se zase ukáže a zůstane v činnostech, dokud ho nesplníš.",
+    everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se znovu ukáže v „Na výběr“ a zůstane tam, dokud ho nesplníš.",
     nextDue: d => `Další ${d}`,
+    nextIn: n => n <= 1 ? "Zítra znovu" : `Znovu za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}`,
     save: "Uložit",
     saved: "Uloženo",
     deleteTask: "Smazat úkol",
@@ -762,8 +826,16 @@ const STRINGS = {
     habitTag: "Habit",
     mustTitle: "Tasks for this day",
     overdue: "Overdue",
-    when: "When",
-    whenHint: "Optional. Without a date the task shows up every day. With a date it appears that day and moves to Must have if missed.",
+    when: "Due",
+    dueBy: d => `by ${d}`,
+    overdueSince: d => `Overdue · ${d}`,
+    dueToday: "Due today",
+    start: "Start",
+    dateClear: "Clear date",
+    dateNone: "Not set",
+    noArea: "Not set",
+    noAreaGroup: "No category",
+    whenHint: "Optional. Without a date the task is offered every day in “To pick from”. With a date it appears under Tasks in Today's goal and stays there until done.",
     today: "Today",
     tomorrow: "Tomorrow",
     rel: n => n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n > 1 ? `In ${n} days` : `${-n} days ago`,
@@ -839,15 +911,17 @@ const STRINGS = {
     otherGroup: "Other",
     taskTitle: "What needs doing",
     type: "Type",
-    types: ["One-off", "Project", "Repeating"],
+    types: ["Once", "Project (steps)", "Regularly"],
     steps: "Project steps",
     stepsPh: "One step per line",
     everyDays: "Repeat",
     everyPreset: n => n === 30 ? "Every month" : `Every ${n} days`,
     everyCustom: "Custom",
+    everyShort: n => n === 30 ? "month" : `${n} d`,
     everyCustomLabel: "Number of days",
     everyHint: "Counted from the day you tick it off. Then it shows up again and stays until you do it.",
     nextDue: d => `Next ${d}`,
+    nextIn: n => n <= 1 ? "Again tomorrow" : `Again in ${n} days`,
     save: "Save",
     saved: "Saved",
     deleteTask: "Delete task",
@@ -946,7 +1020,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.6.4";
+const APP_VERSION = "0.7.0";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1130,6 +1204,9 @@ const t = () => STRINGS[lang];
 
 /* ===================== LOGIKA ===================== */
 const areaById = id => state.areas.find(a => a.id === id);
+// Úkol bez kategorie: zástupná „kategorie“ jen pro zobrazení (neukládá se).
+const noArea = () => ({ id: "", name: t().noArea, color: "#7d7799", icon: "other", groups: [] });
+const taskArea = x => areaById(x.areaId) || noArea();
 
 function weekStart(d = day()) { const x = new Date(d); const wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x; }
 function weekDaysISO() { const s = weekStart(); const today = todayISO(); const out = []; for (let i = 0; i < 7; i++) { const k = iso(day(i, s)); if (k > today) break; out.push(k); } return out; }
@@ -1164,13 +1241,14 @@ function isSkippedToday(task) { const k = todayISO(); return task.skipDay === k 
 // Vlastní pořadí (task.order, nastavené přetažením) má přednost; bez něj zůstává původní řazení.
 const byOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9);
 const sortTasks = list => list.sort((a, b) => byOrder(a, b) || a.priority - b.priority || (a.type === "project" ? -1 : 1));
-// Dnešní činnosti: úkoly bez data, úkoly na dnešek a opakované, které jsou na řadě. Zpožděné jsou zvlášť v Must have.
+// Dnešní činnosti: úkoly bez data, úkoly na dnešek a opakované, které jsou na řadě. Zpožděné jsou v Cíli dne pod Úkoly.
 function openTasks() {
   const today = todayISO();
-  return sortTasks(state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x) && (!x.date || x.type === "recurring")));
+  // Úkoly s termínem jsou v „Na výběr“ až do dne termínu; v den termínu a po něm jsou v Cíli dne pod Úkoly.
+  return sortTasks(state.tasks.filter(x => taskIsOpen(x) && !isSkippedToday(x) && (!x.date || x.type === "recurring" || x.date > today)));
 }
 function isOverdue(x) { return !!x.date && x.type !== "recurring" && x.date < todayISO() && taskIsOpen(x); }
-// Must have: úkoly s datem na dnešek a zpožděné (ty mají chip Overdue).
+// Úkoly v Cíli dne: úkoly s datem na dnešek a zpožděné (ty mají chip Overdue).
 function overdueTasks() { const today = todayISO(); return state.tasks.filter(x => x.date && x.type !== "recurring" && x.date <= today && taskIsOpen(x)).sort((a, b) => byOrder(a, b) || a.date.localeCompare(b.date)); }
 // Budoucí den: úkoly naplánované na ten den a opakované, které na něj připadnou.
 function plannedFor(dayIso) {
@@ -1264,7 +1342,7 @@ function deleteInbox(id) {
   state.inbox.splice(idx, 1); save();
   return () => { state.inbox.splice(idx, 0, item); save(); };
 }
-const AREA_ICONS = ["sport", "work", "photo", "home", "trips", "food", "book", "heart", "star", "music", "other"];
+const AREA_ICONS = ["sport", "work", "photo", "home", "trips", "food", "book", "heart", "star", "music"]; // „other“ (tečky) jen jako záloha, v nabídce působilo jako „další ikony“
 // Barvy kategorií: tlumené, aby nejvýraznější zůstala fialová apky (fialová kategorie je záměrně světlejší lila).
 // Každá má kontrast aspoň 3:1 vůči bílé i vůči svému světlému podkladu (WCAG AA pro grafiku a ikony).
 const PALETTE = ["#9f78cc", "#6089d1", "#3194a8", "#3a9976", "#62963d", "#b2802a", "#d46a49", "#d2668a"];
@@ -1310,7 +1388,15 @@ function toggleGoal(kind, id, d = todayISO()) {
 }
 // Backlog „Na výběr“ pro budoucí den: úkoly bez data a opakované, které už budou na řadě.
 function backlogFor(d) {
-  return sortTasks(state.tasks.filter(x => !(x.skipDays && x.skipDays[d]) && (x.type === "recurring" ? x.nextDue <= d : (!x.date && taskIsOpen(x)))));
+  return sortTasks(state.tasks.filter(x => !(x.skipDays && x.skipDays[d]) && (x.type === "recurring" ? x.nextDue <= d : ((!x.date || x.date > d) && taskIsOpen(x)))));
+}
+// „Na zítra“: položka z cíle dne se přesune do cíle následujícího dne. Vrací funkci pro vrácení zpět.
+function moveGoalNextDay(kind, id, skipFn) {
+  const d = curDay(); const next = iso(day(1, new Date(d + "T12:00:00")));
+  const g = isGoal(kind, id, d); const wasNext = isGoal(kind, id, next);
+  if (g) { setGoal(kind, id, false, d); setGoal(kind, id, true, next); }
+  const undoSkip = skipFn();
+  return () => { undoSkip(); if (g) { setGoal(kind, id, true, d); if (!wasNext) setGoal(kind, id, false, next); } };
 }
 function goalItems(d = todayISO()) {
   return goalsOf(d).map(k => {
@@ -1348,7 +1434,7 @@ function importBackup(text) {
 
 /* ===================== VZHLED (render) ===================== */
 const ICONS = {
-  sport: '<path d="M13 4a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M5 21l4-6 3 2 1-5 4 3"/><path d="M8 11l3-3 4 1 2 3"/>',
+  sport: '<rect x="5" y="5.5" width="3.5" height="13" rx="1.2"/><rect x="15.5" y="5.5" width="3.5" height="13" rx="1.2"/><path d="M2.5 9.5v5M21.5 9.5v5M8.5 12h7"/>',
   work: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
   photo: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>',
   home: '<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>',
@@ -1418,10 +1504,10 @@ function renderHabit(h) {
 // mode: "full" (pruh, oblast, priorita) | "grouped" (nic navíc) | "area" (jen priorita + úprava)
 function renderTask(task, mode = "full") {
   if (mode === true) mode = "grouped";
-  const a = areaById(task.areaId);
+  const a = taskArea(task);
   const showStripe = mode === "full", showMeta = mode === "must" || mode === "goal", showArea = mode === "full", showPrio = false, canEdit = mode === "area";
   const prio = showPrio ? `<span class="pill p${task.priority}">${t().prio[task.priority - 1]}</span>` : "";
-  const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : (showMeta ? `<span class="meta">${esc(a.name)}</span>` : "");
+  const areaTag = showArea ? `<span style="display:inline-flex;align-items:center;gap:5px"><i class="dot" style="background:${a.color}"></i>${esc(a.name)}</span>` : (showMeta && a.id ? `<span class="meta">${esc(a.name)}</span>` : "");
   const stripe = showStripe ? `<i class="stripe" style="background:${a.color}"></i>` : "";
   // Akce „Na zítra“ a „Cíl dne“ jsou schované pod swajpem doleva. V „Na výběr“ jen Cíl.
   const acts = [
@@ -1429,9 +1515,13 @@ function renderTask(task, mode = "full") {
     (mode === "grouped" && curDay() >= todayISO()) || mode === "goal" ? goalAction("t", task.id, task.title, mode === "goal") : "",
   ].join("");
   const fmtShort = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d + "T12:00:00"));
-  const dateTag = isOverdue(task) ? `<span class="pill p1">${t().overdue} · ${fmtShort(task.date)}</span>`
-    : (task.date && task.type !== "recurring" && mode === "area" ? `<span class="pill p3">${fmtShort(task.date)}</span>` : "");
-  const skipTag = dateTag + (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
+  const hasDeadline = task.date && task.type !== "recurring";
+  // Termín jako šedý text pod názvem; po termínu, v den termínu a den předem červeně.
+  const daysLeft = hasDeadline ? Math.round((new Date(task.date + "T12:00:00") - new Date(curDay() + "T12:00:00")) / 864e5) : null;
+  const dueText = !hasDeadline || task.done ? "" : daysLeft < 0 ? t().overdueSince(fmtShort(task.date)) : daysLeft === 0 ? t().dueToday : t().dueBy(fmtShort(task.date));
+  const dateTag = dueText ? `<span class="meta ${daysLeft <= 1 ? "due-soon" : ""}">${dueText}</span>` : "";
+  const rightTag = "";
+  const skipTag = (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
     + (mode === "area" && task.followUp && canUse("followUps") ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
   const editBtn = canEdit ? `<button class="icon-btn-plain" data-action="task-edit" data-id="${task.id}" aria-label="${t().editTask}: ${esc(task.title)}">${icon("pencil")}</button>` : "";
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
@@ -1442,10 +1532,10 @@ function renderTask(task, mode = "full") {
       <div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>
       <div class="body">
         <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-        <div class="tags">${prio}${areaTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
+        <div class="tags">${prio}${areaTag}${dateTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? (d / n) * 100 : 0}%"></i></div>
       </div>
-      ${editBtn}
+      ${rightTag}${editBtn}
       <button class="expand" data-action="expand" data-id="${task.id}" aria-expanded="${open}" aria-label="${t().showSteps}">${icon("chevron")}</button>
     </div>`) + `
     ${open ? `<div class="subtasks">${task.subtasks.map(st => `
@@ -1457,7 +1547,7 @@ function renderTask(task, mode = "full") {
   let extra = "";
   if (task.type === "recurring" && mode !== "grouped" && mode !== "goal") {
     const waiting = task.nextDue > todayISO();
-    extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextDue(fmtDay(task.nextDue)) : t().recurring(task.everyDays)}</span>`;
+    extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextIn(Math.round((new Date(task.nextDue + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 864e5)) : t().recurring(task.everyDays)}</span>`;
   }
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
   return swipeWrap(acts, `<div class="row ${checked && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
@@ -1465,16 +1555,17 @@ function renderTask(task, mode = "full") {
     ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
     <div class="body">
       <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-      <div class="tags">${prio}${areaTag}${skipTag}${extra}</div>
+      <div class="tags">${prio}${areaTag}${dateTag}${skipTag}${extra}</div>
     </div>
-    ${editBtn}
+    ${task.type === "recurring" && mode === "grouped" ? `<span class="rep-badge" aria-label="${t().recurring(task.everyDays)}">${icon("repeat")}${t().everyShort(task.everyDays)}</span>` : ""}
+    ${rightTag}${editBtn}
   </div>`);
 }
 
 // Přetažení (podržet prst): jen v Cíli dne, u úkolů s datem a v „Na výběr“ (úkoly v rámci jedné podskupiny).
 function dragAttr(mode, kind, x) {
   if (curDay() < todayISO()) return "";
-  if (mode === "goal") return `data-drag="${kind}:${x.id}" data-dgroup="goal"`;
+  if (mode === "goal") return `data-drag="${kind}:${x.id}" data-dgroup="${kind === "h" ? "goal-h" : "goal"}"`;
   if (kind !== "t") return "";
   if (mode === "must") return `data-drag="t:${x.id}" data-dgroup="dated"`;
   if (mode === "grouped") return `data-drag="t:${x.id}" data-dgroup="b-${x.areaId}"`;
@@ -1482,7 +1573,7 @@ function dragAttr(mode, kind, x) {
 }
 function applyOrder(dgroup, keys) {
   if (dgroup === "areas") { const ids = keys.map(k => k.slice(2)); state.areas.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); }
-  else if (dgroup === "goal") { const d = curDay(); const rest = goalsOf(d).filter(k => !keys.includes(k)); state.goals[d] = [...keys, ...rest]; }
+  else if (dgroup === "goal" || dgroup === "goal-h") { const d = curDay(); const rest = goalsOf(d).filter(k => !keys.includes(k)); state.goals[d] = [...keys, ...rest]; }
   else keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.order = i; });
   save();
 }
@@ -1501,8 +1592,13 @@ function swipeWrap(acts, row) {
 }
 
 // Úkoly rozdělené podle podskupin kategorie (např. místností). extra = řádky navíc do „Ostatní“.
+// Podskupiny vždy podle abecedy, „Ostatní“ jako záchytná skupina na konci.
+const isOtherGroup = n => n.trim().toLowerCase() === t().otherGroup.toLowerCase();
+const byGroupName = (a, b) => (isOtherGroup(a) - isOtherGroup(b)) || a.localeCompare(b, lang);
+const sortedGroups = area => [...(area.groups || [])].sort((x, y) => byGroupName(x.name, y.name));
+
 function renderByGroups(area, items, mode, extra = "") {
-  const all = area.groups || [];
+  const all = sortedGroups(area);
   const known = new Set(all.map(g => g.id));
   const otherG = all.find(g => g.name.trim().toLowerCase() === t().otherGroup.toLowerCase());
   const inGroup = (x, g) => x.groupId === g.id || (otherG && g.id === otherG.id && (!x.groupId || !known.has(x.groupId)));
@@ -1528,8 +1624,8 @@ function renderHabitRow(h, mode = "grouped") {
 
     <button class="check" role="checkbox" aria-checked="${done}" data-action="habit" data-id="${h.id}" aria-label="${esc(h.title)}" ${future ? "disabled" : ""}><span>${icon("check")}</span></button>
     <div class="body">
-      <div class="title">${esc(h.title)}</div>
-      ${mode === "goal" ? `<div class="tags"><span class="meta">${esc(areaById(h.areaId).name)} · ${t().habitTag}</span></div>` : ""}
+      <button class="title title-link" data-action="habit-edit" data-id="${h.id}">${esc(h.title)}</button>
+      ${mode === "goal" ? `<div class="tags"><span class="meta">${esc(areaById(h.areaId).name)}</span></div>` : ""}
     </div>
     ${habitWeekDots(h)}
   </div>`);
@@ -1540,7 +1636,7 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
   if (mode === "grouped") tasks = tasks.filter(x => !isGoal("t", x.id, d));
   const habits = withHabits ? state.habits.filter(h => (future ? !(h.skips && h.skips[d]) : habitIsDueToday(h)) && !isGoal("h", h.id, d)) : [];
   if (!tasks.length && !habits.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
-  const groups = state.areas.map(a => ({ a, items: tasks.filter(x => x.areaId === a.id), habits: habits.filter(h => h.areaId === a.id) }))
+  const groups = [...state.areas, noArea()].map(a => ({ a, items: tasks.filter(x => a.id ? x.areaId === a.id : !areaById(x.areaId)), habits: habits.filter(h => h.areaId === a.id) }))
     .filter(g => g.items.length || g.habits.some(h => !h.log[d]))
     ; // pořadí kategorií si uživatelka určuje přetažením v Kategoriích
   if (!groups.length) return `<div class="list glass"><div class="empty">${t().noTasks}</div></div>`;
@@ -1550,7 +1646,7 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
     return `<div class="group glass ${open ? "is-open" : ""}" style="--area-c:${a.color}">
       <button class="group-head" data-action="expand-area" data-id="${a.id}" aria-expanded="${open}">
         <span class="ico">${icon(a.icon)}</span>
-        <span class="g-body g-row"><span class="g-name">${esc(a.name)}</span><span class="g-count ${left ? "" : "zero"}" aria-label="${t().openTasks(left)}">${left ? left : icon("check")}</span></span>
+        <span class="g-body g-row"><span class="g-name">${esc(a.id ? a.name : t().noAreaGroup)}</span><span class="g-count ${left ? "" : "zero"}" aria-label="${t().openTasks(left)}">${left ? left : icon("check")}</span></span>
         <span class="g-chev">${icon("chevron")}</span>
       </button>
       ${open ? `<div class="group-list">${renderByGroups(a, items, mode, g.habits.map(renderHabitRow).join(""))}</div>` : ""}
@@ -1611,7 +1707,8 @@ function renderMust() {
 // Jedna sekce: nahoře cíl dne (vybrané z „Na výběr“), pod ním úkoly s datem na dnešek a prošlé.
 function renderGoals(d = todayISO()) {
   const future = d > todayISO();
-  const all = goalItems(d); const dated = future ? state.tasks.filter(x => x.date === d && x.type !== "recurring" && taskIsOpen(x)).sort(byOrder) : overdueTasks();
+  const all = goalItems(d); const goalIds = new Set(goalsOf(d));
+  const dated = (future ? state.tasks.filter(x => x.date && x.date <= d && x.type !== "recurring" && taskIsOpen(x)).sort(byOrder) : overdueTasks()).filter(x => !goalIds.has("t:" + x.id));
   const isDone = i => i.kind === "h" ? !!i.x.log[d] : (i.x.type === "recurring" ? (!future && i.x.nextDue > todayISO()) : !!i.x.done);
   const items = all.filter(i => !isDone(i));
   const done = future ? { tasks: [], habits: [] } : doneOn(d); const nDone = done.tasks.length + done.habits.length;
@@ -1619,8 +1716,13 @@ function renderGoals(d = todayISO()) {
   return `<section class="section goal" aria-labelledby="h-goal">
       <div class="section-head"><h2 id="h-goal">${t().goalTitle}</h2>
         <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
-      <div class="list glass">${items.length ? items.map(i => i.kind === "t" ? renderTask(i.x, "goal") : renderHabitRow(i.x, "goal")).join("") : `<div class="empty">${emptyTxt}</div>`}
-        ${dated.length ? `<div class="subhead subhead-tasks">${t().goalTasks}</div>${dated.map(x => renderTask(x, "must")).join("")}` : ""}</div>
+      <div class="list glass">${(() => {
+        // Dvě části podle druhu: Úkoly (vybrané i s datem) a Návyky.
+        const tRows = items.filter(i => i.kind === "t").map(i => renderTask(i.x, "goal")).join("") + dated.map(x => renderTask(x, "must")).join("");
+        const hRows = items.filter(i => i.kind === "h").map(i => renderHabitRow(i.x, "goal")).join("");
+        if (!tRows && !hRows) return `<div class="empty">${emptyTxt}</div>`;
+        return (tRows ? `<div class="subhead">${t().goalTasks}</div>${tRows}` : "") + (hRows ? `<div class="subhead">${t().habits}</div>${hRows}` : "");
+      })()}</div>
       ${nDone ? `<button class="done-link" data-action="toggle-done-today" aria-expanded="${doneTodayOpen}">${t().doneToday} (${nDone})</button>
         ${doneTodayOpen ? `<div class="list glass">${done.tasks.map(x => doneRow(x.title, x.type === "recurring" ? "" : `data-action="task" data-id="${x.id}"`, "", (areaById(x.areaId) || {}).name || "")).join("")}${done.habits.map(h => doneRow(h.title, `data-action="habit" data-id="${h.id}"`, habitWeekDots(h), `${(areaById(h.areaId) || {}).name || ""} · ${t().habitTag}`)).join("")}</div>` : ""}` : ""}
     </section>`;
@@ -1899,6 +2001,35 @@ function areaPicker(name, selected) {
     <label class="pick" style="--area-c:${a.color}"><input type="radio" name="${name}" value="${a.id}" ${selected === a.id ? "checked" : ""}>
       <span class="ico">${icon(a.icon)}</span><span>${esc(a.name)}</span></label>`).join("")}</div>`;
 }
+// Kategorie jako rozbalovací řádek: vlevo popisek, vpravo vybraná kategorie; klepnutím se rozbalí výběr.
+const fmtDateLong = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric", year: "numeric" }).format(new Date(d + "T12:00:00"));
+function areaSelect(name, selected, allowNone = false) {
+  if (!state.areas.length && !allowNone) return `<div class="field"><span class="flabel">${t().areaLabel}</span><p class="note">${t().needArea}</p></div>`;
+  const opts = allowNone ? [noArea(), ...state.areas] : state.areas;
+  const cur = areaById(selected) || (allowNone ? opts[0] : state.areas[0]);
+  return `<div class="field cat-field">
+    <button type="button" class="cat-head" data-action="cat-toggle" aria-expanded="false">
+      <span class="flabel">${t().areaLabel}</span>
+      <span class="cat-val ${cur.id ? "" : "is-none"}" style="--area-c:${cur.color}"><span class="ico">${icon(cur.icon)}</span><span class="cat-name">${esc(cur.name)}</span><span class="cat-chev">${icon("chevron")}</span></span>
+    </button>
+    <div class="cat-list list glass" role="radiogroup" aria-label="${t().areaLabel}" hidden>${opts.map(a => `
+      <label class="cat-opt" style="--area-c:${a.color}"><input type="radio" name="${name}" value="${a.id}" ${cur.id === a.id ? "checked" : ""}>
+        <span class="ico">${icon(a.icon)}</span><span class="cat-opt-name">${esc(a.name)}</span><span class="cat-tick">${icon("check")}</span></label>`).join("")}</div>
+  </div>`;
+}
+// Stejné rozbalovací menu jako u kategorie, jen s textovými volbami.
+function menuSelect(name, label, options, selected) {
+  const cur = options.find(([v]) => String(v) === String(selected)) || options[0];
+  return `<div class="field cat-field">
+    <button type="button" class="cat-head" data-action="cat-toggle" aria-expanded="false">
+      <span class="flabel">${label}</span>
+      <span class="cat-val"><span class="cat-name">${cur[1]}</span><span class="cat-chev">${icon("chevron")}</span></span>
+    </button>
+    <div class="cat-list list glass" role="radiogroup" aria-label="${label}" hidden>${options.map(([v, l]) => `
+      <label class="cat-opt"><input type="radio" name="${name}" value="${v}" data-label="${l}" ${String(v) === String(cur[0]) ? "checked" : ""}>
+        <span class="cat-opt-name">${l}</span><span class="cat-tick">${icon("check")}</span></label>`).join("")}</div>
+  </div>`;
+}
 function segRadios(name, options, selected) {
   return `<div class="seg" role="radiogroup">${options.map(([val, label]) => `
     <label><input type="radio" name="${name}" value="${val}" ${String(selected) === String(val) ? "checked" : ""}><span>${label}</span></label>`).join("")}</div>`;
@@ -1919,40 +2050,41 @@ function openQuickAdd() {
 function openTaskForm(id, presetArea, presetDate) {
   delete sheetEl.dataset.area;
   const task = id ? state.tasks.find(x => x.id === id) : null;
-  const areaId = task ? task.areaId : (presetArea || (state.areas[0] && state.areas[0].id));
+  const areaId = task ? (task.areaId || "") : (presetArea || "");
   const type = task ? task.type : "single";
-  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${type}" novalidate>
+  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${type}" data-goal-day="${!id && presetDate ? presetDate : ""}" novalidate>
     ${sheetHead(task ? t().taskDetail : t().newTask)}
     <label class="field"><span class="flabel">${t().taskTitle}</span>
       <input class="input" name="title" type="text" value="${task ? esc(task.title) : ""}" ${task ? "" : "autofocus"} autocomplete="off"></label>
-    <div class="field"><span class="flabel">${t().areaLabel}</span>${areaPicker("area", areaId)}</div>
-    ${state.areas.filter(ar => (ar.groups || []).length).map(ar => `
-      <div class="field f-group" data-for-area="${ar.id}" ${ar.id === areaId ? "" : "hidden"}><span class="flabel">${t().group}</span>
-        <div class="area-pick">${[["", t().noGroup], ...ar.groups.map(g => [g.id, g.name])].map(([gid, gname]) => `
-          <label class="pick pick-plain"><input type="radio" name="group_${ar.id}" value="${gid}" ${(task && task.areaId === ar.id ? (task.groupId || "") : "") === gid ? "checked" : ""}><span>${esc(gname)}</span></label>`).join("")}</div>
-      </div>`).join("")}
-    <input type="hidden" name="priority" value="${task ? task.priority : 2}">
-    <div class="field field-inline"><span class="flabel">${t().type}</span>${segRadios("type", [["single", t().types[0]], ["project", t().types[1]], ["recurring", t().types[2]]], type)}</div>
-    <label class="field f-project"><span class="flabel">${t().steps}</span>
-      <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
-    <div class="field f-date"><span class="flabel">${t().when}</span>
-      <div class="date-row">
-        <input class="input" name="date" type="date" value="${task && task.date ? task.date : (presetDate || "")}" aria-label="${t().when}">
-        <button class="btn" type="button" data-action="date-set" data-off="0">${t().today}</button>
-        <button class="btn" type="button" data-action="date-set" data-off="1">${t().tomorrow}</button>
+    <div class="set-card list glass">
+      ${areaSelect("area", areaId, true)}
+      ${state.areas.filter(ar => (ar.groups || []).length).map(ar => menuSelect("group_" + ar.id, t().group, [["", t().noGroup], ...sortedGroups(ar).map(g => [g.id, esc(g.name)])], task && task.areaId === ar.id ? (task.groupId || "") : "")
+        .replace('class="field cat-field"', `class="field cat-field f-group" data-for-area="${ar.id}" ${ar.id === areaId ? "" : "hidden"}`)).join("")}
+      ${menuSelect("type", t().type, [["single", t().types[0]], ["recurring", t().types[2]], ["project", t().types[1]]], type)}
+      <div class="field f-date ${task && task.date ? "has-date" : ""}">
+        <div class="date-line">
+          <span class="flabel">${t().when}</span>
+          <span class="date-right cat-val"><span class="date-text">${task && task.date ? fmtDateLong(task.date) : t().dateNone}</span><input class="date-pill" name="date" type="date" value="${task && task.date ? task.date : ""}" aria-label="${t().when}"></span>
+        </div>
       </div>
-      <span class="note">${t().whenHint}</span></div>
-    ${(() => { const ev = task && task.everyDays ? task.everyDays : 7; const preset = EVERY_PRESETS.includes(ev) ? String(ev) : "custom";
-      return `<div class="field f-recurring" data-every="${preset}"><span class="flabel">${t().everyDays}</span>
-      <div class="area-pick">${[...EVERY_PRESETS.map(n => [String(n), t().everyPreset(n)]), ["custom", t().everyCustom]].map(([v, l]) => `
-        <label class="pick pick-plain"><input type="radio" name="everyPick" value="${v}" ${v === preset ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
+      ${(() => { const st = task && task.type === "recurring" && task.nextDue > todayISO() ? task.nextDue : todayISO();
+        return `<div class="field f-start has-date"><div class="date-line"><span class="flabel">${t().start}</span>
+          <span class="date-right cat-val"><span class="date-text">${st === todayISO() ? t().today : fmtDateLong(st)}</span><input class="date-pill" name="start" type="date" min="${todayISO()}" value="${st}" aria-label="${t().start}"></span></div></div>`; })()}
+      ${(() => { const ev = task && task.everyDays ? task.everyDays : 7; const preset = EVERY_PRESETS.includes(ev) ? String(ev) : "custom";
+        return menuSelect("everyPick", t().everyDays, [...EVERY_PRESETS.map(n => [String(n), t().everyPreset(n)]), ["custom", t().everyCustom]], preset).replace('class="field cat-field"', 'class="field cat-field f-recurring"'); })()}
+      ${(() => { const ev = task && task.everyDays ? task.everyDays : 7; const preset = EVERY_PRESETS.includes(ev) ? String(ev) : "custom";
+      return `<div class="f-recurring f-recurring-extra" data-every="${preset}">
       <input class="input f-every-custom" name="every" type="number" inputmode="numeric" min="1" max="365" value="${ev}" aria-label="${t().everyCustomLabel}" placeholder="${t().everyCustomLabel}">
       <span class="note">${t().everyHint}</span></div>`; })()}
+    </div>
+    <input type="hidden" name="priority" value="${task ? task.priority : 2}">
+    <label class="field f-project"><span class="flabel">${t().steps}</span>
+      <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
     ${canUse("followUps") ? `<label class="field"><span class="flabel">${t().followUp}</span>
       <textarea class="input" name="followUp" rows="3" placeholder="${t().followUpPh}">${task && task.followUp ? esc(task.followUp) : ""}</textarea>
       <span class="note">${t().followUpHint}</span></label>` : ""}
     <button class="btn-accent btn-wide" type="submit">${t().save}</button>
-    ${task ? `<button class="btn danger btn-wide-ghost" type="button" data-action="task-delete" data-id="${task.id}">${t().deleteTask}</button>` : ""}
+    ${task ? `<button class="btn-text-danger" type="button" data-action="task-delete" data-id="${task.id}">${t().deleteTask}</button>` : ""}
   </form>`);
 }
 
@@ -1965,16 +2097,18 @@ function openHabitForm(id, presetArea) {
     ${sheetHead(h ? t().editHabit : t().addHabit)}
     <label class="field"><span class="flabel">${t().habitName}</span>
       <input class="input" name="title" type="text" value="${h ? esc(h.title) : ""}" ${h ? "" : "autofocus"} autocomplete="off"></label>
-    <div class="field"><span class="flabel">${t().areaLabel}</span>${areaPicker("area", areaId)}</div>
-    <div class="field"><span class="flabel">${t().freq}</span>${segRadios("freq", [["daily", t().freqDaily], ["weekly", t().freqWeekly]], ftype)}</div>
-    <div class="field f-weekly"><span class="flabel">${t().timesPerWeek}</span>${segRadios("times", [1, 2, 3, 4, 5, 6].map(n => [n, n]), h && h.freq.times ? h.freq.times : 3)}</div>
+    <div class="set-card list glass">
+      ${areaSelect("area", areaId)}
+      ${menuSelect("freq", t().freq, [["daily", t().freqDaily], ["weekly", t().freqWeekly]], ftype)}
+      ${menuSelect("times", t().timesPerWeek, [1, 2, 3, 4, 5, 6].map(n => [n, `${n}×`]), h && h.freq.times ? h.freq.times : 3).replace('class="field cat-field"', 'class="field cat-field f-weekly"')}
+    </div>
     <button class="btn-accent btn-wide" type="submit">${t().save}</button>
-    ${h ? `<button class="btn danger btn-wide-ghost" type="button" data-action="habit-delete" data-id="${h.id}">${t().deleteHabit}</button>` : ""}
+    ${h ? `<button class="btn-text-danger" type="button" data-action="habit-delete" data-id="${h.id}">${t().deleteHabit}</button>` : ""}
   </form>`);
 }
 
 function gchipsHtml(names) {
-  return names.map(n => `<span class="gchip">${esc(n)}<button type="button" data-action="gchip-del" data-name="${esc(n)}" aria-label="${t().deleteLabel}: ${esc(n)}">${icon("x")}</button></span>`).join("");
+  return [...names].sort(byGroupName).map(n => `<span class="gchip">${esc(n)}<button type="button" data-action="gchip-del" data-name="${esc(n)}" aria-label="${t().deleteLabel}: ${esc(n)}">${icon("x")}</button></span>`).join("");
 }
 function gchipsUpdate(form, names) {
   form.querySelector('[name="groups"]').value = names.join("\n");
@@ -1990,7 +2124,7 @@ function gchipsAdd(form) {
 function openAreaForm(id) {
   delete sheetEl.dataset.area;
   const a = id ? areaById(id) : null;
-  const ic = a ? a.icon : "other"; const col = a ? a.color : PALETTE[0];
+  const ic = a ? a.icon : "star"; const col = a ? a.color : PALETTE[0];
   openSheet(`<form class="form" data-form="area" data-id="${id || ""}" novalidate>
     ${sheetHead(a ? t().editArea : t().addArea)}
     <label class="field"><span class="flabel">${t().areaName}</span>
@@ -2012,7 +2146,7 @@ function openAreaForm(id) {
     <label class="field"><span class="flabel">${t().context}</span>
       <textarea class="input" name="context" rows="3" placeholder="${t().contextPh}">${a ? esc(a.context || "") : ""}</textarea></label>
     <button class="btn-accent btn-wide" type="submit">${t().save}</button>
-    ${a ? `<button class="btn danger btn-wide-ghost" type="button" data-action="area-delete" data-id="${a.id}">${t().deleteArea}</button>` : ""}
+    ${a ? `<button class="btn-text-danger" type="button" data-action="area-delete" data-id="${a.id}">${t().deleteArea}</button>` : ""}
   </form>`);
 }
 
@@ -2020,13 +2154,14 @@ function submitForm(form) {
   const f = new FormData(form); const id = form.dataset.id;
   const title = (f.get("title") || f.get("name") || "").toString().trim();
   if (!title) { toast(t().required); const inp = form.querySelector('[name="title"],[name="name"]'); if (inp) inp.focus(); return; }
-  if (form.dataset.form !== "area" && !f.get("area")) { toast(t().needArea); return; }
+  if (form.dataset.form === "habit" && !f.get("area")) { toast(t().needArea); return; }
   const snap = snapshot();
   if (form.dataset.form === "task") {
     const type = f.get("type"); const priority = +f.get("priority") || 2;
     let task = id ? state.tasks.find(x => x.id === id) : null;
+    const isNew = !task;
     if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
-    Object.assign(task, { title, areaId: f.get("area"), priority, type });
+    Object.assign(task, { title, areaId: (f.get("area") || "").toString(), priority, type });
     const dt = (f.get("date") || "").toString(); if (dt && type !== "recurring") task.date = dt; else delete task.date;
     if (canUse("followUps")) { const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp; }
     const gsel = (f.get("group_" + task.areaId) || "").toString(); const ar = areaById(task.areaId);
@@ -2039,9 +2174,12 @@ function submitForm(form) {
     } else if (type === "recurring") {
       const pick = f.get("everyPick");
       task.everyDays = Math.max(1, Math.min(365, (pick && pick !== "custom" ? +pick : +f.get("every")) || 7));
-      if (!task.nextDue) task.nextDue = todayISO();
+      const st = (f.get("start") || "").toString();
+      if (st) task.nextDue = st; else if (!task.nextDue) task.nextDue = todayISO();
       task.done = false; delete task.subtasks;
     } else { delete task.subtasks; delete task.everyDays; delete task.nextDue; }
+    // Nový úkol z plusu u Cíle dne bez data: patří do cíle toho dne.
+    if (isNew && form.dataset.goalDay && !task.date && !(task.type === "recurring" && task.nextDue > form.dataset.goalDay)) setGoal("t", task.id, true, form.dataset.goalDay);
   } else if (form.dataset.form === "habit") {
     let h = id ? state.habits.find(x => x.id === id) : null;
     if (!h) { h = { id: uid(), log: {} }; state.habits.push(h); }
@@ -2228,6 +2366,9 @@ document.addEventListener("click", e => { if (Date.now() < (drag.suppressUntil |
 document.addEventListener("focusin", e => { const a = e.target.closest(".sw-act"); if (a) { const el = a.closest(".swipe"); closeSwipes(el); el.classList.add("open"); } });
 
 document.addEventListener("click", async e => {
+  // Klepnutí na řádek s datem rovnou otevře kalendář.
+  if (e.target.closest(".date-line") && !e.target.closest(".date-clear")) { const inp = e.target.closest(".date-line").querySelector(".date-pill"); try { inp.showPicker(); } catch (err) { inp.focus(); } }
+  if (!e.target.closest(".cat-field")) document.querySelectorAll(".cat-list:not([hidden])").forEach(l => { l.hidden = true; l.parentElement.querySelector(".cat-head").setAttribute("aria-expanded", "false"); });
   const el = e.target.closest("[data-action]"); if (!el) { if (e.target === sheetEl) closeSheet(); return; }
   const id = el.dataset.id;
   switch (el.dataset.action) {
@@ -2235,6 +2376,18 @@ document.addEventListener("click", async e => {
     case "task": { const u = completeTask(id); rerender(); const f = completeTask.lastFollow; toast(f ? t().followAdded(f.title) : t().done, u); break; }
     case "sub": { const u = toggleSubtask(id, el.dataset.sub); rerender(); toast(t().done, u); break; }
     case "expand": expanded.has(id) ? expanded.delete(id) : expanded.add(id); rerender(); break;
+    case "cat-toggle": {
+      const l = el.parentElement.querySelector(".cat-list"); l.hidden = !l.hidden; el.setAttribute("aria-expanded", String(!l.hidden));
+      if (!l.hidden) {
+        // Když se menu dolů nevejde (okraj obrazovky / listu), otevře se nahoru.
+        l.classList.remove("up");
+        const box = (el.closest(".sheet") || document.body).getBoundingClientRect();
+        const r = l.getBoundingClientRect(); const head = el.getBoundingClientRect();
+        const bottomLimit = Math.min(innerHeight, box.bottom) - 8;
+        if (r.bottom > bottomLimit && head.top - Math.max(0, box.top) > r.height) l.classList.add("up");
+      }
+      break;
+    }
     case "expand-area": expandedAreas.has(id) ? expandedAreas.delete(id) : expandedAreas.add(id); rerender(); break;
     case "area": go("area-" + id); break;
     case "area-new": openAreaForm(); break;
@@ -2268,11 +2421,12 @@ document.addEventListener("click", async e => {
     case "calendar": calMonth = null; openCalendar(); break;
     case "cal-month": { const [yy, mm] = calMonth.split("-").map(Number); const nd = new Date(yy, mm - 1 + Number(el.dataset.dir), 1, 12); calMonth = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}`; openCalendar(); break; }
     case "cal-pick": { const k = el.dataset.day; selectedDay = k === todayISO() ? null : k; calMonth = null; closeSheet(); go(""); break; }
+    case "date-clear": { const inp = el.closest("form").querySelector('[name="date"]'); inp.value = ""; el.closest(".f-date").classList.remove("has-date"); break; }
     case "date-set": { const inp = el.closest("form").querySelector('[name="date"]'); inp.value = iso(day(+el.dataset.off)); break; }
     case "task-new-day": openTaskForm(null, undefined, curDay()); break;
-    case "skip-habit": { const d = curDay(); const g = isGoal("h", id, d); if (g) setGoal("h", id, false, d); const u0 = skipHabitToday(id, d); const u = () => { u0(); if (g) setGoal("h", id, true, d); }; render(); toast(t().skippedToast, u); break; }
+    case "skip-habit": { const u = moveGoalNextDay("h", id, () => skipHabitToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "goal": { const kind = el.dataset.kind, d = curDay(); const u = toggleGoal(kind, id, d); render(); toast(isGoal(kind, id, d) ? t().goalAdded : t().goalRemoved, u); break; }
-    case "skip": { const d = curDay(); const g = isGoal("t", id, d); if (g) setGoal("t", id, false, d); const u0 = skipToday(id, d); const u = () => { u0(); if (g) setGoal("t", id, true, d); }; render(); toast(t().skippedToast, u); break; }
+    case "skip": { const u = moveGoalNextDay("t", id, () => skipToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
     case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
     case "settings": openSettings(); break;
@@ -2310,10 +2464,23 @@ document.addEventListener("click", async e => {
 document.addEventListener("change", e => {
   const form = e.target.closest("form[data-form]"); if (!form) return;
   if (e.target.name === "type") form.dataset.type = e.target.value;
-  if (e.target.name === "area") form.querySelectorAll(".f-group").forEach(el => { el.hidden = el.dataset.forArea !== e.target.value; });
+  if (e.target.name === "date" || e.target.name === "start") {
+    const box = e.target.closest(".field"); box.classList.toggle("has-date", !!e.target.value);
+    box.querySelector(".date-text").textContent = !e.target.value ? t().dateNone : (e.target.name === "start" && e.target.value === todayISO() ? t().today : fmtDateLong(e.target.value));
+  }
+  if (e.target.dataset.label) { const box = e.target.closest(".cat-field"); box.querySelector(".cat-name").textContent = e.target.dataset.label; box.querySelector(".cat-list").hidden = true; box.querySelector(".cat-head").setAttribute("aria-expanded", "false"); }
+  if (e.target.name === "area") {
+    form.querySelectorAll(".f-group").forEach(el => { el.hidden = el.dataset.forArea !== e.target.value; });
+    const box = e.target.closest(".cat-field"); const a = areaById(e.target.value) || noArea();
+    if (box) {
+      const v = box.querySelector(".cat-val"); v.style.setProperty("--area-c", a.color); v.classList.toggle("is-none", !a.id);
+      v.querySelector(".ico").innerHTML = icon(a.icon); v.querySelector(".cat-name").textContent = a.name;
+      box.querySelector(".cat-list").hidden = true; box.querySelector(".cat-head").setAttribute("aria-expanded", "false");
+    }
+  }
   if (e.target.name === "freq") form.dataset.freq = e.target.value;
   if (e.target.name === "everyPick") {
-    const box = e.target.closest(".f-recurring"); box.dataset.every = e.target.value;
+    const box = form.querySelector(".f-recurring-extra"); box.dataset.every = e.target.value;
     if (e.target.value === "custom") { const inp = box.querySelector(".f-every-custom"); inp.focus(); inp.select && inp.select(); }
   }
 });
