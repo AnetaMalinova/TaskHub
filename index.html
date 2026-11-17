@@ -183,7 +183,9 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .drag-list > :not(.drag-on){opacity:.55;transition:opacity .15s ease}
 /* V seznamech: zvednutý řádek bez dělicí linky, se zaoblenými rohy. */
 .drag-on::before,.drag-on > .row::before{display:none !important}
-.list .drag-on{border-radius:14px;overflow:hidden}
+.list .drag-on{border-radius:14px;overflow:hidden;box-shadow:0 12px 28px rgba(40,20,90,.25)}
+/* Fialový rámeček uvnitř řádku, aby ho neořízl okraj karty. */
+.list .drag-on > .row,.list .row.drag-on{box-shadow:inset 0 0 0 2px var(--c-accent);border-radius:14px}
 .drag-on + .swipe > .row::before,.drag-on + .row::before{display:none}
 @media (prefers-reduced-motion:reduce){.drag-on{animation:none}}
 .drag-on > .row{background:var(--c-surface)}
@@ -455,7 +457,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
   position:fixed;z-index:5;left:50%;transform:translateX(-50%);
   bottom:var(--tabbar-bottom);
   width:min(448px,calc(100% - 32px));
-  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:var(--r-pill);
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:6px;border-radius:var(--r-pill);
   background:rgba(255,255,255,.82);border:1px solid var(--c-stroke);
   backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
   box-shadow:0 12px 30px rgba(115,66,203,.16);
@@ -468,7 +470,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .btn-plus{width:var(--tap);height:var(--tap);display:grid;place-items:center;background:none;color:var(--c-accent);margin:-10px -10px -10px 0;flex:none}
 .btn-plus .icon{width:24px;height:24px;stroke-width:2.4}
 /* Listování dny a kalendář */
-.day-title{text-align:left;color:inherit;padding:0;display:block;min-width:0;min-height:var(--tap)}
+.day-title{text-align:left;color:inherit;padding:0;display:block;min-width:0;flex:1;min-height:var(--tap)}
 .day-top{position:relative}
 .day-top .icon-btn-subtle{position:absolute;top:-12px;right:-10px;margin:0}
 .day-row{display:flex;align-items:center;margin-left:-10px;margin-right:-6px}
@@ -1063,7 +1065,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.8.1";
+const APP_VERSION = "0.8.2";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -2400,17 +2402,29 @@ document.addEventListener("pointermove", e => {
   if (!drag.active) { if (Math.abs(e.clientX - drag.x0) > 8 || Math.abs(e.clientY - drag.y0) > 8) { clearTimeout(drag.timer); drag.row = null; } return; }
   drag.moved = true;
   const sibs = dragSiblings(); const me = drag.el;
-  // Funguje pro seznam i mřížku: prohodí se s položkou, nad kterou je prst.
-  for (const c of sibs) {
+  // Funguje pro seznam i mřížku: prohodí se s položkou, nad jejímž středem je prst.
+  // Proti „třesení“: jen střední část cílové položky, po prohození krátká pauza a ostatní položky plynule dojedou (FLIP).
+  const now = Date.now();
+  if (now > (drag.lockUntil || 0)) for (const c of sibs) {
     if (c === me) continue;
-    const r = c.getBoundingClientRect();
-    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) continue;
+    const r = c.getBoundingClientRect(); const mx = r.width * 0.25, my = r.height * 0.25;
+    if (e.clientX < r.left + mx || e.clientX > r.right - mx || e.clientY < r.top + my || e.clientY > r.bottom - my) continue;
+    const before = new Map(sibs.filter(x => x !== me).map(x => [x, x.getBoundingClientRect()]));
     if (me.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING) c.before(me); else c.after(me);
+    before.forEach((r0, x) => {
+      const r1 = x.getBoundingClientRect(); const ddx = r0.left - r1.left, ddy = r0.top - r1.top;
+      if (!ddx && !ddy) return;
+      x.style.transition = "none"; x.style.transform = `translate(${ddx}px, ${ddy}px)`;
+      requestAnimationFrame(() => { x.style.transition = "transform .2s ease"; x.style.transform = ""; });
+    });
+    drag.lockUntil = now + 220;
     break;
   }
   // Položka jede s prstem (posun počítaný od jejího aktuálního místa v rozložení).
   me.style.transform = "none"; const base = me.getBoundingClientRect();
-  me.style.transform = `translate(${e.clientX - drag.gx - base.left}px, ${e.clientY - drag.gy - base.top}px) scale(${drag.scale})`;
+  // V seznamu jen nahoru/dolů, v mřížce kategorií volně.
+  const dx = me.closest(".list") ? 0 : e.clientX - drag.gx - base.left;
+  me.style.transform = `translate(${dx}px, ${e.clientY - drag.gy - base.top}px) scale(${drag.scale})`;
 }, true);
 function endDrag() {
   clearTimeout(drag.timer);
