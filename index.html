@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#7342cb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="TaskHub">
@@ -58,7 +58,8 @@
 
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{
+button,input,textarea,select{font-variant-ligatures:no-common-ligatures}
+body{font-variant-ligatures:no-common-ligatures;
   background:var(--c-bg);
   color:var(--c-text);
   font-family:var(--f-body);
@@ -198,7 +199,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .rep-badge.due-soon{color:var(--c-crit)}
 .tags .meta{color:var(--c-faint);font-weight:500;font-size:.6875rem}
 .row .body:has(.meta){gap:1px}
-.done-link{align-self:center;min-height:36px;margin:-10px 0 -8px;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-muted);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
+.done-link{align-self:flex-end;min-height:36px;margin:-10px calc(-1 * var(--sp-2)) -8px 0;padding:0 var(--sp-2);font-size:var(--fs-xs);font-weight:500;color:var(--c-muted);text-decoration:underline;text-decoration-color:var(--c-stroke);text-underline-offset:3px;position:relative}
 .done-link::after{content:"";position:absolute;inset:-4px 0}
 .wdots i{width:10px;height:10px;border-radius:3px;background:var(--c-stroke)}
 .wdots i.on{background:var(--area-c)}
@@ -277,6 +278,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .hcard{padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3)}
 .hc-head{display:flex;align-items:center;gap:var(--sp-3)}
 .hc-head .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c);flex:none}
+.hc-head .icon-btn-plain{align-self:flex-start;margin:-10px -10px 0 0}
 .hc-txt{flex:1;min-width:0}
 .hc-name{font-weight:700}
 .hc-meta{font-size:var(--fs-xs);color:var(--c-muted)}
@@ -300,19 +302,22 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .form{display:flex;flex-direction:column;gap:var(--sp-4)}
 .field{display:flex;flex-direction:column;gap:var(--sp-2)}
 .flabel{font-size:var(--fs-sm);color:var(--c-muted);font-weight:700}
-.input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--c-stroke);background:#fff;padding:0 14px;font:inherit;font-size:16px;color:var(--c-text)}
+.input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--c-stroke);background:#fff;padding:0 14px;font:inherit;font-size:var(--fs-sm);font-weight:700;color:var(--c-text)}
+.input::placeholder{color:var(--c-faint);font-weight:400;opacity:1}
 textarea.input{padding:12px 14px;resize:vertical;line-height:1.4}
 .input:focus{outline:none;border-color:var(--c-accent);box-shadow:0 0 0 3px var(--c-accent-soft)}
+.form[data-own-icon="off"] .f-icon{display:none}
+.form[data-note="off"] .f-note{display:none}
 .form .f-project,.form .f-recurring,.form .f-weekly,.form .f-list{display:none}
 .form[data-type="single"][data-list="on"] .f-project,.form[data-type="single"] .f-list,.form[data-type="recurring"] .f-recurring,.form[data-freq="weekly"] .f-weekly{display:flex}
 .list-line{display:flex;align-items:center;justify-content:space-between;min-height:var(--tap);width:100%}
 /* Přepínač ve stylu iOS */
-.switch{position:relative;width:51px;height:31px;flex:none}
+.switch{position:relative;width:44px;height:26px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
 .switch-track{position:absolute;inset:0;border-radius:999px;background:var(--c-stroke);transition:background var(--t-fast)}
-.switch-track::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform var(--t-fast)}
+.switch-track::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform var(--t-fast)}
 .switch input:checked + .switch-track{background:var(--c-accent)}
-.switch input:checked + .switch-track::after{transform:translateX(20px)}
+.switch input:checked + .switch-track::after{transform:translateX(18px)}
 .switch input:focus-visible + .switch-track{outline:2px solid var(--c-accent);outline-offset:2px}
 .seg label{position:relative;display:inline-flex}
 .seg label input{position:absolute;opacity:0;pointer-events:none}
@@ -353,8 +358,8 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .f-recurring-extra .f-every-custom{display:none}
 .f-recurring-extra[data-every="custom"] .f-every-custom{display:block}
 .field[hidden]{display:none}
-.btn-x{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;background:var(--c-surface);border:1px solid var(--c-stroke);color:var(--c-muted);flex:none}
-.btn-x .icon{width:18px;height:18px;stroke-width:2.2}
+.btn-x{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;background:none;border:0;margin-right:-10px;color:var(--c-muted);flex:none}
+.btn-x .icon{width:22px;height:22px;stroke-width:2.2}
 .field-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:var(--sp-3)}
 .field-inline .seg{align-self:auto}
 .cat-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);min-height:var(--tap);width:100%;text-align:left}
@@ -367,8 +372,10 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 /* Poslední „ikona“ v mřížce: vlastní emoji ze systémové klávesnice. */
 .chip-emoji{position:relative;width:44px;height:44px;border-radius:14px;background:#fff;border:2px dashed var(--c-stroke);display:grid;place-items:center;cursor:text}
 .chip-emoji.is-on{border:2px solid var(--c-accent);background:var(--c-accent-soft)}
+.emoji-val,.emoji-hint{grid-area:1/1}
 .emoji-val{font-size:1.3rem;line-height:1}
-.emoji-hint{pointer-events:none;color:var(--c-muted);display:grid}
+.emoji-val:empty{display:none}
+.emoji-hint{pointer-events:none;color:var(--c-muted);display:grid;place-items:center}
 .emoji-hint .icon{width:20px;height:20px}
 .chip-emoji.is-on .emoji-hint{display:none}
 .chip-emoji[aria-expanded="true"]{border-color:var(--c-accent)}
@@ -469,13 +476,32 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .section-head{align-items:center}
 .btn-plus{width:var(--tap);height:var(--tap);display:grid;place-items:center;background:none;color:var(--c-accent);margin:-10px -10px -10px 0;flex:none}
 .btn-plus .icon{width:24px;height:24px;stroke-width:2.4}
+.btn-edit-subtle{color:var(--c-muted)}
+/* Dlaždice návyků v Cíli dne */
+.hstrip{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 calc(-1 * var(--sp-4));padding:4px var(--sp-4) 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.hstrip::-webkit-scrollbar{display:none}
+.htile{position:relative;flex:none;width:96px;min-height:104px;padding:12px 8px 10px;border-radius:18px;background:var(--c-surface);border:1px solid var(--c-stroke);display:flex;flex-direction:column;align-items:center;gap:8px;scroll-snap-align:start;color:var(--c-text);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-x;transition:background var(--t-fast),transform var(--t-fast)}
+.htile:active{transform:scale(.97)}
+.htile-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c)}
+.htile-ico .icon{width:22px;height:22px}
+.htile-name{font-size:var(--fs-sm);font-weight:700;line-height:1.2;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.htile.on{background:color-mix(in srgb,var(--area-c) 16%,#fff);border-color:color-mix(in srgb,var(--area-c) 45%,#fff)}
+.htile-check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--c-good);color:#fff;display:grid;place-items:center}
+.htile-check .icon{width:14px;height:14px;stroke-width:3}
+.htile.skipped{opacity:.55;filter:grayscale(1)}
+.htile-note{font-size:11px;color:var(--c-muted);font-weight:700;font-variant-numeric:tabular-nums;margin-top:auto}
+.htile[aria-disabled="true"]{cursor:default}
+.htile-menu{position:fixed;z-index:60;min-width:200px;border-radius:14px;background:var(--c-surface);box-shadow:0 12px 40px rgba(28,22,51,.22),0 0 0 .5px rgba(28,22,51,.08);overflow:hidden;animation:menu-in .16s ease-out}
+.htile-menu button{display:flex;align-items:center;width:100%;min-height:44px;padding:0 var(--sp-4);font-weight:600;color:var(--c-text);text-align:left}
+.wdots-link{display:flex;align-items:center;min-height:var(--tap);padding:0 4px;margin-right:-4px;background:none;flex:none}
+.btn-edit-subtle .icon{width:22px;height:22px;stroke-width:2}
 /* Listování dny a kalendář */
-.day-title{text-align:left;color:inherit;padding:0;display:block;min-width:0;flex:1;min-height:var(--tap)}
+.day-title{text-align:center;color:inherit;padding:0;display:block;min-width:0;flex:1;min-height:var(--tap)}
 .day-top{position:relative}
 .day-top .icon-btn-subtle{position:absolute;top:-12px;right:-10px;margin:0}
-.day-row{display:flex;align-items:center;margin-left:-10px;margin-right:-6px}
+.day-row{display:flex;align-items:center;margin-left:-8px;margin-right:-8px}
 .day-row .day-btn{flex:none;opacity:.85}
-.day-greet{padding-left:22px}
+.day-greet{text-align:center;padding:0 44px}
 .day-ctrl{display:flex;align-items:center;gap:0;margin:6px 0 -8px -9px}
 .day-btn{width:32px;height:var(--tap);display:grid;place-items:center;color:#fff;border-radius:12px}
 .day-btn .icon{width:20px;height:20px}
@@ -533,6 +559,17 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .grabber{width:40px;height:5px;border-radius:3px;background:#d6cbee;margin:0 auto}
 .sheet-head{display:flex;align-items:center;gap:var(--sp-3)}
 .sheet-head h3{flex:1;margin:0;font-family:var(--f-display);font-size:var(--fs-xl);font-weight:800}
+.profile{display:flex;flex-direction:column;gap:var(--sp-3)}
+.profile-link{width:100%;display:flex;align-items:center;gap:var(--sp-3);min-height:56px;text-align:left;color:var(--c-text)}
+.profile-link .profile-label{flex:1;font-weight:600}
+.profile-ver{text-align:center}
+.backup-note{margin:0 var(--sp-1)}
+.backup-last{margin:0 var(--sp-1) var(--sp-2)}
+.profile label.btn-wide{height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.profile-val{color:var(--c-muted);font-size:var(--fs-sm)}
+.profile-link .icon{color:var(--c-muted)}
+.profile-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--c-surface-2)}
+.profile-ico .icon{color:var(--c-accent)}
 .block{padding:var(--sp-4);border-radius:var(--r-lg);background:var(--c-surface);border:1px solid var(--c-stroke);display:flex;flex-direction:column;gap:var(--sp-2)}
 .block h4{margin:0;font-size:var(--fs-sm);color:var(--c-accent);font-weight:700}
 .block p{margin:0}
@@ -544,6 +581,8 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .seg{display:inline-flex;padding:4px;border-radius:var(--r-pill);background:var(--c-surface-2);border:1px solid var(--c-stroke)}
 .seg button{height:38px;padding:0 var(--sp-4);border-radius:var(--r-pill);font-size:var(--fs-sm);font-weight:700;color:var(--c-muted)}
 .seg button[aria-pressed="true"]{background:var(--c-accent);color:#fff}
+.seg-full{display:flex;align-self:stretch;width:100%}
+.seg-full button{flex:1;height:44px}
 .note{font-size:var(--fs-xs);color:var(--c-muted)}
 textarea.dump{width:100%;min-height:90px;border-radius:var(--r-sm);background:var(--c-surface-2);color:var(--c-muted);border:1px solid var(--c-stroke);font:12px/1.4 ui-monospace,Menlo,monospace;padding:var(--sp-2)}
 .dialog{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:var(--sp-6);background:rgba(28,22,51,.4)}
@@ -670,7 +709,7 @@ const STRINGS = {
     whenHint: "Nepovinné. Bez data se úkol nabízí každý den v „Na výběr“. S datem se ten den ukáže v Cíli dne pod Úkoly a zůstane tam, dokud ho nesplníš.",
     today: "Dnes",
     tomorrow: "Zítra",
-    rel: n => n === 1 ? "Zítra" : n === -1 ? "Včera" : n > 1 ? `Za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}` : `Před ${-n} ${pl("cs", -n, ["dnem", "dny", "dne", "dny"])}`,
+    rel: n => n === 0 ? "dnes" : n === 1 ? "zítra" : n === -1 ? "včera" : n > 1 ? `za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}` : `před ${-n} ${pl("cs", -n, ["dnem", "dny", "dne", "dny"])}`,
     prevDay: "Předchozí den",
     nextDay: "Další den",
     openCalendar: "Otevřít kalendář",
@@ -690,8 +729,11 @@ const STRINGS = {
     habitsMeta: (a, b) => `${a} z ${b}`,
     streak: n => `${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])} v řadě`,
     weekly: (a, b) => `${a}/${b} tento týden`,
+    timesWeek: n => `${n}× týdně`,
     priorities: "Priority",
     todayTitle: "Na výběr",
+    editAreas: "Upravit kategorie",
+    openHabits: "Otevřít přehled návyků",
     goalTitle: "Cíl dne",
     goalTasks: "Úkoly",
     goalAllDone: "Všechno z cíle dne je hotové.",
@@ -705,7 +747,6 @@ const STRINGS = {
     goalOff: "Na později",
     goalRemoved: "Vráceno do Na výběr",
     areasTitle: "Kategorie",
-    areasLead: "Klepni na kategorii a uvidíš její směr, úkoly, návyky i to, co už máš hotové.",
     areaLabel: "Kategorie",
     addArea: "Nová kategorie",
     editArea: "Upravit kategorii",
@@ -742,6 +783,10 @@ const STRINGS = {
     noGroup: "Bez podskupiny",
     otherGroup: "Ostatní",
     taskTitle: "Co je potřeba udělat",
+    taskTitlePh: "Název úkolu",
+    noteToggle: "Přidat poznámku",
+    note: "Poznámka",
+    notePh: "Cokoli, co se ti bude hodit",
     type: "Typ",
     types: ["Jednorázově", "Projekt (víc kroků)", "Pravidelně"],
     listToggle: "Přidat seznam úkolů",
@@ -770,14 +815,22 @@ const STRINGS = {
     habitsLead: "Klepni na den, kdy jsi návyk splnila. Takhle doplníš i dny, na které jsi zapomněla.",
     addHabit: "Nový návyk",
     editHabit: "Upravit návyk",
-    habitName: "Název návyku",
+    habitName: "Co chceš dělat pravidelně",
+    habitIcon: "Ikona",
+    skippedToday: "Dnes vynecháno",
+    skippedShort: "Vynecháno",
+    skipHabitToday: "Dnes vynechat",
+    unskipHabit: "Zrušit vynechání",
+    ownIcon: "Jiná ikona než kategorie",
+    iconFromArea: "Podle kategorie",
+    habitNamePh: "Název návyku",
     freq: "Jak často",
     freqDaily: "Každý den",
     freqWeekly: "Několikrát týdně",
     timesPerWeek: "Kolikrát týdně",
     deleteHabit: "Smazat návyk",
     habitsEmpty: "Zatím nemáš žádné návyky.",
-    last30: n => `Za 30 dní ${n}×`,
+    last30: n => `${n}× za 30 dní`,
     required: "Vyplň prosím název.",
     deletedArea: "Kategorie smazána",
     startOwn: "Začít s vlastními daty",
@@ -802,7 +855,7 @@ const STRINGS = {
     review: "Týdenní revize",
     reviewWhen: d => `Naplánovaná na ${d}`,
     reviewStart: "Začít",
-    tabs: { home: "Přehled", areas: "Kategorie", habits: "Návyky", inbox: "Schránka" },
+    tabs: { home: "Přehled", areas: "Kategorie", habits: "Návyky", inbox: "Schránka", profile: "Profil" },
     soon: "Tahle část přijde v další verzi.",
     done: "Hotovo",
     undone: "Vráceno",
@@ -815,16 +868,18 @@ const STRINGS = {
     backup: "Záloha",
     lastBackup: "Poslední záloha",
     never: "zatím nikdy",
-    backupWhy: "Data jsou jen v tomhle zařízení. Zálohu si ulož mimo apku, třeba do Poznámek nebo Souborů.",
-    copyBackup: "Zkopírovat zálohu",
+    backupWhy: "Data jsou jen v tomhle zařízení. Zálohu si stáhni jako soubor a ulož ji třeba do Souborů nebo na iCloud.",
+    copyBackup: "Zkopírovat jako text",
+    backupNow: "Zálohovat data",
+    backupSaved: "Záloha uložena",
     copied: "Záloha zkopírována. Vlož ji do Poznámek nebo Souborů.",
     copyFailed: "Kopírování se nepovedlo. Označ text níže a zkopíruj ho ručně.",
-    importBackup: "Načíst zálohu ze souboru",
+    importBackup: "Nahrát zálohu",
     pasteBackup: "Vložit zálohu",
     pastePh: "Sem vlož zkopírovanou zálohu",
     pasteLoad: "Načíst vloženou zálohu",
     pasteEmpty: "Nejdřív sem vlož zálohu.",
-    pasteConfirm: "Nahradit všechna data v téhle apce vloženou zálohou? Hned potom to půjde vrátit.",
+    pasteConfirm: "Nahradit všechna data v téhle apce nahranou zálohou? Hned potom to půjde vrátit.",
     importOk: "Záloha načtena",
     importBad: "Tohle není platná záloha této apky. Zkontroluj, že je zkopírovaná celá.",
     resetDemo: "Obnovit ukázková data",
@@ -878,7 +933,7 @@ const STRINGS = {
     whenHint: "Optional. Without a date the task is offered every day in “To pick from”. With a date it appears under Tasks in Today's goal and stays there until done.",
     today: "Today",
     tomorrow: "Tomorrow",
-    rel: n => n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n > 1 ? `In ${n} days` : `${-n} days ago`,
+    rel: n => n === 0 ? "today" : n === 1 ? "tomorrow" : n === -1 ? "yesterday" : n > 1 ? `in ${n} days` : `${-n} days ago`,
     prevDay: "Previous day",
     nextDay: "Next day",
     openCalendar: "Open calendar",
@@ -898,8 +953,11 @@ const STRINGS = {
     habitsMeta: (a, b) => `${a} of ${b}`,
     streak: n => `${n}-day streak`,
     weekly: (a, b) => `${a}/${b} this week`,
+    timesWeek: n => `${n}× a week`,
     priorities: "Priorities",
     todayTitle: "To pick from",
+    editAreas: "Edit categories",
+    openHabits: "Open habits overview",
     goalTitle: "Today's goal",
     goalTasks: "Tasks",
     goalAllDone: "Everything in today's goal is done.",
@@ -913,7 +971,6 @@ const STRINGS = {
     goalOff: "Later",
     goalRemoved: "Back in To pick from",
     areasTitle: "Categories",
-    areasLead: "Tap a category to see its direction, tasks, habits and what you've already done.",
     areaLabel: "Category",
     addArea: "New category",
     editArea: "Edit category",
@@ -950,6 +1007,10 @@ const STRINGS = {
     noGroup: "No subgroup",
     otherGroup: "Other",
     taskTitle: "What needs doing",
+    taskTitlePh: "Task name",
+    noteToggle: "Add a note",
+    note: "Note",
+    notePh: "Anything that will help",
     type: "Type",
     types: ["Once", "Project (steps)", "Regularly"],
     listToggle: "Add a checklist",
@@ -978,7 +1039,15 @@ const STRINGS = {
     habitsLead: "Tap a day when you did the habit. You can fill in days you forgot, too.",
     addHabit: "New habit",
     editHabit: "Edit habit",
-    habitName: "Habit name",
+    habitName: "What do you want to do regularly",
+    habitIcon: "Icon",
+    skippedToday: "Skipped today",
+    skippedShort: "Skipped",
+    skipHabitToday: "Skip today",
+    unskipHabit: "Undo skip",
+    ownIcon: "Different icon than category",
+    iconFromArea: "Same as category",
+    habitNamePh: "Habit name",
     freq: "How often",
     freqDaily: "Every day",
     freqWeekly: "A few times a week",
@@ -1010,7 +1079,7 @@ const STRINGS = {
     review: "Weekly review",
     reviewWhen: d => `Planned for ${d}`,
     reviewStart: "Start",
-    tabs: { home: "Overview", areas: "Categories", habits: "Habits", inbox: "Inbox" },
+    tabs: { home: "Overview", areas: "Categories", habits: "Habits", inbox: "Inbox", profile: "Profile" },
     soon: "This part comes in the next version.",
     done: "Done",
     undone: "Restored",
@@ -1023,16 +1092,18 @@ const STRINGS = {
     backup: "Backup",
     lastBackup: "Last backup",
     never: "never yet",
-    backupWhy: "Your data lives only on this device. Keep a backup outside the app, for example in Notes or Files.",
-    copyBackup: "Copy backup",
+    backupWhy: "Your data lives only on this device. Download a backup file and keep it in Files or iCloud.",
+    copyBackup: "Copy as text",
+    backupNow: "Back up data",
+    backupSaved: "Backup saved",
     copied: "Backup copied. Paste it into Notes or Files.",
     copyFailed: "Copying failed. Select the text below and copy it by hand.",
-    importBackup: "Load backup from file",
+    importBackup: "Upload backup",
     pasteBackup: "Paste backup",
     pastePh: "Paste your copied backup here",
     pasteLoad: "Load pasted backup",
     pasteEmpty: "Paste a backup first.",
-    pasteConfirm: "Replace all data in this app with the pasted backup? You can undo right after.",
+    pasteConfirm: "Replace all data in this app with the uploaded backup? You can undo right after.",
     importOk: "Backup loaded",
     importBad: "This isn't a valid backup for this app. Check that you copied all of it.",
     resetDemo: "Restore sample data",
@@ -1065,7 +1136,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.8.2";
+const APP_VERSION = "0.9.0";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1259,6 +1330,8 @@ const areaById = id => state.areas.find(a => a.id === id);
 const noArea = () => ({ id: "", name: t().noArea, color: "#7d7799", icon: "other", groups: [] });
 const taskArea = x => areaById(x.areaId) || noArea();
 // Ikona kategorie: vlastní emoji (systémová klávesnice), jinak čárová ikona.
+// Ikona návyku: vlastní emoji nebo ikona, jinak ikona kategorie.
+const habitIcon = (h, a) => h.emoji ? `<span class="emo" aria-hidden="true">${esc(h.emoji)}</span>` : h.icon ? icon(h.icon) : areaIcon(a);
 const areaIcon = a => a && a.emoji ? `<span class="emo" aria-hidden="true">${esc(a.emoji)}</span>` : icon(a ? a.icon : "other");
 const graphemes = str => { try { return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)].map(x => x.segment); } catch (e) { return [...str]; } };
 const firstGrapheme = str => { try { const it = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)[Symbol.iterator]().next(); return it.done ? "" : it.value.segment; } catch (e) { return [...str][0] || ""; } };
@@ -1536,6 +1609,9 @@ const ICONS = {
   heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   music: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5z"/>',
+  save: '<path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 16v2.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V16"/>',
+  user: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5.5 19.5c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>',
   home2: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
 };
 const icon = (name, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -1548,10 +1624,11 @@ const SWIPE_ACT_W = 72; // šířka jedné akce pod swajpem (px)
 const HABIT_WEEKS = 12; // kolik týdnů zpět jde u návyku odswajpovat
 const habitWeekPos = {}; // pozice swajpu u jednotlivých návyků (jen v paměti)
 let habitFilter = null;
+let areasFrom = "home"; // odkud se otevřela stránka Kategorie (tužka u Na výběr, nebo Profil) – kam vede Zpět a která záložka svítí
 let doneTodayOpen = false; // rozbalený seznam „Dokončeno“ na přehledu (jen v paměti) // filtr kategorie na záložce Návyky (jen v paměti)
 function view() {
   const h = location.hash.slice(1);
-  if ((h === "inbox" && canUse("inbox")) || h === "areas" || h === "habits") return { name: h };
+  if ((h === "inbox" && canUse("inbox")) || h === "areas" || h === "habits" || h === "profile" || h === "profile-lang" || h === "profile-backup") return { name: h };
   if (h.startsWith("area-") && areaById(h.slice(5))) return { name: "area", id: h.slice(5) };
   return { name: "home" };
 }
@@ -1700,7 +1777,7 @@ function habitWeekDots(h, ref = curDay()) {
 
 function renderHabitRow(h, mode = "grouped") {
   const done = !!h.log[curDay()]; const future = curDay() > todayISO();
-  const acts = (done || mode !== "goal" ? "" : skipAction("skip-habit", h.id, h.title)) + (mode === "goal" || curDay() >= todayISO() ? goalAction("h", h.id, h.title, mode === "goal") : "");
+  const acts = done || mode !== "goal" ? "" : skipAction("skip-habit", h.id, h.title);
   return swipeWrap(acts, `<div class="row ${done ? "is-done" : ""}" ${dragAttr(mode, "h", h)}>
 
     <button class="check" role="checkbox" aria-checked="${done}" data-action="habit" data-id="${h.id}" aria-label="${esc(h.title)}" ${future ? "disabled" : ""}><span>${icon("check")}</span></button>
@@ -1708,7 +1785,7 @@ function renderHabitRow(h, mode = "grouped") {
       <button class="title title-link" data-action="habit-edit" data-id="${h.id}">${esc(h.title)}</button>
       ${mode === "goal" ? `<div class="tags"><span class="meta">${esc(areaById(h.areaId).name)}</span></div>` : ""}
     </div>
-    ${habitWeekDots(h)}
+    <button class="wdots-link" data-action="nav" data-view="habits" aria-label="${t().openHabits}">${habitWeekDots(h)}</button>
   </div>`);
 }
 
@@ -1767,9 +1844,9 @@ function renderChart() {
 let lastViewKey = null;
 function topBlock(small, big, opts = {}) {
   const left = opts.back ? `<button class="icon-btn icon-btn-bare" data-action="nav" data-view="${opts.back}" aria-label="${t().back}">${icon("back")}</button>` : "";
-  const right = opts.right || `<button class="icon-btn" data-action="settings" aria-label="${t().settingsLabel}">${icon("gear")}</button>`;
+  const right = opts.right || "";
   return `<header class="top">${left}
-    <div class="top-txt"><div class="greet">${esc(small)}</div><h1>${esc(big)}</h1>
+    <div class="top-txt">${small ? `<div class="greet">${esc(small)}</div>` : ""}<h1>${esc(big)}</h1>
       ${state.demo ? `<span class="badge-demo">${t().demo}</span>` : ""}</div>
     ${right}</header>`;
 }
@@ -1789,28 +1866,54 @@ function renderMust() {
 // Jedna sekce: nahoře cíl dne (vybrané z „Na výběr“), pod ním úkoly s datem na dnešek a prošlé.
 function renderGoals(d = todayISO()) {
   const future = d > todayISO();
-  const all = goalItems(d); const goalIds = new Set(goalsOf(d));
+  const all = goalItems(d).filter(i => i.kind === "t"); const goalIds = new Set(goalsOf(d));
   const dated = (future ? state.tasks.filter(x => x.date && x.date <= d && x.type !== "recurring" && taskIsOpen(x)).sort(byOrder) : overdueTasks()).filter(x => !goalIds.has("t:" + x.id));
   const isDone = i => i.kind === "h" ? !!i.x.log[d] : (i.x.type === "recurring" ? (!future && i.x.nextDue > todayISO()) : !!i.x.done);
   const items = all.filter(i => !isDone(i));
-  const done = future ? { tasks: [], habits: [] } : doneOn(d); const nDone = done.tasks.length + done.habits.length;
+  const done = future ? { tasks: [], habits: [] } : { tasks: doneOn(d).tasks, habits: [] }; const nDone = done.tasks.length;
   const emptyTxt = all.length ? t().goalAllDone : t().goalEmpty;
   return `<section class="section goal" aria-labelledby="h-goal">
       <div class="section-head"><h2 id="h-goal">${t().goalTitle}</h2>
-        <button class="btn-plus" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
+        <button class="btn-plus btn-edit-subtle" data-action="task-new-day" aria-label="${t().addTask}">${icon("plus")}</button></div>
       <div class="list glass">${(() => {
         // Dvě části podle druhu: Úkoly (vybrané i s datem) a Návyky.
         // Vybrané úkoly i úkoly s termínem jsou jeden seznam s vlastním pořadím (task.dayOrder, přetažením).
         const tList = [...items.filter(i => i.kind === "t").map(i => ({ x: i.x, m: "goal" })), ...dated.map(x => ({ x, m: "must" }))];
         tList.sort((a, b) => (a.x.dayOrder ?? 1e9) - (b.x.dayOrder ?? 1e9));
         const tRows = tList.map(o => renderTask(o.x, o.m)).join("");
-        const hRows = items.filter(i => i.kind === "h").map(i => renderHabitRow(i.x, "goal")).join("");
-        if (!tRows && !hRows) return `<div class="empty">${emptyTxt}</div>`;
-        return (tRows ? `<div class="subhead">${t().goalTasks}</div>${tRows}` : "") + (hRows ? `<div class="subhead">${t().habits}</div>${hRows}` : "");
+        if (!tRows) return `<div class="empty">${emptyTxt}</div>`;
+        return tRows;
       })()}</div>
       ${nDone ? `<button class="done-link" data-action="toggle-done-today" aria-expanded="${doneTodayOpen}">${t().doneToday} (${nDone})</button>
         ${doneTodayOpen ? `<div class="list glass">${done.tasks.map(x => doneRow(x.title, x.type === "recurring" ? "" : `data-action="task" data-id="${x.id}"`, "", (areaById(x.areaId) || {}).name || "")).join("")}${done.habits.map(h => doneRow(h.title, `data-action="habit" data-id="${h.id}"`, habitWeekDots(h), `${(areaById(h.areaId) || {}).name || ""} · ${t().habitTag}`)).join("")}</div>` : ""}` : ""}
     </section>`;
+}
+// Návyky v Cíli dne: všechny návyky na daný den jako dlaždice v řadě (swajp do boku).
+// Klepnutí = splněno, podržení = nabídka „Dnes vynechat“. Vynechané jsou šedé na konci.
+function habitsForDay(d) {
+  const today = todayISO();
+  const due = h => h.freq.type === "daily" || !!h.log[d] || (d === today ? habitWeekCount(h) < h.freq.times : true);
+  const list = state.habits.filter(due);
+  const skipped = h => !!(h.skips && h.skips[d]) && !h.log[d];
+  return [...list.filter(h => !skipped(h)), ...list.filter(skipped)].map(h => ({ h, skipped: skipped(h) }));
+}
+function renderHabitStrip(d) {
+  const list = habitsForDay(d); if (!list.length) return "";
+  const future = d > todayISO();
+  return `<section class="section hsection" aria-labelledby="h-habits">
+    <div class="section-head"><h2 id="h-habits">${t().habits}</h2></div>
+    <div class="hstrip" role="group" aria-labelledby="h-habits">${list.map(({ h, skipped }) => {
+      const a = areaById(h.areaId) || noArea(); const on = !!h.log[d];
+      return `<button class="htile ${on ? "on" : ""} ${skipped ? "skipped" : ""}" style="--area-c:${a.color}" data-htile="${h.id}" data-day="${d}"
+        role="checkbox" aria-checked="${on}" aria-label="${esc(h.title)}${skipped ? ", " + t().skippedToday : ""}" ${future ? 'aria-disabled="true"' : ""}>
+        <span class="htile-ico">${habitIcon(h, a)}</span>
+        <span class="htile-name">${esc(h.title)}</span>
+        ${on ? `<span class="htile-check" aria-hidden="true">${icon("check")}</span>` : ""}
+        <span class="htile-note">${skipped ? t().skippedShort : (() => { const r = new Date(d + "T12:00:00"); const mon = day(-((r.getDay() + 6) % 7), r);
+          const x = Array.from({ length: 7 }, (_, i) => iso(day(i, mon))).filter(k => h.log[k]).length;
+          return `${x}/${h.freq.type === "daily" ? 7 : h.freq.times}`; })()}</span>
+      </button>`; }).join("")}</div>
+  </section>`;
 }
 // Splněná položka; s akcí jde klepnutím na fajfku vrátit zpět.
 function doneRow(title, act, extra = "", meta = "") {
@@ -1822,10 +1925,11 @@ function renderDayBody(d) {
   const today = todayISO();
   if (d > today) {
     // Budoucí den: stejné rozložení jako dnes, cíle dne si jde naplánovat dopředu.
-    return `${renderGoals(d)}
+    return `${renderHabitStrip(d)}${renderGoals(d)}
     <section class="section" aria-labelledby="h-today">
-      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
-      ${renderToday(backlogFor(d))}
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
+        <button class="btn-plus btn-edit-subtle" data-action="areas-open" data-from="home" aria-label="${t().editAreas}">${icon("pencil")}</button></div>
+      ${renderToday(backlogFor(d), false)}
     </section>`;
   }
   const { tasks, habits } = doneOn(d);
@@ -1846,10 +1950,11 @@ function renderHomeBody() {
   const ws = weekStats();
   const reviewDay = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(day(((state.meta.reviewWeekday ?? 0) - now.getDay() + 7) % 7));
   return `
-    ${renderGoals()}
+    ${renderHabitStrip(todayISO())}${renderGoals()}
     <section class="section" aria-labelledby="h-today">
-      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2></div>
-      ${renderToday(openTasks())}
+      <div class="section-head"><h2 id="h-today">${t().todayTitle}</h2>
+        <button class="btn-plus btn-edit-subtle" data-action="areas-open" data-from="home" aria-label="${t().editAreas}">${icon("pencil")}</button></div>
+      ${renderToday(openTasks(), false)}
     </section>
 
 
@@ -1897,7 +2002,6 @@ function renderInboxBody() {
 function renderAreasBody() {
   return `
     <section class="section">
-      <p class="lead">${t().areasLead}</p>
       <div class="areas">${state.areas.map(renderArea).join("")}
         <button class="area add-tile" data-action="area-new">${icon("plus")}<span>${t().addArea}</span></button>
       </div>
@@ -1949,9 +2053,9 @@ function renderHabitCard(h, showArea = true) {
   const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
   return `<div class="hcard glass" style="--area-c:${a.color}">
     <div class="hc-head">
-      <span class="ico">${areaIcon(a)}</span>
+      <span class="ico">${habitIcon(h, a)}</span>
       <div class="hc-txt"><div class="hc-name">${esc(h.title)}</div>
-        <div class="hc-meta">${showArea ? `${esc(a.name)} · ` : ""}${h.freq.type === "daily" ? t().freqDaily : t().weekly(habitWeekCount(h), h.freq.times)}</div></div>
+        ${showArea ? `<div class="hc-meta">${esc(a.name)}</div>` : ""}</div>
       <button class="icon-btn-plain" data-action="habit-edit" data-id="${h.id}" aria-label="${t().editHabit}: ${esc(h.title)}">${icon("pencil")}</button>
     </div>
     <div class="hc-weeks" data-id="${h.id}">${weeks.map(days => `<div class="hc-days">${days.map(d => { const k = iso(d); const on = !!h.log[k]; const future = k > today;
@@ -1987,14 +2091,13 @@ function dayHeader(greet) {
   const big = `${wd} ${dm}`.replace(/^./, c => c.toUpperCase());
   return `<header class="top day-top">
     <div class="top-txt">
-      <div class="greet day-greet">${esc(isToday ? greet : relLabel(d))}</div>
+      <div class="greet day-greet">${esc(relLabel(d))}</div>
       <div class="day-row">
         <button class="day-btn" data-action="day-prev" aria-label="${t().prevDay}">${icon("back")}</button>
         <button class="day-title" data-action="calendar" aria-label="${t().openCalendar}"><h1>${esc(big)}</h1></button>
         <button class="day-btn" data-action="day-next" aria-label="${t().nextDay}">${icon("arrow")}</button>
       </div>
     </div>
-    <button class="icon-btn icon-btn-subtle" data-action="settings" aria-label="${t().settingsLabel}">${icon("gear")}</button>
   </header>`;
 }
 
@@ -2037,13 +2140,16 @@ function render() {
 
   let top, body, capture = "";
   if (v.name === "inbox") { top = topBlock(date, t().inboxTitle); body = renderInboxBody(); }
-  else if (v.name === "areas") { top = topBlock(date, t().areasTitle); body = renderAreasBody(); }
+  else if (v.name === "areas") { top = topBlock(date, t().areasTitle, { back: areasFrom }); body = renderAreasBody(); }
   else if (v.name === "area") {
     const a = areaById(v.id);
     top = topBlock(t().areaLabel, a.name, { back: "areas", right: `<button class="icon-btn" data-action="area-edit" data-id="${a.id}" aria-label="${t().editArea}">${icon("pencil")}</button>` });
     body = renderAreaBody(a);
   }
-  else if (v.name === "habits") { top = topBlock(date, t().habitsTitle); body = renderHabitsBody(); }
+  else if (v.name === "habits") { top = topBlock("", t().habitsTitle); body = renderHabitsBody(); }
+  else if (v.name === "profile") { top = topBlock("", t().tabs.profile); body = renderProfileBody(); }
+  else if (v.name === "profile-lang") { top = topBlock(t().tabs.profile, t().language, { back: "profile" }); body = renderLangBody(); }
+  else if (v.name === "profile-backup") { top = topBlock(t().tabs.profile, t().backup, { back: "profile" }); body = renderBackupBody(); }
   else { top = dayHeader(greet); body = renderHomeBody(); }
 
   document.getElementById("app").innerHTML = `<section class="hero">${top}${capture}</section>` + body;
@@ -2061,8 +2167,8 @@ function render() {
     window.scrollTo(0, 0);
   }
 
-  const cur = v.name === "area" ? "areas" : v.name;
-  const tabs = [["home", "home2"], ["areas", "grid"], ["habits", "repeat"], ["inbox", "inbox"]].filter(([k]) => k !== "inbox" || canUse("inbox"));
+  const cur = v.name === "area" || v.name === "areas" ? areasFrom : v.name.startsWith("profile") ? "profile" : v.name;
+  const tabs = [["home", "home2"], ["habits", "repeat"], ["inbox", "inbox"], ["profile", "user"]].filter(([k]) => k !== "inbox" || canUse("inbox"));
   document.getElementById("tabbar").innerHTML = tabs.map(([k, ic]) => `
     <button class="tab" ${cur === k ? 'aria-current="page"' : ""} data-action="nav" data-view="${k}">
       ${icon(ic)}${k === "inbox" && state.inbox.length ? `<span class="badge">${state.inbox.length}</span>` : ""}<span>${t().tabs[k]}</span>
@@ -2140,21 +2246,15 @@ function openTaskForm(id, presetArea, presetDate) {
   const type = task ? task.type : "single";
   // Projekt už není samostatný typ: je to jednorázový úkol se zapnutým „Seznamem“ (podúkoly). Uložený typ zůstává "project".
   const baseType = type === "recurring" ? "recurring" : "single", isList = type === "project";
-  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${baseType}" data-list="${isList ? "on" : "off"}" data-goal-day="${!id && presetDate ? presetDate : ""}" novalidate>
+  openSheet(`<form class="form" data-form="task" data-id="${id || ""}" data-type="${baseType}" data-list="${isList ? "on" : "off"}" data-note="${task && task.note ? "on" : "off"}" data-goal-day="${!id && presetDate ? presetDate : ""}" novalidate>
     ${sheetHead(task ? t().taskDetail : t().newTask)}
     <label class="field"><span class="flabel">${t().taskTitle}</span>
-      <input class="input" name="title" type="text" value="${task ? esc(task.title) : ""}" ${task ? "" : "autofocus"} autocomplete="off"></label>
+      <input class="input" name="title" type="text" value="${task ? esc(task.title) : ""}" placeholder="${t().taskTitlePh}" ${task ? "" : "autofocus"} autocomplete="off"></label>
     <div class="set-card list glass">
       ${areaSelect("area", areaId, true)}
       ${state.areas.filter(ar => (ar.groups || []).length).map(ar => menuSelect("group_" + ar.id, t().group, [["", t().noGroup], ...sortedGroups(ar).map(g => [g.id, esc(g.name)])], task && task.areaId === ar.id ? (task.groupId || "") : "")
         .replace('class="field cat-field"', `class="field cat-field f-group" data-for-area="${ar.id}" ${ar.id === areaId ? "" : "hidden"}`)).join("")}
       ${menuSelect("type", t().type, [["single", t().types[0]], ["recurring", t().types[2]]], baseType)}
-      <div class="field f-date ${task && task.date ? "has-date" : ""}">
-        <div class="date-line">
-          <span class="flabel">${t().when}</span>
-          <span class="date-right cat-val"><span class="date-text">${task && task.date ? fmtDateLong(task.date) : t().dateNone}</span><input class="date-pill" name="date" type="date" value="${task && task.date ? task.date : ""}" aria-label="${t().when}"></span>
-        </div>
-      </div>
       ${(() => { const st = task && task.type === "recurring" && task.nextDue > todayISO() ? task.nextDue : todayISO();
         return `<div class="field f-start has-date"><div class="date-line"><span class="flabel">${t().start}</span>
           <span class="date-right cat-val"><span class="date-text">${st === todayISO() ? t().today : fmtDateLong(st)}</span><input class="date-pill" name="start" type="date" min="${todayISO()}" value="${st}" aria-label="${t().start}"></span></div></div>`; })()}
@@ -2168,10 +2268,20 @@ function openTaskForm(id, presetArea, presetDate) {
         <span class="switch"><input type="checkbox" name="toGoal" role="switch" checked aria-label="${t().toGoal}"><span class="switch-track"></span></span></span></label>` : ""}
       <label class="field f-list"><span class="list-line"><span class="flabel">${t().listToggle}</span>
         <span class="switch"><input type="checkbox" name="list" role="switch" ${isList ? "checked" : ""} aria-label="${t().listToggle}"><span class="switch-track"></span></span></span></label>
+      <label class="field"><span class="list-line"><span class="flabel">${t().noteToggle}</span>
+        <span class="switch"><input type="checkbox" name="noteOn" role="switch" ${task && task.note ? "checked" : ""} aria-label="${t().noteToggle}"><span class="switch-track"></span></span></span></label>
+      <div class="field f-date ${task && task.date ? "has-date" : ""}">
+        <div class="date-line">
+          <span class="flabel">${t().when}</span>
+          <span class="date-right cat-val"><span class="date-text">${task && task.date ? fmtDateLong(task.date) : t().dateNone}</span><input class="date-pill" name="date" type="date" value="${task && task.date ? task.date : ""}" aria-label="${t().when}"></span>
+        </div>
+      </div>
     </div>
     <input type="hidden" name="priority" value="${task ? task.priority : 2}">
     <label class="field f-project"><span class="flabel">${t().steps}</span>
       <textarea class="input" name="steps" rows="5" placeholder="${t().stepsPh}">${task && task.subtasks ? esc(task.subtasks.map(x => x.title).join("\n")) : ""}</textarea></label>
+    <label class="field f-note"><span class="flabel">${t().note}</span>
+      <textarea class="input" name="note" rows="4" placeholder="${t().notePh}">${task && task.note ? esc(task.note) : ""}</textarea></label>
     ${canUse("followUps") ? `<label class="field"><span class="flabel">${t().followUp}</span>
       <textarea class="input" name="followUp" rows="3" placeholder="${t().followUpPh}">${task && task.followUp ? esc(task.followUp) : ""}</textarea>
       <span class="note">${t().followUpHint}</span></label>` : ""}
@@ -2185,15 +2295,24 @@ function openHabitForm(id, presetArea) {
   const h = id ? state.habits.find(x => x.id === id) : null;
   const areaId = h ? h.areaId : (presetArea || (state.areas[0] && state.areas[0].id));
   const ftype = h ? h.freq.type : "daily";
-  openSheet(`<form class="form" data-form="habit" data-id="${id || ""}" data-freq="${ftype}" novalidate>
+  openSheet(`<form class="form" data-form="habit" data-id="${id || ""}" data-freq="${ftype}" data-own-icon="${h && (h.icon || h.emoji) ? "on" : "off"}" data-note="${h && h.note ? "on" : "off"}" novalidate>
     ${sheetHead(h ? t().editHabit : t().addHabit)}
     <label class="field"><span class="flabel">${t().habitName}</span>
-      <input class="input" name="title" type="text" value="${h ? esc(h.title) : ""}" ${h ? "" : "autofocus"} autocomplete="off"></label>
+      <input class="input" name="title" type="text" value="${h ? esc(h.title) : ""}" placeholder="${t().habitNamePh}" ${h ? "" : "autofocus"} autocomplete="off"></label>
     <div class="set-card list glass">
       ${areaSelect("area", areaId)}
       ${menuSelect("freq", t().freq, [["daily", t().freqDaily], ["weekly", t().freqWeekly]], ftype)}
       ${menuSelect("times", t().timesPerWeek, [1, 2, 3, 4, 5, 6].map(n => [n, `${n}×`]), h && h.freq.times ? h.freq.times : 3).replace('class="field cat-field"', 'class="field cat-field f-weekly"')}
+      <label class="field"><span class="list-line"><span class="flabel">${t().ownIcon}</span>
+        <span class="switch"><input type="checkbox" name="ownIcon" role="switch" ${h && (h.icon || h.emoji) ? "checked" : ""} aria-label="${t().ownIcon}"><span class="switch-track"></span></span></span></label>
+      <label class="field"><span class="list-line"><span class="flabel">${t().noteToggle}</span>
+        <span class="switch"><input type="checkbox" name="noteOn" role="switch" ${h && h.note ? "checked" : ""} aria-label="${t().noteToggle}"><span class="switch-track"></span></span></span></label>
     </div>
+    <div class="field f-icon">
+      ${(() => { const ar = areaById(areaId) || {}; const own = h && (h.icon || h.emoji);
+        return iconPicker(own ? h.icon : (ar.emoji ? "" : ar.icon), own ? h.emoji : ar.emoji); })()}</div>
+    <label class="field f-note"><span class="flabel">${t().note}</span>
+      <textarea class="input" name="note" rows="4" placeholder="${t().notePh}">${h && h.note ? esc(h.note) : ""}</textarea></label>
     <button class="btn-accent btn-wide" type="submit">${t().save}</button>
     ${h ? `<button class="btn-text-danger" type="button" data-action="habit-delete" data-id="${h.id}">${t().deleteHabit}</button>` : ""}
   </form>`);
@@ -2213,6 +2332,13 @@ function gchipsAdd(form) {
   gchipsUpdate(form, names); inp.value = ""; inp.focus();
 }
 
+// Výběr ikony nebo emoji (kategorie i návyky). noneIco = první volba „podle kategorie“ (jen u návyků).
+function iconPicker(ic, emo, noneIco) {
+  const none = noneIco ? `<label class="chip-ico"><input type="radio" name="icon" value="" ${!ic && !emo ? "checked" : ""} aria-label="${t().iconFromArea}"><span>${noneIco}</span></label>` : "";
+  return `<div class="chips">${none}${AREA_ICONS.map(n => `<label class="chip-ico"><input type="radio" name="icon" value="${n}" ${n === ic && !emo ? "checked" : ""}><span>${icon(n)}</span></label>`).join("")}<button type="button" class="chip-emoji ${emo ? "is-on" : ""}" data-action="emoji-toggle" aria-expanded="false" aria-label="${t().emojiLabel}"><span class="emoji-val">${emo ? esc(emo) : ""}</span><span class="emoji-hint">${icon("plus")}</span></button>
+        <input type="hidden" name="emoji" value="${emo ? esc(emo) : ""}"></div>
+      <div class="emoji-panel list glass" hidden>${EMOJI_SETS.map(([key, list]) => `<div class="emoji-group"><div class="emoji-gl">${t().emojiGroups[key]}</div><div class="emoji-grid">${graphemes(list).map(e => `<button type="button" class="emoji-pick" data-action="emoji-pick" data-emoji="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div>`;
+}
 function openAreaForm(id) {
   delete sheetEl.dataset.area;
   const a = id ? areaById(id) : null;
@@ -2222,9 +2348,7 @@ function openAreaForm(id) {
     <label class="field"><span class="flabel">${t().areaName}</span>
       <input class="input" name="name" type="text" value="${a ? esc(a.name) : ""}" ${a ? "" : "autofocus"} autocomplete="off"></label>
     <div class="field"><span class="flabel">${t().areaIcon}</span>
-      <div class="chips">${AREA_ICONS.map(n => `<label class="chip-ico"><input type="radio" name="icon" value="${n}" ${n === ic && !(a && a.emoji) ? "checked" : ""}><span>${icon(n)}</span></label>`).join("")}<button type="button" class="chip-emoji ${a && a.emoji ? "is-on" : ""}" data-action="emoji-toggle" aria-expanded="false" aria-label="${t().emojiLabel}"><span class="emoji-val">${a && a.emoji ? esc(a.emoji) : ""}</span><span class="emoji-hint">${icon("smile")}</span></button>
-        <input type="hidden" name="emoji" value="${a && a.emoji ? esc(a.emoji) : ""}"></div>
-      <div class="emoji-panel list glass" hidden>${EMOJI_SETS.map(([key, list]) => `<div class="emoji-group"><div class="emoji-gl">${t().emojiGroups[key]}</div><div class="emoji-grid">${graphemes(list).map(e => `<button type="button" class="emoji-pick" data-action="emoji-pick" data-emoji="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div></div>
+      ${iconPicker(ic, a && a.emoji)}</div>
     <div class="field"><span class="flabel">${t().areaColor}</span>
       <div class="chips">${PALETTE.map(c => `<label class="chip-col"><input type="radio" name="color" value="${c}" ${c === col ? "checked" : ""}><span style="background:${c}"></span></label>`).join("")}</div></div>
     <div class="field"><span class="flabel">${t().groups}</span>
@@ -2257,6 +2381,7 @@ function submitForm(form) {
     if (!task) { task = { id: uid(), done: false }; state.tasks.push(task); }
     Object.assign(task, { title, areaId: (f.get("area") || "").toString(), priority, type });
     const dt = (f.get("date") || "").toString(); if (dt && type !== "recurring") task.date = dt; else delete task.date;
+    const note = f.get("noteOn") ? (f.get("note") || "").toString().trim() : ""; if (note) task.note = note; else delete task.note;
     if (canUse("followUps")) { const fu = (f.get("followUp") || "").toString().split("\n").map(x => x.trim()).filter(Boolean).join("\n"); if (fu) task.followUp = fu; else delete task.followUp; }
     const gsel = (f.get("group_" + task.areaId) || "").toString(); const ar = areaById(task.areaId);
     if (gsel && ar && (ar.groups || []).some(g => g.id === gsel)) task.groupId = gsel; else delete task.groupId;
@@ -2280,6 +2405,10 @@ function submitForm(form) {
     if (!h) { h = { id: uid(), log: {} }; state.habits.push(h); }
     h.title = title; h.areaId = f.get("area");
     h.freq = f.get("freq") === "weekly" ? { type: "weekly", times: +f.get("times") || 3 } : { type: "daily" };
+    const hNote = f.get("noteOn") ? (f.get("note") || "").toString().trim() : ""; if (hNote) h.note = hNote; else delete h.note;
+    const own = !!f.get("ownIcon");
+    const hEmo = own ? firstGrapheme((f.get("emoji") || "").toString().trim()) : ""; const hIco = own ? (f.get("icon") || "").toString() : "";
+    if (hEmo) { h.emoji = hEmo; delete h.icon; } else { delete h.emoji; if (hIco) h.icon = hIco; else delete h.icon; }
   } else if (form.dataset.form === "area") {
     let a = id ? areaById(id) : null; const isNew = !a;
     if (!a) { a = { id: uid() }; state.areas.push(a); }
@@ -2316,44 +2445,52 @@ function openSort(id) {
     <button class="btn-accent btn-wide" data-action="sort-confirm" ${sortChoice.areaId ? "" : "disabled"}>${t().sortCta}</button>`);
 }
 
-function openSettings() {
-  delete sheetEl.dataset.area;
-  const lb = state.meta.lastBackup ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup)) : t().never;
-  openSheet(`
-    <div class="sheet-head"><h3>${t().settings}</h3><button class="btn-x" type="button" data-action="close" aria-label="${t().close}">${icon("x")}</button></div>
-    <div class="block"><h4>${t().language}</h4>
-      <div class="seg" role="group" aria-label="${t().language}">
-        <button data-action="lang" data-lang="cs" aria-pressed="${lang === "cs"}">Čeština</button>
-        <button data-action="lang" data-lang="en" aria-pressed="${lang === "en"}">English</button>
-      </div>
-    </div>
-    <div class="block"><h4>${t().backup}</h4>
-      <p class="note">${t().backupWhy}</p>
-      <p><b>${t().lastBackup}:</b> <span id="lb">${lb}</span></p>
-      <div class="btn-row">
-        <button class="btn" data-action="copy">${t().copyBackup}</button>
-        <label class="btn" for="import-file" style="display:inline-flex;align-items:center;cursor:pointer">${t().importBackup}</label>
-        <input id="import-file" type="file" accept="application/json,.json,.txt" hidden>
-      </div>
-      <textarea class="dump" id="dump" readonly hidden aria-label="${t().backup}"></textarea>
-      <button class="btn" data-action="paste-open">${t().pasteBackup}</button>
-      <div id="paste-box" class="field" hidden>
-        <textarea class="input" id="paste-text" rows="5" placeholder="${t().pastePh}" aria-label="${t().pasteBackup}"></textarea>
-        <button class="btn-accent btn-wide" data-action="paste-load">${t().pasteLoad}</button>
-      </div>
+// Profil: nastavení jako samostatná záložka (jazyk, záloha, verze).
+function renderProfileBody() {
+  const lb = state.meta.lastBackup ? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(new Date(state.meta.lastBackup)) : t().never;
+  const row = (attrs, ic, label, val) => `<button class="row profile-link" ${attrs}>
+      <span class="profile-ico">${icon(ic)}</span><span class="profile-label">${label}</span>${val ? `<span class="profile-val">${esc(val)}</span>` : ""}${icon("arrow")}</button>`;
+  return `<section class="section profile">
+    <div class="list glass">
+      ${row('data-action="areas-open" data-from="profile"', "grid", t().areasTitle)}
+      ${row('data-action="nav" data-view="profile-lang"', "globe", t().language, lang === "cs" ? "Čeština" : "English")}
+      ${row('data-action="nav" data-view="profile-backup"', "save", t().backup, lb)}
     </div>
     ${state.demo ? `<div class="block"><h4>${t().startOwn}</h4><p class="note">${t().startOwnNote}</p>
       <div class="btn-row"><button class="btn" data-action="start-own">${t().startOwn}</button></div></div>` : ""}
-    <div class="block">
-      <div class="btn-row"><button class="btn danger" data-action="reset">${t().resetDemo}</button></div>
-      <p class="note">${t().version(APP_VERSION)}</p>
-    </div>`);
-  document.getElementById("import-file").addEventListener("change", async e => {
-    const file = e.target.files[0]; if (!file) return;
-    try { importBackup(await file.text()); closeSheet(); render(); toast(t().importOk); }
-    catch (err) { toast(t().importBad); }
-  });
+    <p class="note profile-ver">${t().version(APP_VERSION)}</p>
+  </section>`;
 }
+function renderLangBody() {
+  return `<section class="section profile">
+    <div class="seg seg-full" role="group" aria-label="${t().language}">
+        <button data-action="lang" data-lang="cs" aria-pressed="${lang === "cs"}">Čeština</button>
+        <button data-action="lang" data-lang="en" aria-pressed="${lang === "en"}">English</button>
+    </div>
+  </section>`;
+}
+function renderBackupBody() {
+  const lb = state.meta.lastBackup ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup)) : t().never;
+  return `<section class="section profile">
+    <p class="note backup-note">${t().backupWhy}</p>
+    <p class="backup-last">${t().lastBackup}: <b id="lb">${lb}</b></p>
+    <button class="btn-accent btn-wide" data-action="backup-file">${icon("save")}${t().backupNow}</button>
+    <label class="btn btn-wide" for="import-file">${t().importBackup}</label>
+    <input id="import-file" type="file" accept="application/json,.json,.txt" hidden>
+  </section>`;
+}
+// Nahrání zálohy ze souboru: nejdřív ověřit, pak potvrdit nahrazení, a hned potom jde vrátit.
+document.addEventListener("change", async e => {
+  if (e.target.id !== "import-file") return;
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  let txt;
+  try { txt = await file.text(); const o = JSON.parse(txt); migrate(JSON.parse(JSON.stringify(o && o.app === "hub" ? o.data : o))); }
+  catch (err) { toast(t().importBad); return; }
+  confirmDialog(t().pasteConfirm, t().replace, () => {
+    const snap = snapshot();
+    try { importBackup(txt); render(); toast(t().importOk, restore(snap)); } catch (err) { toast(t().importBad); }
+  });
+});
 
 /* ----- Dialog a toast ----- */
 const dialogEl = document.getElementById("dialog");
@@ -2373,6 +2510,50 @@ function toast(text, undoFn) {
   toastTimer = setTimeout(() => { toastEl.hidden = true; }, undoFn ? TOAST_MS_UNDO : TOAST_MS);
 }
 function rerender() { render(); }
+
+/* ----- Dlaždice návyků: klepnutí = splněno, podržení (~0,5 s) = nabídka „Dnes vynechat“ ----- */
+const HTILE_HOLD_MS = 500;
+let htile = null; // { el, x, y, timer, held }
+function closeHtileMenu() { const m = document.querySelector(".htile-menu"); if (m) m.remove(); }
+function openHtileMenu(el) {
+  closeHtileMenu();
+  const h = state.habits.find(x => x.id === el.dataset.htile); const d = el.dataset.day; if (!h) return;
+  if (h.log[d]) return; // splněný návyk nejde vynechat
+  const skipped = !!(h.skips && h.skips[d]);
+  const m = document.createElement("div"); m.className = "htile-menu"; m.setAttribute("role", "menu");
+  m.innerHTML = `<button role="menuitem" data-hmenu="${skipped ? "unskip" : "skip"}">${skipped ? t().unskipHabit : t().skipHabitToday}</button>`;
+  document.body.appendChild(m);
+  const r = el.getBoundingClientRect(); const mw = m.offsetWidth, mh = m.offsetHeight;
+  const left = Math.min(Math.max(8, r.left), window.innerWidth - mw - 8);
+  const top = r.bottom + 6 + mh < window.innerHeight ? r.bottom + 6 : r.top - mh - 6;
+  m.style.left = left + "px"; m.style.top = top + "px";
+  m.querySelector("button").focus();
+  m.addEventListener("click", e => {
+    const b = e.target.closest("[data-hmenu]"); if (!b) return;
+    h.skips = h.skips || {};
+    let undo;
+    if (b.dataset.hmenu === "skip") { h.skips[d] = true; undo = () => { delete h.skips[d]; save(); }; }
+    else { delete h.skips[d]; undo = () => { h.skips[d] = true; save(); }; }
+    save(); closeHtileMenu(); render(); toast(b.dataset.hmenu === "skip" ? t().skippedToday : t().undone, undo);
+  });
+}
+document.addEventListener("pointerdown", e => {
+  if (!e.target.closest(".htile-menu")) closeHtileMenu();
+  const el = e.target.closest(".htile"); if (!el) return;
+  htile = { el, x: e.clientX, y: e.clientY, held: false, timer: setTimeout(() => { htile.held = true; if (navigator.vibrate) navigator.vibrate(10); openHtileMenu(el); }, HTILE_HOLD_MS) };
+});
+document.addEventListener("pointermove", e => { if (htile && Math.hypot(e.clientX - htile.x, e.clientY - htile.y) > 8) { clearTimeout(htile.timer); if (!htile.held) htile = null; } });
+["pointerup", "pointercancel"].forEach(ev => document.addEventListener(ev, () => { if (htile) clearTimeout(htile.timer); }));
+document.addEventListener("contextmenu", e => { const el = e.target.closest(".htile"); if (el) { e.preventDefault(); openHtileMenu(el); if (htile) htile.held = true; } });
+document.addEventListener("click", e => {
+  const el = e.target.closest(".htile"); if (!el) return;
+  const held = htile && htile.held && htile.el === el; htile = null;
+  if (held) return;
+  if (el.getAttribute("aria-disabled") === "true") return;
+  const id = el.dataset.htile; const h = state.habits.find(x => x.id === id); if (!h) return;
+  if (h.skips && h.skips[el.dataset.day]) { delete h.skips[el.dataset.day]; }
+  const u = toggleHabit(id); render(); if (h.log[todayISO()]) toast(t().done, u);
+});
 
 /* ----- Události ----- */
 /* ----- Přetažení řádků: podržet prst ~0,4 s, pak táhnout nahoru/dolů ----- */
@@ -2561,7 +2742,8 @@ document.addEventListener("click", async e => {
     case "skip": { const u = moveGoalNextDay("t", id, () => skipToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
     case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
-    case "settings": openSettings(); break;
+    case "settings": go("profile"); break;
+    case "areas-open": areasFrom = el.dataset.from || "home"; go("areas"); break;
     case "close": closeSheet(); break;
     case "soon": toast(t().soon); break;
     case "nav": { const v = el.dataset.view; if (v === "home" && view().name === "home") selectedDay = null; go(v === "home" ? "" : v); break; }
@@ -2570,7 +2752,7 @@ document.addEventListener("click", async e => {
     case "sort-area": sortChoice.areaId = el.dataset.area; openSort(sortChoice.id); break;
     case "sort-prio": sortChoice.priority = +el.dataset.prio; openSort(sortChoice.id); break;
     case "sort-confirm": { const a = areaById(sortChoice.areaId); const u = sortInbox(sortChoice.id, sortChoice.areaId, sortChoice.priority); closeSheet(); render(); toast(t().sortedTo(a.name), u); break; }
-    case "lang": lang = el.dataset.lang; prefs.lang = lang; savePrefs(); render(); openSettings(); break;
+    case "lang": lang = el.dataset.lang; prefs.lang = lang; savePrefs(); render(); break;
     case "paste-open": { const b = document.getElementById("paste-box"); b.hidden = !b.hidden; if (!b.hidden) document.getElementById("paste-text").focus(); break; }
     case "paste-load": {
       const txt = document.getElementById("paste-text").value.trim();
@@ -2581,6 +2763,22 @@ document.addEventListener("click", async e => {
         const snap = snapshot();
         try { importBackup(txt); closeSheet(); render(); toast(t().importOk, restore(snap)); } catch (err) { toast(t().importBad); }
       });
+      break;
+    }
+    case "backup-file": {
+      // Záloha jako soubor: na iPhonu se otevře nabídka sdílení (Uložit do Souborů, AirDrop, Zprávy…), jinde se soubor stáhne.
+      const json = exportBackup();
+      document.getElementById("lb").textContent = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup));
+      const name = `taskhub-zaloha-${todayISO()}.json`;
+      try {
+        const file = new File([json], name, { type: "application/json" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); toast(t().backupSaved); break; }
+      } catch (err) { if (err && err.name === "AbortError") break; }
+      try {
+        const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+        const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t().backupSaved);
+      } catch (err) { toast(t().copyFailed); }
       break;
     }
     case "copy": {
@@ -2599,6 +2797,8 @@ document.addEventListener("change", e => {
   if (e.target.name === "icon") { const em = form.querySelector('[name="emoji"]'); if (em) { em.value = ""; const c = form.querySelector(".chip-emoji"); c.classList.remove("is-on"); c.querySelector(".emoji-val").textContent = ""; } }
   if (e.target.name === "emoji") onEmojiInput(e.target);
   if (e.target.name === "list") form.dataset.list = e.target.checked ? "on" : "off";
+  if (e.target.name === "noteOn") { form.dataset.note = e.target.checked ? "on" : "off"; if (e.target.checked) form.querySelector('[name="note"]').focus(); }
+  if (e.target.name === "ownIcon") form.dataset.ownIcon = e.target.checked ? "on" : "off";
   if (e.target.name === "date" || e.target.name === "start") {
     const box = e.target.closest(".field"); box.classList.toggle("has-date", !!e.target.value);
     box.querySelector(".date-text").textContent = !e.target.value ? t().dateNone : (e.target.name === "start" && e.target.value === todayISO() ? t().today : fmtDateLong(e.target.value));
