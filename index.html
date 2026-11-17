@@ -23,6 +23,8 @@
   color-scheme: light;
   --sat:env(safe-area-inset-top,0px);
   --sab:env(safe-area-inset-bottom,0px);
+  /* Spodní lišta: na iPhonu zasahuje do zóny home indikátoru (jako nativní plovoucí lišty), jinde 12 px od kraje. */
+  --tabbar-bottom:max(12px, calc(var(--sab) - 14px));
   --device-bg:#ecebf0;
   --device-frame:#1c1633;
   --device-ring:#d9d7e0;
@@ -75,7 +77,7 @@ body{
 .app{
   position:relative;z-index:1;
   max-width:480px;margin:0 auto;
-  padding:0 var(--sp-4) calc(var(--sab) + 108px);
+  padding:0 var(--sp-4) calc(var(--tabbar-bottom) + 96px);
   display:flex;flex-direction:column;gap:var(--sp-6);
 }
 
@@ -195,6 +197,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .sw-goal .t-core{fill:currentColor}
 .sw-goal.on{background:var(--c-muted)}
 @media (prefers-reduced-motion:reduce){.swipe > .row{transition:none}}
+.row.no-check::before{left:var(--sp-4) !important}
 .row .stripe{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
 .check{width:var(--tap);height:var(--tap);margin:-6px -6px -6px -10px;flex:none;display:grid;place-items:center}
 .check span{width:24px;height:24px;border-radius:8px;border:2px solid #d3c8ec;display:grid;place-items:center;transition:all var(--t-fast);background:#fff}
@@ -370,7 +373,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 /* Navigace jako pilulka (jemné sklo) */
 .tabbar{
   position:fixed;z-index:5;left:50%;transform:translateX(-50%);
-  bottom:calc(var(--sab) + 12px);
+  bottom:var(--tabbar-bottom);
   width:min(448px,calc(100% - 32px));
   display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:var(--r-pill);
   background:rgba(255,255,255,.82);border:1px solid var(--c-stroke);
@@ -422,7 +425,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .capture-card{background:var(--c-accent);border-radius:var(--r-xl);padding:var(--sp-4) var(--sp-4) var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-3);box-shadow:var(--shadow-accent);color:#fff}
 
 /* Plovoucí tlačítko pro nový úkol */
-.fab{position:fixed;z-index:6;right:max(16px,calc(50% - 224px));bottom:calc(var(--sab) + 92px);width:56px;height:56px;border-radius:50%;
+.fab{position:fixed;z-index:6;right:max(16px,calc(50% - 224px));bottom:calc(var(--tabbar-bottom) + 80px);width:56px;height:56px;border-radius:50%;
   display:grid;place-items:center;background:var(--c-accent);color:#fff;box-shadow:0 10px 24px rgba(115,66,203,.45);transition:transform var(--t-fast),opacity var(--t-fast)}
 .fab .icon{width:26px;height:26px;stroke-width:2.4}
 .fab:active{transform:scale(.94)}
@@ -941,7 +944,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.6.1";
+const APP_VERSION = "0.6.2";
 const DATA_VERSION = 3;
 const STORAGE_KEY = "hub.data";
 const PREFS_KEY = "hub.prefs";
@@ -1444,9 +1447,9 @@ function renderTask(task, mode = "full") {
     extra = `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? t().nextDue(fmtDay(task.nextDue)) : t().recurring(task.everyDays)}</span>`;
   }
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
-  return swipeWrap(acts, `<div class="row ${checked ? "is-done" : ""}" ${dragAttr(mode, "t", task)}>
+  return swipeWrap(acts, `<div class="row ${checked ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
     ${stripe}
-    <button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>
+    ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
     <div class="body">
       <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
       <div class="tags">${prio}${areaTag}${skipTag}${extra}</div>
@@ -1715,7 +1718,6 @@ function renderAreaBody(a) {
       <div class="section-head"><h2 id="h-a-tasks">${t().tasks}</h2>
         <button class="btn-plus" data-action="task-new" data-area="${a.id}" aria-label="${t().addTask}">${icon("plus")}</button></div>
       <div class="list glass">${active.length ? renderByGroups(a, active, "area") : `<div class="empty">${t().noAreaTasks}</div>`}</div>
-      <button class="link-muted" data-action="groups-edit" data-id="${a.id}">${icon("pencil")}${(a.groups || []).length ? t().editGroups : t().addGroups}</button>
     </section>
 
     <section class="section" aria-labelledby="h-a-habits">
