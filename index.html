@@ -177,7 +177,15 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 /* Swajp doleva odkryje akce (Dnes ne, Cíl dne). */
 .swipe{position:relative;overflow:hidden}
 [data-drag]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.drag-on{position:relative;z-index:5;box-shadow:0 8px 24px rgba(40,20,90,.18);transform:scale(1.02);transition:transform .15s ease,box-shadow .15s ease;background:var(--c-surface)}
+/* Přetahovaná položka: zvednutá, sleduje prst; ostatní ztlumené. */
+.drag-on{position:relative;z-index:30;box-shadow:0 18px 40px rgba(40,20,90,.28),0 0 0 2px var(--c-accent);background:var(--c-surface);transition:box-shadow .15s ease;pointer-events:none;animation:lift .18s ease-out}
+@keyframes lift{from{opacity:.85}to{opacity:1}}
+.drag-list > :not(.drag-on){opacity:.55;transition:opacity .15s ease}
+/* V seznamech: zvednutý řádek bez dělicí linky, se zaoblenými rohy. */
+.drag-on::before,.drag-on > .row::before{display:none !important}
+.list .drag-on{border-radius:14px;overflow:hidden}
+.drag-on + .swipe > .row::before,.drag-on + .row::before{display:none}
+@media (prefers-reduced-motion:reduce){.drag-on{animation:none}}
 .drag-on > .row{background:var(--c-surface)}
 .wdots{display:flex;gap:4px;flex:none}
 .row-right{flex:none;display:inline-flex}
@@ -1050,12 +1058,12 @@ function pl(lang, n, forms) {
 // Jediné místo, které rozhoduje o přístupu. Zatím je vše odemčené; nákupy poběží přes App Store.
 // "hidden" = funkce je zatím skrytá v celé apce (data se dál počítají).
 const EVERY_PRESETS = [7, 14, 21, 30, 60];
-const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", followUps: "hidden", unlimitedAreas: "free" };
+const FEATURES = { stats: "hidden", weeklyReview: "hidden", habitCards: "hidden", areaArchive: "hidden", followUps: "hidden", inbox: "hidden", unlimitedAreas: "free" };
 const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1164,7 +1172,7 @@ function load() {
   const raw = storage.get(STORAGE_KEY);
   if (raw) { try {
     state = migrate(JSON.parse(raw));
-    cleanup1(); cleanup2(); cleanup3(); cleanup4(); cleanup5(); cleanup6();
+    cleanup1(); cleanup2(); cleanup3(); cleanup4(); cleanup5(); cleanup6(); cleanup8();
     // Jen u ukázkových dat: srovnat barvy oblastí s aktuálním vzhledem. Vlastní data se nemění.
     if (state.demo) { const s = sampleData(); state.areas.forEach(a => { const m = s.areas.find(x => x.id === a.id); if (m) a.color = m.color; }); save(); }
     return; } catch (e) { /* poškozená data necháme být, nepřepisujeme */ storage.set(STORAGE_KEY + ".corrupt", raw); } }
@@ -1178,6 +1186,12 @@ function save() { storage.set(STORAGE_KEY, JSON.stringify(state)); }
 // Jednorázově na přání: vrátit Kuchyň do Domácnosti (před Ostatní) a přesunout do ní kuchyňské úkoly z Ostatní.
 // Jednorázově na přání: současná data beru jako vlastní (bez štítku Ukázková data). Nic se nemaže.
 // Jednorázově: kategorie v původních sytých barvách převést na odpovídající pastelové. Vlastní jiné barvy se nemění.
+// Schránka už v apce není: zápisy z ní se jednou převedou na úkoly bez kategorie (najdeš je v „Na výběr“). Nic se neztratí.
+function cleanup8() {
+  if (canUse("inbox") || !(state.inbox || []).length) return;
+  state.inbox.forEach(it => state.tasks.push({ id: uid(), areaId: "", title: it.text, priority: 2, type: "single", done: false }));
+  state.inbox = []; save();
+}
 function cleanup6() {
   if (state.meta.cleanup7) return;
   state.areas.forEach(a => { const n = PALETTE_OLD[(a.color || "").toLowerCase()]; if (n) a.color = n; });
@@ -1485,7 +1499,7 @@ function exportBackup() {
 function importBackup(text) {
   const obj = JSON.parse(text);
   const data = migrate(obj && obj.app === "hub" ? obj.data : obj);
-  state = data; cleanup6(); save();
+  state = data; cleanup6(); cleanup8(); save();
 }
 
 /* ===================== VZHLED (render) ===================== */
@@ -1535,7 +1549,7 @@ let habitFilter = null;
 let doneTodayOpen = false; // rozbalený seznam „Dokončeno“ na přehledu (jen v paměti) // filtr kategorie na záložce Návyky (jen v paměti)
 function view() {
   const h = location.hash.slice(1);
-  if (h === "inbox" || h === "areas" || h === "habits") return { name: h };
+  if ((h === "inbox" && canUse("inbox")) || h === "areas" || h === "habits") return { name: h };
   if (h.startsWith("area-") && areaById(h.slice(5))) return { name: "area", id: h.slice(5) };
   return { name: "home" };
 }
@@ -1590,7 +1604,7 @@ function renderTask(task, mode = "full") {
     return swipeWrap(acts, `<div class="row ${listDone && mode !== "area" ? "is-done" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
       ${stripe}
       ${mode === "area" ? `<div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>`
-        : `<button class="check" role="checkbox" aria-checked="${listDone}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
+        : `<button class="check" role="checkbox" aria-checked="${listDone}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}"><span>${icon("check")}</span></button>`}
       <div class="body">
         <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
         <div class="tags">${prio}${areaTag}${dateTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
@@ -1615,7 +1629,7 @@ function renderTask(task, mode = "full") {
   const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
   return swipeWrap(acts, `<div class="row ${checked && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
     ${stripe}
-    ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${(task.type === "recurring" && checked) || curDay() > todayISO() ? "disabled" : ""}><span>${icon("check")}</span></button>`}
+    ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${task.type === "recurring" && checked ? "disabled" : ""}><span>${icon("check")}</span></button>`}
     <div class="body">
       <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
       <div class="tags">${prio}${areaTag}${mode === "area" || mode === "grouped" ? "" : dateTag}${skipTag}${extra}</div>
@@ -2046,7 +2060,7 @@ function render() {
   }
 
   const cur = v.name === "area" ? "areas" : v.name;
-  const tabs = [["home", "home2"], ["areas", "grid"], ["habits", "repeat"], ["inbox", "inbox"]];
+  const tabs = [["home", "home2"], ["areas", "grid"], ["habits", "repeat"], ["inbox", "inbox"]].filter(([k]) => k !== "inbox" || canUse("inbox"));
   document.getElementById("tabbar").innerHTML = tabs.map(([k, ic]) => `
     <button class="tab" ${cur === k ? 'aria-current="page"' : ""} data-action="nav" data-view="${k}">
       ${icon(ic)}${k === "inbox" && state.inbox.length ? `<span class="badge">${state.inbox.length}</span>` : ""}<span>${t().tabs[k]}</span>
@@ -2374,7 +2388,10 @@ document.addEventListener("pointerdown", e => {
   drag.timer = setTimeout(() => {
     if (swipe.moved) return;
     drag.active = true; swipe.el = null; closeSwipes();
-    drag.el.classList.add("drag-on");
+    const r = drag.el.getBoundingClientRect(); drag.gx = drag.x0 - r.left; drag.gy = drag.y0 - r.top;
+    drag.el.classList.add("drag-on"); drag.el.parentElement.classList.add("drag-list");
+    drag.scale = drag.el.closest(".list") ? 1 : 1.05; // v seznamu se nezvětšuje, aby se neořízl o okraj karty
+    drag.el.style.transform = `scale(${drag.scale})`;
     if (navigator.vibrate) try { navigator.vibrate(10); } catch (err) {}
   }, DRAG_HOLD_MS);
 }, true);
@@ -2391,11 +2408,14 @@ document.addEventListener("pointermove", e => {
     if (me.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING) c.before(me); else c.after(me);
     break;
   }
+  // Položka jede s prstem (posun počítaný od jejího aktuálního místa v rozložení).
+  me.style.transform = "none"; const base = me.getBoundingClientRect();
+  me.style.transform = `translate(${e.clientX - drag.gx - base.left}px, ${e.clientY - drag.gy - base.top}px) scale(${drag.scale})`;
 }, true);
 function endDrag() {
   clearTimeout(drag.timer);
   if (drag.active) {
-    drag.el.classList.remove("drag-on");
+    drag.el.classList.remove("drag-on"); drag.el.style.transform = ""; drag.el.parentElement && drag.el.parentElement.classList.remove("drag-list");
     if (drag.moved) {
       const g = drag.row.dataset.dgroup;
       const keys = dragSiblings().map(c => (c.matches("[data-drag]") ? c : c.querySelector(":scope > [data-drag]")).dataset.drag);
