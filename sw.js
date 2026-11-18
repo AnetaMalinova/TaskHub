@@ -1,5 +1,5 @@
 // Při každém vydání zvyš verzi cache, aby se načetla nová verze apky.
-const CACHE = "taskhub-v0.9.5";
+const CACHE = "taskhub-v0.9.6";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {

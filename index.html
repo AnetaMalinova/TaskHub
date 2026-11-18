@@ -880,7 +880,7 @@ const STRINGS = {
     copied: "Záloha zkopírována. Vlož ji do Poznámek nebo Souborů.",
     copyFailed: "Kopírování se nepovedlo. Označ text níže a zkopíruj ho ručně.",
     importBackup: "Nahrát zálohu",
-    pasteBackup: "Vložit zálohu",
+    pasteBackup: "Vložit zálohu jako text",
     pastePh: "Sem vlož zkopírovanou zálohu",
     pasteLoad: "Načíst vloženou zálohu",
     pasteEmpty: "Nejdřív sem vlož zálohu.",
@@ -1104,7 +1104,7 @@ const STRINGS = {
     copied: "Backup copied. Paste it into Notes or Files.",
     copyFailed: "Copying failed. Select the text below and copy it by hand.",
     importBackup: "Upload backup",
-    pasteBackup: "Paste backup",
+    pasteBackup: "Paste backup as text",
     pastePh: "Paste your copied backup here",
     pasteLoad: "Load pasted backup",
     pasteEmpty: "Paste a backup first.",
@@ -1141,7 +1141,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.5";
+const APP_VERSION = "0.9.6";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -2493,6 +2493,11 @@ function renderBackupBody() {
     <button class="btn-accent btn-wide" data-action="backup-file">${icon("save")}${t().backupNow}</button>
     <label class="btn btn-wide" for="import-file">${t().importBackup}</label>
     <input id="import-file" type="file" accept="application/json,.json,.txt" hidden>
+    <button class="btn btn-wide" data-action="paste-open">${t().pasteBackup}</button>
+    <div id="paste-box" class="field" hidden>
+      <textarea class="input" id="paste-text" rows="4" placeholder="${t().pastePh}" aria-label="${t().pasteBackup}"></textarea>
+      <button class="btn-accent btn-wide" data-action="paste-load">${t().pasteLoad}</button>
+    </div>
   </section>`;
 }
 // Nahrání zálohy ze souboru: nejdřív ověřit, pak potvrdit nahrazení, a hned potom jde vrátit.
