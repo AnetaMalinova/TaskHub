@@ -496,6 +496,8 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .htile-week .htile-note{order:-1}
 .htile-note{font-size:11px;color:var(--c-muted);font-weight:700;font-variant-numeric:tabular-nums}
 .htile[aria-disabled="true"]{cursor:default}
+.dlg-title{font-size:var(--fs-lg);font-weight:800;margin:0 0 var(--sp-2)}
+.dlg-actions{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3)}
 .htile-menu{position:fixed;z-index:60;min-width:200px;border-radius:14px;background:var(--c-surface);box-shadow:0 12px 40px rgba(28,22,51,.22),0 0 0 .5px rgba(28,22,51,.08);overflow:hidden;animation:menu-in .16s ease-out}
 .htile-menu button{display:flex;align-items:center;width:100%;min-height:44px;padding:0 var(--sp-4);font-weight:600;color:var(--c-text);text-align:left}
 .wdots-link{display:flex;align-items:center;min-height:var(--tap);padding:0 4px;margin-right:-4px;background:none;flex:none}
@@ -877,6 +879,9 @@ const STRINGS = {
     copyBackup: "Zkopírovat jako text",
     backupNow: "Zálohovat data",
     backupSaved: "Záloha uložena",
+    remindTitle: "Zálohuj si data",
+    remindText: "Data jsou jen v tomhle telefonu. Když apku odebereš z plochy nebo se něco pokazí, přijdeš o ně. Ulož si zálohu do Souborů nebo na iCloud.",
+    notNow: "Teď ne",
     copied: "Záloha zkopírována. Vlož ji do Poznámek nebo Souborů.",
     copyFailed: "Kopírování se nepovedlo. Označ text níže a zkopíruj ho ručně.",
     importBackup: "Nahrát zálohu",
@@ -1101,6 +1106,9 @@ const STRINGS = {
     copyBackup: "Copy as text",
     backupNow: "Back up data",
     backupSaved: "Backup saved",
+    remindTitle: "Back up your data",
+    remindText: "Your data lives only on this phone. If you remove the app from the home screen or something goes wrong, it is gone. Save a backup to Files or iCloud.",
+    notNow: "Not now",
     copied: "Backup copied. Paste it into Notes or Files.",
     copyFailed: "Copying failed. Select the text below and copy it by hand.",
     importBackup: "Upload backup",
@@ -1141,7 +1149,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.6";
+const APP_VERSION = "0.9.7";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -2515,6 +2523,45 @@ document.addEventListener("change", async e => {
 
 /* ----- Dialog a toast ----- */
 const dialogEl = document.getElementById("dialog");
+// Záloha jako soubor: na iPhonu nabídka sdílení (Uložit do Souborů, AirDrop…), jinde stažení.
+// Když uživatelka nabídku zavře bez uložení, „poslední záloha“ se nemění.
+async function backupToFile() {
+  const prev = state.meta.lastBackup; const json = exportBackup();
+  const showLast = () => { const lb = document.getElementById("lb"); if (lb) lb.textContent = state.meta.lastBackup ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup)) : t().never; };
+  const name = `taskhub-zaloha-${todayISO()}.json`;
+  try {
+    const file = new File([json], name, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); showLast(); toast(t().backupSaved); return; }
+  } catch (err) { if (err && err.name === "AbortError") { state.meta.lastBackup = prev; save(); showLast(); return; } }
+  try {
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); showLast(); toast(t().backupSaved);
+  } catch (err) { state.meta.lastBackup = prev; save(); showLast(); toast(t().copyFailed); }
+}
+// Denní připomínka zálohy (dočasně, než bude apka v App Storu s automatickou zálohou na iCloud):
+// nejvýš jednou za 24 h, jen když poslední záloha je starší než 24 h.
+const BACKUP_REMIND_MS = 24 * 3600 * 1000;
+function maybeRemindBackup() {
+  const now = Date.now();
+  const last = state.meta.lastBackup ? Date.parse(state.meta.lastBackup) : 0;
+  const asked = state.meta.backupAskedAt ? Date.parse(state.meta.backupAskedAt) : 0;
+  if (now - last < BACKUP_REMIND_MS || now - asked < BACKUP_REMIND_MS) return;
+  if (!dialogEl.hidden || !sheetEl.hidden) return;
+  state.meta.backupAskedAt = new Date(now).toISOString(); save();
+  const when = last ? new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(last)) : t().never;
+  dialogEl.innerHTML = `<div class="box" role="alertdialog" aria-labelledby="bk-t" aria-describedby="bk-d">
+    <h3 id="bk-t" class="dlg-title">${t().remindTitle}</h3>
+    <p id="bk-d">${t().remindText}</p>
+    <p class="note">${t().lastBackup}: <b>${when}</b></p>
+    <div class="dlg-actions"><button class="btn-accent btn-wide" data-d="ok">${icon("save")}${t().backupNow}</button>
+    <button class="btn btn-wide" data-d="cancel">${t().notNow}</button></div></div>`;
+  dialogEl.hidden = false; dialogEl.querySelector('[data-d="ok"]').focus();
+  dialogEl.onclick = e => { const b = e.target.closest("[data-d]"); if (!b && e.target !== dialogEl) return; dialogEl.hidden = true; if (b && b.dataset.d === "ok") backupToFile(); };
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") setTimeout(maybeRemindBackup, 800); });
+// Požádat systém, aby data apky sám nemazal (např. při nedostatku místa).
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (err) {}
 function confirmDialog(text, okLabel, onOk) {
   dialogEl.innerHTML = `<div class="box"><p>${text}</p><div class="btn-row" style="justify-content:flex-end">
     <button class="btn" data-d="cancel">${t().cancel}</button><button class="btn danger" data-d="ok">${okLabel}</button></div></div>`;
@@ -2792,22 +2839,7 @@ document.addEventListener("click", async e => {
       });
       break;
     }
-    case "backup-file": {
-      // Záloha jako soubor: na iPhonu se otevře nabídka sdílení (Uložit do Souborů, AirDrop, Zprávy…), jinde se soubor stáhne.
-      const json = exportBackup();
-      document.getElementById("lb").textContent = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup));
-      const name = `taskhub-zaloha-${todayISO()}.json`;
-      try {
-        const file = new File([json], name, { type: "application/json" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); toast(t().backupSaved); break; }
-      } catch (err) { if (err && err.name === "AbortError") break; }
-      try {
-        const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-        const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t().backupSaved);
-      } catch (err) { toast(t().copyFailed); }
-      break;
-    }
+    case "backup-file": await backupToFile(); break;
     case "copy": {
       const json = exportBackup();
       document.getElementById("lb").textContent = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.meta.lastBackup));
@@ -2874,6 +2906,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 }
 load();
 render();
+setTimeout(maybeRemindBackup, 800);
 { const c = document.getElementById("clock"); const n = new Date(); c.textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2, "0")}`; }
 </script>
 </body>
