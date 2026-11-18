@@ -714,7 +714,7 @@ const STRINGS = {
     dateNone: "Nevybráno",
     noArea: "Nevybráno",
     noAreaGroup: "Bez kategorie",
-    whenHint: "Nepovinné. Bez data se úkol nabízí každý den v „Na výběr“. S datem se ten den ukáže v Cíli dne pod Úkoly a zůstane tam, dokud ho nesplníš.",
+    whenHint: "Nepovinné. Bez data se úkol nabízí každý den v „Můžu ještě udělat“. S datem se ten den ukáže v „Dnes udělám“ a zůstane tam, dokud ho nesplníš.",
     today: "Dnes",
     tomorrow: "Zítra",
     rel: n => n === 0 ? "dnes" : n === 1 ? "zítra" : n === -1 ? "včera" : n > 1 ? `za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}` : `před ${-n} ${pl("cs", -n, ["dnem", "dny", "dne", "dny"])}`,
@@ -739,15 +739,16 @@ const STRINGS = {
     weekly: (a, b) => `${a}/${b} tento týden`,
     timesWeek: n => `${n}× týdně`,
     priorities: "Priority",
-    todayTitle: "Na výběr",
+    todayTitle: "Můžu ještě udělat",
+    habitsHome: "Moje návyky",
     editAreas: "Upravit kategorie",
     openHabits: "Otevřít přehled návyků",
-    goalTitle: "Cíl dne",
+    goalTitle: "Dnes udělám",
     goalTasks: "Úkoly",
     goalAllDone: "Všechno z cíle dne je hotové.",
     doneToday: "Dokončeno",
     weekDone: n => `Tento týden splněno ${n}× ze 7 dní`,
-    goalEmpty: "Zatím nic. V sekci „Na výběr“ potáhni činnost doleva a klepni na Cíl.",
+    goalEmpty: "Zatím nic. V sekci „Můžu ještě udělat“ potáhni úkol doleva a klepni na Cíl.",
     goalAdd: "Přidat do cíle dne",
     goalRemove: "Odebrat z cíle dne",
     goalAdded: "V cíli dne",
@@ -808,7 +809,7 @@ const STRINGS = {
     everyCustom: "Vlastní",
     everyShort: n => ({ 7: "týden", 14: "2 týdny", 21: "3 týdny", 30: "měsíc", 60: "2 měsíce" })[n] || `${n} d`,
     everyCustomLabel: "Počet dní",
-    everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se znovu ukáže v „Na výběr“ a zůstane tam, dokud ho nesplníš.",
+    everyHint: "Počítá se ode dne, kdy úkol odškrtneš. Pak se znovu ukáže v „Můžu ještě udělat“ a zůstane tam, dokud ho nesplníš.",
     nextDue: d => `Další ${d}`,
     nextIn: n => n <= 1 ? "Zítra znovu" : `Znovu za ${n} ${pl("cs", n, ["den", "dny", "dne", "dní"])}`,
     save: "Uložit",
@@ -942,7 +943,7 @@ const STRINGS = {
     dateNone: "Not set",
     noArea: "Not set",
     noAreaGroup: "No category",
-    whenHint: "Optional. Without a date the task is offered every day in “To pick from”. With a date it appears under Tasks in Today's goal and stays there until done.",
+    whenHint: "Optional. Without a date the task is offered every day in “I can also do”. With a date it appears in “Today I'll do” and stays there until done.",
     today: "Today",
     tomorrow: "Tomorrow",
     rel: n => n === 0 ? "today" : n === 1 ? "tomorrow" : n === -1 ? "yesterday" : n > 1 ? `in ${n} days` : `${-n} days ago`,
@@ -967,15 +968,16 @@ const STRINGS = {
     weekly: (a, b) => `${a}/${b} this week`,
     timesWeek: n => `${n}× a week`,
     priorities: "Priorities",
-    todayTitle: "To pick from",
+    todayTitle: "I can also do",
+    habitsHome: "My habits",
     editAreas: "Edit categories",
     openHabits: "Open habits overview",
-    goalTitle: "Today's goal",
+    goalTitle: "Today I'll do",
     goalTasks: "Tasks",
     goalAllDone: "Everything in today's goal is done.",
     doneToday: "Done",
     weekDone: n => `Done ${n} of 7 days this week`,
-    goalEmpty: "Nothing yet. In “To pick from”, swipe an item left and tap Goal.",
+    goalEmpty: "Nothing yet. In “I can also do”, swipe a task left and tap Goal.",
     goalAdd: "Add to today's goal",
     goalRemove: "Remove from today's goal",
     goalAdded: "Added to today's goal",
@@ -1152,7 +1154,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.8";
+const APP_VERSION = "0.9.9";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1838,7 +1840,8 @@ function renderToday(tasks, withHabits = true, mode = "grouped") {
 }
 
 function renderArea(a) {
-  const n = state.tasks.filter(x => x.areaId === a.id && taskIsOpen(x)).length;
+  // Počet úkolů v kategorii: všechny nedokončené, pravidelné vždy (i když jsou na řadě až později).
+  const n = state.tasks.filter(x => x.areaId === a.id && (x.type === "recurring" || taskIsOpen(x))).length;
   const nh = state.habits.filter(h => h.areaId === a.id).length;
   return `<button class="area glass" style="--area-c:${a.color}" data-action="area" data-id="${a.id}" data-drag="a:${a.id}" data-dgroup="areas">
     <div class="ico">${areaIcon(a)}</div>
@@ -1926,7 +1929,7 @@ function renderHabitStrip(d) {
   const list = habitsForDay(d); if (!list.length) return "";
   const future = d > todayISO();
   return `<section class="section hsection" aria-labelledby="h-habits">
-    <div class="section-head"><h2 id="h-habits">${t().habits}</h2>
+    <div class="section-head"><h2 id="h-habits">${t().habitsHome}</h2>
       <button class="btn-plus btn-edit-subtle" data-action="nav" data-view="habits" aria-label="${t().openHabits}">${icon("stats")}</button></div>
     <div class="hstrip" role="group" aria-labelledby="h-habits">${list.map(({ h, skipped }) => {
       const a = areaById(h.areaId) || noArea(); const on = !!h.log[d];
