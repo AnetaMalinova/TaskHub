@@ -209,6 +209,9 @@ input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webk
 .swipe > .row{background:var(--c-surface);touch-action:pan-y;transition:transform .22s ease;will-change:transform}
 .swipe.dragging > .row{transition:none}
 .swipe.open > .row{transform:translateX(calc(-1 * var(--sw-w)))}
+/* Zavřené akce schovat (jinak u zaoblených rohů karty prosvítá barva tlačítka); po zavření až když řádek dojede zpět. */
+.swipe:not(.open):not(.dragging) > .sw-acts{opacity:0;transition:opacity 0s .22s}
+.swipe.open > .sw-acts,.swipe.dragging > .sw-acts{opacity:1;transition:none}
 .sw-acts{position:absolute;top:0;right:0;bottom:0;display:flex}
 .sw-act{width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-size:.6875rem;font-weight:700}
 .sw-act .icon{width:20px;height:20px}
@@ -489,7 +492,7 @@ label.pick:has(input:checked){border-color:var(--c-accent);background:var(--c-ac
 .htile-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--area-c) 14%,#fff);color:var(--area-c)}
 .htile-ico .icon{width:22px;height:22px}
 .htile-name{font-size:var(--fs-sm);font-weight:700;line-height:1.2;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
-.htile.on{background:color-mix(in srgb,var(--area-c) 16%,#fff);border-color:color-mix(in srgb,var(--area-c) 45%,#fff)}
+.htile.on{border-color:var(--c-good);box-shadow:inset 0 0 0 1px var(--c-good)}
 .htile-check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--c-good);color:#fff;display:grid;place-items:center}
 .htile-check .icon{width:14px;height:14px;stroke-width:3}
 .htile.skipped{opacity:.55;filter:grayscale(1)}
@@ -1154,7 +1157,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.9";
+const APP_VERSION = "0.10.0";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1923,7 +1926,9 @@ function habitsForDay(d) {
   const due = h => h.freq.type === "daily" || !!h.log[d] || (d === today ? habitWeekCount(h) < h.freq.times : true);
   const list = state.habits.filter(due);
   const skipped = h => !!(h.skips && h.skips[d]) && !h.log[d];
-  return [...list.filter(h => !skipped(h)), ...list.filter(skipped)].map(h => ({ h, skipped: skipped(h) }));
+  // Pořadí: nesplněné (podle vlastního pořadí), pak splněné, nakonec vynechané.
+  const open = h => !h.log[d] && !skipped(h);
+  return [...list.filter(open), ...list.filter(h => !!h.log[d]), ...list.filter(skipped)].map(h => ({ h, skipped: skipped(h) }));
 }
 function renderHabitStrip(d) {
   const list = habitsForDay(d); if (!list.length) return "";
