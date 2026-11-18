@@ -290,7 +290,7 @@ input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webk
 .hc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:0 0 100%;scroll-snap-align:start}
 .hc-day:disabled{cursor:default}
 /* Nesplněné dny (minulé i budoucí) stejně bledé; dnešek a splněné dny plně. */
-.hc-day:not(.on):not(.today) .d-c{opacity:.4}
+.hc-day:not(.on):not(.today) .d-c{color:var(--c-faint);background:transparent;border-color:color-mix(in srgb,var(--c-stroke) 60%,transparent)}
 .hc-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap);padding:2px 0}
 .hc-day .d-l{font-size:.625rem;font-weight:600;color:var(--c-faint);text-transform:uppercase}
 .hc-day .d-c{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-sm);font-weight:600;color:var(--c-muted);background:var(--c-surface-2);border:1.5px solid var(--c-stroke)}
@@ -1141,7 +1141,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.3";
+const APP_VERSION = "0.9.4";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
