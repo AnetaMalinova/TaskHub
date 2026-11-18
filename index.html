@@ -174,7 +174,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .list{padding:0;overflow:hidden}
 .list:has(> .subhead:first-child){padding-top:0}
 .row{display:flex;align-items:center;gap:var(--sp-3);min-height:62px;padding:var(--sp-2) var(--sp-4);position:relative}
-.row + .row::before,.swipe + .swipe > .row::before,.row + .swipe > .row::before,.swipe + .row::before{content:"";position:absolute;top:0;left:56px;right:0;height:1px;background:var(--c-stroke)}
+.row + .row::before,.swipe + .swipe > .row::before,.row + .swipe > .row::before,.swipe + .row::before,.subtasks + .row::before,.subtasks + .swipe > .row::before{content:"";position:absolute;top:0;left:56px;right:0;height:1px;background:var(--c-stroke)}
 /* Swajp doleva odkryje akce (Dnes ne, Cíl dne). */
 .swipe{position:relative;overflow:hidden}
 [data-drag]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -1141,7 +1141,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.4";
+const APP_VERSION = "0.9.5";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1680,8 +1680,7 @@ function renderTask(task, mode = "full") {
   const dueText = !hasDeadline || task.done ? "" : daysLeft < 0 ? t().overdueSince(fmtShort(task.date)) : daysLeft === 0 ? t().dueToday : t().dueBy(fmtShort(task.date));
   const dateTag = dueText ? `<span class="meta ${daysLeft <= 1 ? "due-soon" : ""}">${dueText}</span>` : "";
   const rightTag = "";
-  const skipTag = (mode === "area" && isSkippedToday(task) ? `<span class="pill p3">${t().skipped}</span>` : "")
-    + (mode === "area" && task.followUp && canUse("followUps") ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
+  const skipTag = (mode === "area" && task.followUp && canUse("followUps") ? `<span class="pill p3">${t().followTag(esc(task.followUp.split("\n").join(" → ")))}</span>` : "");
   const editBtn = ""; // úprava klepnutím na název; tužka už se nepoužívá
   const fmtDay = d => new Intl.DateTimeFormat(lang, { day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
   if (task.type === "project") {
@@ -2694,8 +2693,9 @@ document.addEventListener("click", async e => {
   const id = el.dataset.id;
   switch (el.dataset.action) {
     case "habit": { const u = toggleHabit(id); rerender(); if (state.habits.find(h => h.id === id).log[todayISO()]) toast(t().done, u); break; }
-    case "task": { const u = completeTask(id); rerender(); const f = completeTask.lastFollow; toast(f ? t().followAdded(f.title) : t().done, u); break; }
-    case "sub": { const u = toggleSubtask(id, el.dataset.sub); rerender(); toast(t().done, u); break; }
+    // Splnění úkolu je vidět hned (zaškrtnutí, Dokončeno), takže bez toastu; vrátit jde odškrtnutím.
+    case "task": { completeTask(id); rerender(); const f = completeTask.lastFollow; if (f) toast(t().followAdded(f.title)); break; }
+    case "sub": { toggleSubtask(id, el.dataset.sub); rerender(); break; }
     case "expand": expanded.has(id) ? expanded.delete(id) : expanded.add(id); rerender(); break;
     case "emoji-toggle": { const pnl = el.closest("form").querySelector(".emoji-panel"); pnl.hidden = !pnl.hidden; el.setAttribute("aria-expanded", String(!pnl.hidden)); break; }
     case "emoji-pick": {
