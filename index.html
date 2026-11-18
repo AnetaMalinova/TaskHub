@@ -178,15 +178,18 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 /* Swajp doleva odkryje akce (Dnes ne, Cíl dne). */
 .swipe{position:relative;overflow:hidden}
 [data-drag]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Apka se ovládá dotykem: dlouhé podržení nesmí označovat text (kromě polí formuláře). */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 /* Přetahovaná položka: zvednutá, sleduje prst; ostatní ztlumené. */
 .drag-on{position:relative;z-index:30;box-shadow:0 18px 40px rgba(40,20,90,.28),0 0 0 2px var(--c-accent);background:var(--c-surface);transition:box-shadow .15s ease;pointer-events:none;animation:lift .18s ease-out}
 @keyframes lift{from{opacity:.85}to{opacity:1}}
 .drag-list > :not(.drag-on){opacity:.55;transition:opacity .15s ease}
 /* V seznamech: zvednutý řádek bez dělicí linky, se zaoblenými rohy. */
 .drag-on::before,.drag-on > .row::before{display:none !important}
-.list .drag-on{border-radius:14px;overflow:hidden;box-shadow:0 12px 28px rgba(40,20,90,.25)}
+.list .drag-on{border-radius:var(--r-lg);overflow:hidden;box-shadow:0 12px 28px rgba(40,20,90,.25)}
 /* Fialový rámeček uvnitř řádku, aby ho neořízl okraj karty. */
-.list .drag-on > .row,.list .row.drag-on{box-shadow:inset 0 0 0 2px var(--c-accent);border-radius:14px}
+.list .drag-on > .row,.list .row.drag-on{box-shadow:inset 0 0 0 2px var(--c-accent);border-radius:var(--r-lg)}
 .drag-on + .swipe > .row::before,.drag-on + .row::before{display:none}
 @media (prefers-reduced-motion:reduce){.drag-on{animation:none}}
 .drag-on > .row{background:var(--c-surface)}
@@ -304,7 +307,7 @@ button:focus-visible,input:focus-visible,.area:focus-visible{outline:2px solid v
 .flabel{font-size:var(--fs-sm);color:var(--c-muted);font-weight:700}
 .input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--c-stroke);background:#fff;padding:0 14px;font:inherit;font-size:var(--fs-sm);font-weight:700;color:var(--c-text)}
 .input::placeholder{color:var(--c-faint);font-weight:400;opacity:1}
-textarea.input{padding:12px 14px;resize:vertical;line-height:1.4}
+textarea.input{padding:12px 14px;resize:none;line-height:1.4;overflow:hidden;min-height:88px}
 .input:focus{outline:none;border-color:var(--c-accent);box-shadow:0 0 0 3px var(--c-accent-soft)}
 .form[data-own-icon="off"] .f-icon{display:none}
 .form[data-note="off"] .f-note{display:none}
@@ -1138,7 +1141,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.2";
+const APP_VERSION = "0.9.3";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1535,7 +1538,7 @@ function toggleGoal(kind, id, d = todayISO()) {
 }
 // Backlog „Na výběr“ pro budoucí den: úkoly bez data a opakované, které už budou na řadě.
 function backlogFor(d) {
-  return sortTasks(state.tasks.filter(x => !(x.skipDays && x.skipDays[d]) && (x.type === "recurring" ? x.nextDue <= d : ((!x.date || x.date > d) && taskIsOpen(x)))));
+  return sortTasks(state.tasks.filter(x => !(x.skipDays && x.skipDays[d]) && x.skipDay !== d && (x.type === "recurring" ? x.nextDue <= d : ((!x.date || x.date > d) && taskIsOpen(x)))));
 }
 // „Na zítra“: položka z cíle dne se přesune do cíle následujícího dne. Vrací funkci pro vrácení zpět.
 function moveGoalNextDay(kind, id, skipFn) {
@@ -1665,6 +1668,7 @@ function renderTask(task, mode = "full") {
   const stripe = showStripe ? `<i class="stripe" style="background:${a.color}"></i>` : "";
   // Akce „Na zítra“ a „Cíl dne“ jsou schované pod swajpem doleva. V „Na výběr“ jen Cíl.
   const acts = [
+    mode === "grouped" && curDay() >= todayISO() && !task.done ? skipAction("hide-day", task.id, task.title) : "",
     (mode === "future" || mode === "goal" || mode === "must") && !task.done && !(task.type === "recurring" && task.nextDue > todayISO()) ? skipAction("skip", task.id, task.title) : "",
     (mode === "grouped" && curDay() >= todayISO()) || mode === "goal" ? goalAction("t", task.id, task.title, mode === "goal") : "",
     mode === "must" && curDay() === todayISO() && !task.done ? `<button class="sw-act sw-goal on" data-action="later" data-id="${task.id}" aria-label="${t().goalOff}: ${esc(task.title)}">${icon("later")}<span>${t().goalOff}</span></button>` : "",
@@ -1683,13 +1687,13 @@ function renderTask(task, mode = "full") {
   if (task.type === "project") {
     const { d, n } = projectProgress(task); const open = expanded.has(task.id);
     const listDone = !!task.done || (n > 0 && d === n);
-    return swipeWrap(acts, `<div class="row ${listDone && mode !== "area" ? "is-done" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
+    return swipeWrap(acts, `<div class="row ${listDone && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" data-row="${task.id}" ${dragAttr(mode, "t", task)}>
       ${stripe}
-      ${mode === "area" ? `<div class="proj-ico" aria-hidden="true" style="color:${a.color}">${icon("layers")}</div>`
+      ${mode === "area" ? ""
         : `<button class="check" role="checkbox" aria-checked="${listDone}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}"><span>${icon("check")}</span></button>`}
       <div class="body">
         <button class="title title-link" data-action="task-edit" data-id="${task.id}">${esc(task.title)}</button>
-        <div class="tags">${prio}${areaTag}${dateTag}${skipTag}<span>${t().project} · ${d}/${n}</span></div>
+        <div class="tags">${prio}${areaTag}${dateTag}${skipTag}<span class="meta">${t().project} (${d}/${n})</span></div>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? (d / n) * 100 : 0}%"></i></div>
       </div>
       ${rightTag}${editBtn}
@@ -1733,6 +1737,10 @@ function dragAttr(mode, kind, x) {
 }
 function applyOrder(dgroup, keys) {
   if (dgroup === "areas") { const ids = keys.map(k => k.slice(2)); state.areas.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); }
+  else if (dgroup === "habits") { // pořadí návyků: přeřadí jen zobrazené (např. po filtru kategorie), ostatní zůstanou na svých místech
+    const ids = keys.map(k => k.slice(2)); const slots = state.habits.map((h, i) => ids.includes(h.id) ? i : -1).filter(i => i >= 0);
+    const moved = ids.map(id => state.habits.find(h => h.id === id)).filter(Boolean); slots.forEach((slot, i) => { state.habits[slot] = moved[i]; });
+  }
   else if (dgroup === "day-t") keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.dayOrder = i; });
   else if (dgroup === "goal" || dgroup === "goal-h") { const d = curDay(); const rest = goalsOf(d).filter(k => !keys.includes(k)); state.goals[d] = [...keys, ...rest]; }
   else keys.forEach((k, i) => { const x = state.tasks.find(x => x.id === k.slice(2)); if (x) x.order = i; });
@@ -2055,7 +2063,7 @@ function renderHabitCard(h, showArea = true) {
   const mon = day(-((new Date().getDay() + 6) % 7)); // pondělí aktuálního týdne
   const weeks = Array.from({ length: HABIT_WEEKS }, (_, w) => Array.from({ length: 7 }, (_, i) => day((w - HABIT_WEEKS + 1) * 7 + i, mon)));
   const sub = h.freq.type === "daily" ? t().streak(habitStreak(h)) : t().weekly(habitWeekCount(h), h.freq.times);
-  return `<div class="hcard glass" style="--area-c:${a.color}">
+  return `<div class="hcard glass" style="--area-c:${a.color}" data-drag="h:${h.id}" data-dgroup="habits">
     <div class="hc-head">
       <span class="ico">${habitIcon(h, a)}</span>
       <div class="hc-txt"><div class="hc-name">${esc(h.title)}</div>
@@ -2188,7 +2196,12 @@ function openSheet(html) {
   sheetEl.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grabber"></div>${html}</div>`;
   sheetEl.hidden = false;
   const f = sheetEl.querySelector("[autofocus]") || sheetEl.querySelector("button"); if (f) f.focus();
+  growAll(sheetEl);
 }
+// Textová pole se natahují podle obsahu, takže je text vždy vidět celý.
+function growTextarea(el) { if (!el.offsetParent) return; el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
+function growAll(root) { root.querySelectorAll("textarea.input").forEach(growTextarea); }
+document.addEventListener("input", e => { if (e.target.matches && e.target.matches("textarea.input")) growTextarea(e.target); });
 function closeSheet() { sheetEl.hidden = true; sheetEl.innerHTML = ""; }
 
 function areaPicker(name, selected) {
@@ -2608,7 +2621,7 @@ document.addEventListener("pointermove", e => {
   // Položka jede s prstem (posun počítaný od jejího aktuálního místa v rozložení).
   me.style.transform = "none"; const base = me.getBoundingClientRect();
   // V seznamu jen nahoru/dolů, v mřížce kategorií volně.
-  const dx = me.closest(".list") ? 0 : e.clientX - drag.gx - base.left;
+  const dx = me.closest(".list, .hcards") ? 0 : e.clientX - drag.gx - base.left;
   me.style.transform = `translate(${dx}px, ${e.clientY - drag.gy - base.top}px) scale(${drag.scale})`;
 }, true);
 function endDrag() {
@@ -2743,6 +2756,11 @@ document.addEventListener("click", async e => {
     case "skip-habit": { const u = moveGoalNextDay("h", id, () => skipHabitToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "later": { const x = state.tasks.find(x => x.id === id); const prev = x.laterOn; x.laterOn = todayISO(); save(); render(); toast(t().goalRemoved, () => { if (prev) x.laterOn = prev; else delete x.laterOn; save(); render(); }); break; }
     case "goal": { const kind = el.dataset.kind, d = curDay(); const u = toggleGoal(kind, id, d); render(); toast(isGoal(kind, id, d) ? t().goalAdded : t().goalRemoved, u); break; }
+    case "hide-day": { // Na výběr: skrýt úkol jen pro tento den, zítra se nabídne znovu (termín se nemění)
+      const x = state.tasks.find(x => x.id === id); const d = curDay();
+      x.skipDays = x.skipDays || {}; x.skipDays[d] = true; save(); render();
+      toast(t().skippedToast, () => { delete x.skipDays[d]; save(); }); break;
+    }
     case "skip": { const u = moveGoalNextDay("t", id, () => skipToday(id, curDay())); render(); toast(t().skippedToast, u); break; }
     case "archive": archiveOpen = !archiveOpen; render(); break;
     case "start-own": confirmDialog(t().startOwnConfirm, t().startOwnOk, () => { startOwnData(); closeSheet(); go(""); toast(t().startOwnDone); }); break;
@@ -2798,10 +2816,11 @@ document.addEventListener("click", async e => {
 document.addEventListener("change", e => {
   const form = e.target.closest("form[data-form]"); if (!form) return;
   if (e.target.name === "type") form.dataset.type = e.target.value;
-  if (e.target.name === "icon") { const em = form.querySelector('[name="emoji"]'); if (em) { em.value = ""; const c = form.querySelector(".chip-emoji"); c.classList.remove("is-on"); c.querySelector(".emoji-val").textContent = ""; } }
+  // Výběr předvolené ikony zruší emoji: plusko přestane být vybrané i aktivní a nabídka emoji se zavře.
+  if (e.target.name === "icon") { const em = form.querySelector('[name="emoji"]'); if (em) { em.value = ""; const c = form.querySelector(".chip-emoji"); c.classList.remove("is-on"); c.querySelector(".emoji-val").textContent = ""; c.setAttribute("aria-expanded", "false"); c.blur(); const pnl = form.querySelector(".emoji-panel"); if (pnl) pnl.hidden = true; } }
   if (e.target.name === "emoji") onEmojiInput(e.target);
-  if (e.target.name === "list") form.dataset.list = e.target.checked ? "on" : "off";
-  if (e.target.name === "noteOn") { form.dataset.note = e.target.checked ? "on" : "off"; if (e.target.checked) form.querySelector('[name="note"]').focus(); }
+  if (e.target.name === "list") { form.dataset.list = e.target.checked ? "on" : "off"; growAll(form); }
+  if (e.target.name === "noteOn") { form.dataset.note = e.target.checked ? "on" : "off"; if (e.target.checked) { growAll(form); form.querySelector('[name="note"]').focus(); } }
   if (e.target.name === "ownIcon") form.dataset.ownIcon = e.target.checked ? "on" : "off";
   if (e.target.name === "date" || e.target.name === "start") {
     const box = e.target.closest(".field"); box.classList.toggle("has-date", !!e.target.value);
