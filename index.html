@@ -214,6 +214,7 @@ input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webk
 .sw-act .icon{width:20px;height:20px}
 .sw-skip{background:var(--c-skip);color:var(--c-text)}
 .sw-goal{background:var(--c-accent)}
+.sw-del{background:var(--c-crit)}
 .sw-goal .t-core{fill:currentColor}
 .sw-goal.on{background:var(--c-muted)}
 @media (prefers-reduced-motion:reduce){.swipe > .row{transition:none}}
@@ -813,6 +814,7 @@ const STRINGS = {
     save: "Uložit",
     saved: "Uloženo",
     deleteTask: "Smazat úkol",
+    deleteShort: "Smazat",
     archive: n => `Hotové (${n})`,
     archiveEmpty: "Zatím tu nic hotového není.",
     noAreaTasks: "V této kategorii nemáš žádné úkoly.",
@@ -1040,6 +1042,7 @@ const STRINGS = {
     save: "Save",
     saved: "Saved",
     deleteTask: "Delete task",
+    deleteShort: "Delete",
     archive: n => `Done (${n})`,
     archiveEmpty: "Nothing done here yet.",
     noAreaTasks: "No tasks in this category.",
@@ -1149,7 +1152,7 @@ const entitlements = { pro: false };
 function canUse(feature) { if (FEATURES[feature] === "hidden") return false; return FEATURES[feature] === "free" || entitlements.pro; }
 
 /* ===================== DATA: model, verze, migrace, úložiště ===================== */
-const APP_VERSION = "0.9.7";
+const APP_VERSION = "0.9.8";
 // iOS starší verze nepodporují display-mode v CSS, proto ještě třída podle navigator.standalone.
 // Když okno apky z plochy končí výrazně nad spodním krajem displeje, spodní rezervu už řeší systém.
 function checkViewport() {
@@ -1679,6 +1682,7 @@ function renderTask(task, mode = "full") {
     mode === "grouped" && curDay() >= todayISO() && !task.done ? skipAction("hide-day", task.id, task.title) : "",
     (mode === "future" || mode === "goal" || mode === "must") && !task.done && !(task.type === "recurring" && task.nextDue > todayISO()) ? skipAction("skip", task.id, task.title) : "",
     (mode === "grouped" && curDay() >= todayISO()) || mode === "goal" ? goalAction("t", task.id, task.title, mode === "goal") : "",
+    mode === "area" ? `<button class="sw-act sw-del" data-action="swipe-delete" data-id="${task.id}" aria-label="${t().deleteShort}: ${esc(task.title)}">${icon("trash")}<span>${t().deleteShort}</span></button>` : "",
     mode === "must" && curDay() === todayISO() && !task.done ? `<button class="sw-act sw-goal on" data-action="later" data-id="${task.id}" aria-label="${t().goalOff}: ${esc(task.title)}">${icon("later")}<span>${t().goalOff}</span></button>` : "",
   ].join("");
   const fmtShort = d => new Intl.DateTimeFormat(lang, { weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d + "T12:00:00"));
@@ -1716,10 +1720,13 @@ function renderTask(task, mode = "full") {
   if (task.type === "recurring" && mode !== "grouped" && mode !== "goal") {
     const waiting = task.nextDue > todayISO();
     const nextTxt = t().nextIn(Math.round((new Date(task.nextDue + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 864e5));
-    extra = mode === "area" ? (waiting ? `<span class="meta">${nextTxt}</span>` : "")
+    // „Znovu za…“ jen když už byl úkol aspoň jednou splněný; před prvním začátkem nic.
+    extra = mode === "area" ? (waiting && task.doneAt ? `<span class="meta">${nextTxt}</span>` : "")
       : `<span style="display:inline-flex;align-items:center;gap:4px">${icon("repeat", "icon")}${waiting ? nextTxt : t().recurring(task.everyDays)}</span>`;
   }
-  const checked = task.type === "recurring" ? task.nextDue > todayISO() : !!task.done;
+  // Pravidelný úkol je „hotový“, když je další výskyt až po zobrazeném dni (u budoucího dne se počítá od něj, ne od dneška).
+  const refDay = mode !== "area" && curDay() > todayISO() ? curDay() : todayISO();
+  const checked = task.type === "recurring" ? task.nextDue > refDay : !!task.done;
   return swipeWrap(acts, `<div class="row ${checked && mode !== "area" ? "is-done" : ""} ${mode === "area" ? "no-check" : ""}" ${dragAttr(mode, "t", task)}>
     ${stripe}
     ${mode === "area" ? "" : `<button class="check" role="checkbox" aria-checked="${checked}" data-action="task" data-id="${task.id}" aria-label="${esc(task.title)}" ${task.type === "recurring" && checked ? "disabled" : ""}><span>${icon("check")}</span></button>`}
@@ -2790,6 +2797,7 @@ document.addEventListener("click", async e => {
     }
     case "task-new": openTaskForm(null, el.dataset.area); break;
     case "task-edit": openTaskForm(id); break;
+    case "swipe-delete": { const u = deleteTask(id); render(); toast(t().deleted, u); break; }
     case "task-delete": { const u = deleteTask(id); closeSheet(); render(); toast(t().deleted, u); break; }
     case "toggle-done-today": doneTodayOpen = !doneTodayOpen; render(); break;
     case "habit-filter": habitFilter = el.dataset.area || null; render(); break;
